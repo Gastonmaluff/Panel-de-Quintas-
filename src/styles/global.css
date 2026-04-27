@@ -622,6 +622,7 @@ img {
   display: grid;
   gap: 10px;
   margin-bottom: 24px;
+  position: relative;
 }
 
 .date-picker-field > span {
@@ -635,7 +636,43 @@ img {
 .date-picker-panel {
   border: 1px solid var(--color-line);
   background: rgba(255, 255, 255, 0.72);
+  box-shadow: 0 24px 70px rgba(20, 32, 25, 0.1);
   padding: clamp(14px, 2vw, 20px);
+}
+
+.date-picker-trigger {
+  display: flex;
+  width: 100%;
+  min-height: 54px;
+  align-items: center;
+  justify-content: space-between;
+  border: 1px solid var(--color-line);
+  border-radius: 2px;
+  background: white;
+  color: var(--color-muted);
+  padding: 0 16px;
+  text-align: left;
+}
+
+.date-picker-trigger.has-value {
+  color: var(--color-forest);
+}
+
+.date-picker-trigger i {
+  color: var(--color-sage);
+  font-style: normal;
+  transition: transform 160ms ease;
+}
+
+.date-picker-trigger[aria-expanded="true"] i {
+  transform: rotate(180deg);
+}
+
+.date-picker-feedback {
+  color: #8c604f;
+  font-size: 0.86rem;
+  line-height: 1.5;
+  margin: 0;
 }
 
 .date-picker-grid {
@@ -645,40 +682,35 @@ img {
 }
 
 .date-picker-day {
-  display: grid;
-  min-height: 58px;
-  align-content: space-between;
+  aspect-ratio: 1;
   border: 1px solid transparent;
   border-radius: 2px;
   background: #edf6ef;
   color: var(--color-forest);
-  padding: 8px;
-  text-align: left;
+  padding: 0;
+  text-align: center;
   transition:
     border-color 160ms ease,
     box-shadow 160ms ease,
     transform 160ms ease;
 }
 
-.date-picker-day:not(:disabled):hover {
+.date-picker-day:not([aria-disabled="true"]):hover {
   border-color: rgba(6, 27, 14, 0.42);
   box-shadow: 0 10px 28px rgba(20, 32, 25, 0.08);
   transform: translateY(-1px);
 }
 
-.date-picker-day:disabled {
+.date-picker-day[aria-disabled="true"] {
   cursor: not-allowed;
   opacity: 0.62;
 }
 
 .date-picker-day span {
+  display: grid;
+  height: 100%;
+  place-items: center;
   font-weight: 700;
-}
-
-.date-picker-day small {
-  color: rgba(20, 32, 25, 0.68);
-  font-size: 0.58rem;
-  line-height: 1.1;
 }
 
 .date-picker-day--reserved {
@@ -699,6 +731,7 @@ img {
 
 .date-picker-day.is-selected {
   border-color: var(--color-forest);
+  color: var(--color-forest);
   box-shadow: inset 0 0 0 1px var(--color-forest);
 }
 
@@ -1260,6 +1293,24 @@ textarea:focus {
 
   .calendar-day small {
     display: none;
+  }
+
+  .date-picker-panel {
+    padding: 12px;
+  }
+
+  .date-picker-grid {
+    gap: 4px;
+  }
+
+  .date-picker-day {
+    font-size: 0.86rem;
+  }
+
+  .calendar-legend--compact {
+    align-items: center;
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 
   .final-cta {

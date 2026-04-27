@@ -1,10 +1,16 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { getMonthMatrix } from "../../utils/date.js";
 import {
   availabilityLabels,
   getFirstAvailabilityMonth,
   getDateAvailability,
 } from "../../utils/availability.js";
+
+function formatSelectedDate(value) {
+  if (!value) return "Seleccionar fecha disponible";
+  const [year, month, day] = value.split("-");
+  return `${day}/${month}/${year}`;
+}
 
 function getInitialMonth(value, availability) {
   const fallbackMonth = getFirstAvailabilityMonth(availability);
@@ -23,6 +29,9 @@ export default function DateAvailabilityPicker({
   onChange,
   label = "Fecha",
 }) {
+  const pickerRef = useRef(null);
+  const [isOpen, setIsOpen] = useState(false);
+  const [feedback, setFeedback] = useState("");
   const [visibleMonth, setVisibleMonth] = useState(() => getInitialMonth(value, availability));
 
   const cells = useMemo(
@@ -42,10 +51,37 @@ export default function DateAvailabilityPicker({
     });
   };
 
+  useEffect(() => {
+    const handlePointerDown = (event) => {
+      if (!pickerRef.current?.contains(event.target)) {
+        setIsOpen(false);
+      }
+    };
+
+    document.addEventListener("pointerdown", handlePointerDown);
+    return () => document.removeEventListener("pointerdown", handlePointerDown);
+  }, []);
+
   return (
-    <div className="date-picker-field">
+    <div className="date-picker-field" ref={pickerRef}>
       <span>{label}</span>
-      <div className="date-picker-panel">
+      <button
+        type="button"
+        className={`date-picker-trigger ${value ? "has-value" : ""}`}
+        aria-expanded={isOpen}
+        onClick={() => {
+          setFeedback("");
+          setIsOpen((current) => !current);
+        }}
+      >
+        <span>{formatSelectedDate(value)}</span>
+        <i aria-hidden="true">▾</i>
+      </button>
+
+      {feedback ? <p className="date-picker-feedback">{feedback}</p> : null}
+
+      {isOpen ? (
+        <div className="date-picker-panel">
         <div className="calendar-toolbar calendar-toolbar--compact">
           <button type="button" onClick={() => moveMonth(-1)} aria-label="Mes anterior">
             ←
@@ -75,12 +111,19 @@ export default function DateAvailabilityPicker({
                   isSelected ? "is-selected" : ""
                 } ${cell.isCurrentMonth ? "" : "date-picker-day--muted"}`}
                 key={cell.iso}
-                disabled={isDisabled}
+                aria-disabled={isDisabled}
                 title={availabilityState.reason || availabilityState.label}
-                onClick={() => onChange(cell.iso)}
+                onClick={() => {
+                  if (isDisabled) {
+                    setFeedback("Esa fecha no está disponible. Elegí otra fecha.");
+                    return;
+                  }
+                  setFeedback("");
+                  onChange(cell.iso);
+                  setIsOpen(false);
+                }}
               >
                 <span>{cell.day}</span>
-                <small>{cell.isCurrentMonth ? availabilityState.label : ""}</small>
               </button>
             );
           })}
@@ -95,6 +138,7 @@ export default function DateAvailabilityPicker({
           ))}
         </div>
       </div>
+      ) : null}
     </div>
   );
 }
