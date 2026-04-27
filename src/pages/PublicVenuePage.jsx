@@ -17,7 +17,7 @@ export default function PublicVenuePage({ venue }) {
         <GallerySection venue={venue} />
         <AmenitiesSection amenities={venue.amenities} />
         <AvailabilityCalendar availability={availabilityMock} />
-        <QuoteCalculator venue={venue} rules={pricingRules} />
+        <QuoteCalculator venue={venue} rules={pricingRules} availability={availabilityMock} />
         <FinalCta venue={venue} />
       </main>
       <Footer venue={venue} />

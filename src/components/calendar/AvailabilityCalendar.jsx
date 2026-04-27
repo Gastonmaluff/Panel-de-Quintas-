@@ -1,27 +1,14 @@
-import { useMemo, useState } from "react";
+import { useState } from "react";
 import { getMonthMatrix } from "../../utils/date.js";
-
-const statusLabels = {
-  available: "Disponible",
-  reserved: "Reservado",
-  preReserved: "Pre-reservado",
-  blocked: "Bloqueado",
-};
+import {
+  availabilityLabels,
+  getDateAvailability,
+  getFirstAvailabilityMonth,
+} from "../../utils/availability.js";
 
 export default function AvailabilityCalendar({ availability }) {
-  const today = new Date(2026, 4, 1);
-  const [visibleMonth, setVisibleMonth] = useState({
-    year: today.getFullYear(),
-    month: today.getMonth(),
-  });
-
-  const statusByDate = useMemo(
-    () =>
-      availability.reduce((accumulator, item) => {
-        accumulator[item.date] = item;
-        return accumulator;
-      }, {}),
-    [availability],
+  const [visibleMonth, setVisibleMonth] = useState(() =>
+    getFirstAvailabilityMonth(availability),
   );
 
   const cells = getMonthMatrix(visibleMonth.year, visibleMonth.month);
@@ -67,24 +54,25 @@ export default function AvailabilityCalendar({ availability }) {
 
         <div className="calendar-grid" aria-label="Calendario de disponibilidad">
           {cells.map((cell) => {
-            const item = statusByDate[cell.iso];
-            const status = item?.status || "available";
+            const availabilityState = getDateAvailability(cell.iso, availability);
+            const status = availabilityState.status;
             return (
               <div
                 className={`calendar-day calendar-day--${status} ${
                   cell.isCurrentMonth ? "" : "calendar-day--muted"
                 }`}
                 key={cell.iso}
+                title={availabilityState.reason || availabilityState.label}
               >
                 <span>{cell.day}</span>
-                <small>{cell.isCurrentMonth ? statusLabels[status] : ""}</small>
+                <small>{cell.isCurrentMonth ? availabilityState.label : ""}</small>
               </div>
             );
           })}
         </div>
 
         <div className="calendar-legend">
-          {Object.entries(statusLabels).map(([status, label]) => (
+          {Object.entries(availabilityLabels).map(([status, label]) => (
             <span key={status}>
               <i className={`legend-dot legend-dot--${status}`} />
               {label}

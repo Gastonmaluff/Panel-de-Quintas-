@@ -1,4 +1,6 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
+import DateAvailabilityPicker from "../calendar/DateAvailabilityPicker.jsx";
+import { getDateAvailability } from "../../utils/availability.js";
 import { buildWhatsappUrl } from "../../utils/whatsapp.js";
 import {
   calculateQuote,
@@ -9,19 +11,43 @@ import {
 } from "../../utils/pricing.js";
 
 const initialQuoteValues = {
-  date: "2026-05-18",
+  date: "",
   eventType: "cumpleanos",
   guestCount: 45,
   timeSlot: "dia_completo",
   extras: ["limpieza", "mesas_sillas"],
 };
 
-export default function QuoteCalculator({ venue, rules }) {
+export default function QuoteCalculator({ venue, rules, availability }) {
   const [values, setValues] = useState(initialQuoteValues);
-  const quote = useMemo(() => calculateQuote(values, rules), [rules, values]);
-  const whatsappUrl = buildWhatsappUrl({ venue, quoteValues: values, quote });
+  const [dateWarning, setDateWarning] = useState("");
+
+  const selectedDateAvailability = useMemo(
+    () => getDateAvailability(values.date, availability),
+    [availability, values.date],
+  );
+  const isGuestCountValid = Number(values.guestCount) > 0;
+  const isQuoteReady =
+    Boolean(values.date) &&
+    selectedDateAvailability.selectable &&
+    isGuestCountValid &&
+    Boolean(values.eventType) &&
+    Boolean(values.timeSlot);
+  const quote = useMemo(
+    () => (isQuoteReady ? calculateQuote(values, rules) : null),
+    [isQuoteReady, rules, values],
+  );
+  const whatsappUrl = quote ? buildWhatsappUrl({ venue, quoteValues: values, quote }) : "#";
+
+  useEffect(() => {
+    if (values.date && !selectedDateAvailability.selectable) {
+      setDateWarning(`${selectedDateAvailability.reason}. Elegí otra fecha disponible.`);
+      setValues((current) => ({ ...current, date: "" }));
+    }
+  }, [selectedDateAvailability, values.date]);
 
   const updateValue = (key, value) => {
+    if (key === "date") setDateWarning("");
     setValues((current) => ({ ...current, [key]: value }));
   };
 
@@ -41,22 +67,21 @@ export default function QuoteCalculator({ venue, rules }) {
           <p className="eyebrow">Cotizador</p>
           <h2>Estimá tu evento antes de consultar.</h2>
           <p>
-            Las reglas iniciales viven en datos locales y quedan listas para
-            reemplazarse por `pricingRules` desde Firestore.
+            La fecha usa la misma disponibilidad que el calendario público. No se
+            puede cotizar una fecha reservada, pre-reservada, bloqueada o pasada.
           </p>
         </div>
 
         <div className="quote-panel">
-          <div className="form-grid">
-            <label>
-              <span>Fecha</span>
-              <input
-                type="date"
-                value={values.date}
-                onChange={(event) => updateValue("date", event.target.value)}
-              />
-            </label>
+          <DateAvailabilityPicker
+            availability={availability}
+            value={values.date}
+            onChange={(date) => updateValue("date", date)}
+          />
 
+          {dateWarning ? <p className="quote-alert">{dateWarning}</p> : null}
+
+          <div className="form-grid">
             <label>
               <span>Tipo de evento</span>
               <select
@@ -112,22 +137,38 @@ export default function QuoteCalculator({ venue, rules }) {
             </div>
           </fieldset>
 
-          <div className="quote-result">
-            <div>
-              <span>Precio estimado</span>
-              <strong>{formatGuaranies(quote.totalPrice)}</strong>
+          {quote ? (
+            <div className="quote-result">
+              <div>
+                <span>Precio estimado</span>
+                <strong>{formatGuaranies(quote.totalPrice)}</strong>
+              </div>
+              <div>
+                <span>Seña sugerida</span>
+                <strong>{formatGuaranies(quote.depositAmount)}</strong>
+              </div>
+              <div>
+                <span>Saldo aproximado</span>
+                <strong>{formatGuaranies(quote.balanceAmount)}</strong>
+              </div>
             </div>
-            <div>
-              <span>Seña sugerida</span>
-              <strong>{formatGuaranies(quote.depositAmount)}</strong>
+          ) : (
+            <div className="quote-empty-state">
+              Elegí una fecha disponible para estimar tu evento.
             </div>
-            <div>
-              <span>Saldo aproximado</span>
-              <strong>{formatGuaranies(quote.balanceAmount)}</strong>
-            </div>
-          </div>
+          )}
 
-          <a className="primary-button primary-button--wide" href={whatsappUrl} target="_blank" rel="noreferrer">
+          <a
+            className={`primary-button primary-button--wide ${isQuoteReady ? "" : "is-disabled"}`}
+            href={whatsappUrl}
+            target="_blank"
+            rel="noreferrer"
+            aria-disabled={!isQuoteReady}
+            tabIndex={isQuoteReady ? 0 : -1}
+            onClick={(event) => {
+              if (!isQuoteReady) event.preventDefault();
+            }}
+          >
             Consultar con este presupuesto
           </a>
         </div>

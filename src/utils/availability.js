@@ -1,0 +1,98 @@
+import { toISODate } from "./date.js";
+
+export const availabilityLabels = {
+  available: "Disponible",
+  reserved: "Reservado",
+  preReserved: "Pre-reservado",
+  blocked: "Bloqueado",
+  past: "No disponible",
+};
+
+export const unavailableReasons = {
+  reserved: "Fecha reservada",
+  preReserved: "Fecha pre-reservada",
+  blocked: "Fecha bloqueada",
+  past: "Fecha pasada",
+  invalid: "Fecha inválida",
+};
+
+function normalizeDateValue(value) {
+  if (!value) return "";
+  if (value instanceof Date) return toISODate(value);
+  return String(value).slice(0, 10);
+}
+
+export function getTodayISO() {
+  return toISODate(new Date());
+}
+
+export function normalizeAvailabilityData(availabilityData = {}) {
+  if (Array.isArray(availabilityData)) {
+    return availabilityData.reduce(
+      (accumulator, item) => {
+        if (item?.date && accumulator[item.status]) {
+          accumulator[item.status].push(item.date);
+        }
+        return accumulator;
+      },
+      { reserved: [], preReserved: [], blocked: [] },
+    );
+  }
+
+  return {
+    reserved: availabilityData.reserved || [],
+    preReserved: availabilityData.preReserved || [],
+    blocked: availabilityData.blocked || [],
+  };
+}
+
+export function getAvailabilityStatus(dateValue, availabilityData) {
+  const isoDate = normalizeDateValue(dateValue);
+  const availability = normalizeAvailabilityData(availabilityData);
+
+  if (!isoDate) return "invalid";
+  if (isoDate < getTodayISO()) return "past";
+  if (availability.reserved.includes(isoDate)) return "reserved";
+  if (availability.preReserved.includes(isoDate)) return "preReserved";
+  if (availability.blocked.includes(isoDate)) return "blocked";
+  return "available";
+}
+
+export function getDateAvailability(dateValue, availabilityData) {
+  const status = getAvailabilityStatus(dateValue, availabilityData);
+  const selectable = status === "available";
+
+  return {
+    status,
+    selectable,
+    label: availabilityLabels[status] || availabilityLabels.available,
+    reason: selectable ? "" : unavailableReasons[status] || unavailableReasons.invalid,
+  };
+}
+
+export function isDateSelectable(dateValue, availabilityData) {
+  return getDateAvailability(dateValue, availabilityData).selectable;
+}
+
+export function getUnavailableReason(dateValue, availabilityData) {
+  return getDateAvailability(dateValue, availabilityData).reason;
+}
+
+export function getFirstAvailabilityMonth(availabilityData) {
+  const availability = normalizeAvailabilityData(availabilityData);
+  const today = getTodayISO();
+  const futureDates = [
+    ...availability.reserved,
+    ...availability.preReserved,
+    ...availability.blocked,
+  ]
+    .filter((date) => date >= today)
+    .sort();
+  const baseDate = futureDates[0] || today;
+  const date = new Date(`${baseDate}T12:00:00`);
+
+  return {
+    year: date.getFullYear(),
+    month: date.getMonth(),
+  };
+}

@@ -80,15 +80,11 @@ export const pricingRules = {
   depositValue: 30,
 };
 
-export const availabilityMock = [
-  { venueId, date: "2026-05-03", status: "reserved", label: "Casamiento" },
-  { venueId, date: "2026-05-09", status: "preReserved", label: "Pre-reserva" },
-  { venueId, date: "2026-05-14", status: "blocked", label: "Mantenimiento" },
-  { venueId, date: "2026-05-18", status: "reserved", label: "Cumpleaños" },
-  { venueId, date: "2026-05-24", status: "preReserved", label: "Consulta" },
-  { venueId, date: "2026-06-06", status: "reserved", label: "Corporativo" },
-  { venueId, date: "2026-06-13", status: "blocked", label: "Bloqueado" },
-];
+export const availabilityMock = {
+  reserved: ["2026-05-03", "2026-05-18", "2026-06-06"],
+  preReserved: ["2026-05-09", "2026-05-24"],
+  blocked: ["2026-05-14", "2026-06-13"],
+};
 
 export const reservationStatuses = [
   "consulta",
