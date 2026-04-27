@@ -263,11 +263,11 @@ img {
 }
 
 .brand-logo--stacked {
-  aspect-ratio: 360 / 335;
+  aspect-ratio: 1;
 }
 
 .brand-logo--horizontal {
-  aspect-ratio: 520 / 128;
+  aspect-ratio: 560 / 138;
 }
 
 .brand-logo--mark {
@@ -303,10 +303,10 @@ img {
 
 .brand-stage {
   display: grid;
-  min-height: 650px;
+  min-height: 680px;
   align-content: end;
   justify-items: center;
-  padding: 440px 0 86px;
+  padding: 470px 0 86px;
   text-align: center;
 }
 
@@ -1073,8 +1073,8 @@ textarea:focus {
   }
 
   .brand-stage {
-    min-height: 545px;
-    padding-top: 360px;
+    min-height: 570px;
+    padding-top: 385px;
     padding-bottom: 64px;
   }
 

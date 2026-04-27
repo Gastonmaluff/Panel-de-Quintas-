@@ -57,10 +57,10 @@ export default function AnimatedBrandHeader({ venue }) {
     const initialWidth = isMobile
       ? Math.min(viewport.width * 0.76, 300)
       : Math.min(viewport.width * 0.32, 420);
-    const finalWidth = isMobile ? 138 : 210;
+    const finalWidth = isMobile ? 150 : 220;
     const width = initialWidth + (finalWidth - initialWidth) * eased;
-    const initialHeight = initialWidth * (335 / 360);
-    const finalHeight = finalWidth * (128 / 520);
+    const initialHeight = initialWidth;
+    const finalHeight = finalWidth * (138 / 560);
     const height = initialHeight + (finalHeight - initialHeight) * eased;
     const topStart = isMobile ? 56 : 58;
     const topEnd = isMobile ? 12 : 10;

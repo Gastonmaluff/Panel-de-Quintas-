@@ -1,12 +1,12 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 120" role="img" aria-label="El Paraiso Escondido">
-  <g fill="none" stroke="#061b0e" stroke-linecap="round" stroke-linejoin="round">
-    <circle cx="60" cy="60" r="48" stroke-width="4.6"/>
-    <path d="M25 75h70" stroke-width="4.6"/>
-    <path d="M60 81V32" stroke-width="4.6"/>
-    <path d="M60 46 82 33" stroke-width="4.6"/>
-    <path d="M60 54 35 39" stroke-width="4.6"/>
-    <path d="M36 57c-10-16 1-35 24-35s35 19 24 35c-8 13-40 13-48 0Z" stroke-width="4.6"/>
-    <path d="M43 88h28" stroke-width="5.2"/>
-    <path d="M78 88h12" stroke-width="5.2"/>
+  <g fill="none" stroke="#050505" stroke-linecap="round" stroke-linejoin="round">
+    <circle cx="60" cy="60" r="47" stroke-width="3.8"/>
+    <path d="M23 75h74" stroke-width="3.8"/>
+    <path d="M60 82V31" stroke-width="4.4"/>
+    <path d="M60 47 82 34" stroke-width="4.4"/>
+    <path d="M60 55 35 40" stroke-width="4.4"/>
+    <path d="M35 58c-10-15 1-36 25-36s35 21 25 36c-9 14-41 14-50 0Z" stroke-width="3.8"/>
+    <path d="M43 88h28" stroke-width="4.8"/>
+    <path d="M80 88h11" stroke-width="4.8"/>
   </g>
 </svg>
