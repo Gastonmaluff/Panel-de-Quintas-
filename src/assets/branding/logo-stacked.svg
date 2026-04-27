@@ -1,7 +1,7 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 900 900" role="img" aria-label="El Paraiso Escondido">
   <defs>
-    <g id="wordmark-paraiso" fill="none" stroke="#050505" stroke-linecap="round" stroke-linejoin="round" stroke-width="7.4">
-      <path d="M0 0V160M0 0H30M0 80H24M0 160H32"/>
+    <g id="wordmark-paraiso" fill="none" stroke="#050505" stroke-linecap="round" stroke-linejoin="round" stroke-width="6.6">
+      <path d="M0 0V160M0 0H30M0 80H23M0 160H32"/>
       <path d="M55 0V160H83"/>
       <path d="M167 160V0H193C216 0 229 15 229 40C229 65 216 82 193 82H167"/>
       <path d="M259 160 283 0 307 160M269 103H297"/>
@@ -11,17 +11,28 @@
       <path d="M599 20C587 4 556-6 541 17C527 38 542 65 567 73C598 82 611 111 594 142C578 170 540 166 524 144"/>
       <path d="M636 80C636 28 656 0 687 0C718 0 738 28 738 80C738 132 718 160 687 160C656 160 636 132 636 80Z"/>
     </g>
+    <g id="paraiso-mark" fill="none" stroke="#201a1d" stroke-linecap="round" stroke-linejoin="round">
+      <circle cx="60" cy="60" r="47" stroke-width="3.35"/>
+      <path d="M24 75h72" stroke-width="3.35"/>
+      <path d="M60 82V31" stroke-width="4"/>
+      <path d="M60 48 82 35" stroke-width="4"/>
+      <path d="M60 56 35 41" stroke-width="4"/>
+      <path d="M34.5 58c-10.2-16.7 2.4-36.5 25.5-36.5S95.7 41.3 85.5 58c-9.1 14.8-41.9 14.8-51 0Z" stroke-width="3.35"/>
+      <path d="M43 88h28" stroke-width="4.2"/>
+      <path d="M80.5 88h10.5" stroke-width="4.2"/>
+    </g>
   </defs>
-  <g fill="none" stroke="#050505" stroke-linecap="round" stroke-linejoin="round" transform="translate(326 82) scale(2.07)">
-    <circle cx="60" cy="60" r="47" stroke-width="3.8"/>
-    <path d="M23 75h74" stroke-width="3.8"/>
-    <path d="M60 82V31" stroke-width="4.4"/>
-    <path d="M60 47 82 34" stroke-width="4.4"/>
-    <path d="M60 55 35 40" stroke-width="4.4"/>
-    <path d="M35 58c-10-15 1-36 25-36s35 21 25 36c-9 14-41 14-50 0Z" stroke-width="3.8"/>
-    <path d="M43 88h28" stroke-width="4.8"/>
-    <path d="M80 88h11" stroke-width="4.8"/>
-  </g>
-  <use href="#wordmark-paraiso" transform="translate(70 440) scale(1.03)"/>
-  <text x="450" y="730" fill="#6c988b" font-family="Inter, Arial, sans-serif" font-size="54" font-weight="300" letter-spacing="34" text-anchor="middle">ESCONDIDO</text>
+
+  <use href="#paraiso-mark" transform="translate(326 86) scale(2.07)"/>
+  <use href="#wordmark-paraiso" transform="translate(70 444) scale(1.03)"/>
+  <text
+    x="450"
+    y="744"
+    fill="#34b873"
+    font-family="Century Gothic, Avenir Next, Montserrat, Arial, sans-serif"
+    font-size="53"
+    font-weight="400"
+    letter-spacing="33"
+    text-anchor="middle"
+  >ESCONDIDO</text>
 </svg>
