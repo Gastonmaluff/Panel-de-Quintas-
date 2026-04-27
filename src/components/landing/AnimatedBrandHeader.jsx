@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from "react";
+import { LayoutDashboard } from "lucide-react";
 import { buildBaseWhatsappUrl } from "../../utils/whatsapp.js";
 
 function clamp(value, min, max) {
@@ -15,13 +16,13 @@ function rangeProgress(value, start, end) {
 
 export default function AnimatedBrandHeader({ venue }) {
   const brandRef = useRef(null);
-  const buttonRef = useRef(null);
+  const actionsRef = useRef(null);
   const [progress, setProgress] = useState(0);
   const [isMobile, setIsMobile] = useState(false);
   const [viewport, setViewport] = useState({
     width: 1280,
     brandWidth: 520,
-    buttonWidth: 240,
+    actionsWidth: 300,
   });
 
   useEffect(() => {
@@ -36,7 +37,7 @@ export default function AnimatedBrandHeader({ venue }) {
         setViewport({
           width: visualWidth,
           brandWidth: brandRef.current?.offsetWidth || 520,
-          buttonWidth: buttonRef.current?.offsetWidth || 240,
+          actionsWidth: actionsRef.current?.offsetWidth || 300,
         });
       });
     };
@@ -53,9 +54,9 @@ export default function AnimatedBrandHeader({ venue }) {
   }, []);
 
   const style = useMemo(() => {
-    const scale = 1 - easeOutCubic(progress) * (isMobile ? 0.68 : 0.75);
-    const topStart = isMobile ? 78 : 96;
-    const topEnd = isMobile ? 15 : 18;
+    const scale = 1 - easeOutCubic(progress) * (isMobile ? 0.8 : 0.86);
+    const topStart = isMobile ? 56 : 58;
+    const topEnd = isMobile ? 6 : 5;
     const top = topStart + (topEnd - topStart) * easeOutCubic(progress);
     const leftShift = easeOutCubic(rangeProgress(progress, 0.34, 1));
     const leftEnd = isMobile ? 18 : 24;
@@ -64,7 +65,7 @@ export default function AnimatedBrandHeader({ venue }) {
     const headerOpacity = easeOutCubic(rangeProgress(progress, 0.18, 0.95));
     const buttonOpacity = easeOutCubic(rangeProgress(progress, 0.62, 1));
     const buttonInset = isMobile ? 14 : 24;
-    const buttonX = viewport.width - viewport.buttonWidth - buttonInset;
+    const buttonX = viewport.width - viewport.actionsWidth - buttonInset;
 
     return {
       "--brand-scale": scale,
@@ -76,25 +77,36 @@ export default function AnimatedBrandHeader({ venue }) {
     };
   }, [isMobile, progress, viewport]);
 
+  const logoSrc = `${import.meta.env.BASE_URL}${venue.logoImage}`;
+  const adminUrl = `${import.meta.env.BASE_URL}admin`;
+
   return (
     <>
       <header className="scroll-header" style={style} aria-hidden={progress < 0.1}>
         <div className="scroll-header__surface" />
-        <a
-          className="scroll-header__whatsapp"
-          href={buildBaseWhatsappUrl(venue)}
-          ref={buttonRef}
-          target="_blank"
-          rel="noreferrer"
-        >
-          Consultar por WhatsApp
-        </a>
+        <div className="scroll-header__actions" ref={actionsRef}>
+          <a
+            className="admin-icon-button"
+            href={adminUrl}
+            aria-label="Abrir panel administrador"
+            title="Panel administrador"
+          >
+            <LayoutDashboard size={18} strokeWidth={1.8} aria-hidden="true" />
+          </a>
+          <a
+            className="scroll-header__whatsapp"
+            href={buildBaseWhatsappUrl(venue)}
+            target="_blank"
+            rel="noreferrer"
+          >
+            Consultar por WhatsApp
+          </a>
+        </div>
       </header>
 
       <div className="animated-brand" style={style} ref={brandRef}>
         <a className="animated-brand__content" href="#inicio" aria-label={venue.name}>
-          <span className="animated-brand__title">{venue.logoText}</span>
-          <span className="animated-brand__subtitle">{venue.subtitle}</span>
+          <img className="animated-brand__logo" src={logoSrc} alt={venue.name} />
         </a>
       </div>
     </>

@@ -5,6 +5,7 @@ export const venues = [
     id: venueId,
     name: "Paraíso Escondido",
     slug: "paraiso-escondido",
+    logoImage: "brand/paraiso-escondido-logo.png",
     logoText: "PARAÍSO ESCONDIDO",
     subtitle: "quinta & eventos",
     description:

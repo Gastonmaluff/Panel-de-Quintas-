@@ -23,12 +23,16 @@
 }
 
 html {
+  max-width: 100%;
+  overflow-x: clip;
   scroll-behavior: smooth;
 }
 
 body {
   margin: 0;
   min-width: 320px;
+  max-width: 100%;
+  overflow-x: hidden;
   background:
     linear-gradient(180deg, rgba(251, 250, 247, 0.95), rgba(240, 236, 229, 0.42)),
     var(--color-paper);
@@ -121,6 +125,7 @@ img {
 
 .primary-button,
 .scroll-header__whatsapp,
+.admin-icon-button,
 .admin-login button,
 .admin-section-heading button,
 .reservation-card a {
@@ -147,6 +152,7 @@ img {
 
 .primary-button:hover,
 .scroll-header__whatsapp:hover,
+.admin-icon-button:hover,
 .admin-login button:hover,
 .admin-section-heading button:hover,
 .reservation-card a:hover {
@@ -187,13 +193,26 @@ img {
   opacity: var(--header-opacity);
 }
 
-.scroll-header__whatsapp {
+.scroll-header__actions {
   pointer-events: auto;
   position: absolute;
   top: 14px;
   left: var(--button-x);
+  display: flex;
+  align-items: center;
+  gap: 10px;
   opacity: var(--button-opacity);
   transform: translateY(calc((1 - var(--button-opacity)) * -8px));
+}
+
+.scroll-header__whatsapp {
+  position: static;
+}
+
+.admin-icon-button {
+  width: 44px;
+  min-width: 44px;
+  padding: 0;
 }
 
 .animated-brand {
@@ -201,17 +220,24 @@ img {
   top: var(--brand-top);
   left: 0;
   z-index: 40;
-  width: min(72vw, 560px);
+  width: min(54vw, 460px);
+  overflow: hidden;
+  contain: paint;
   transform: translate3d(var(--brand-x), 0, 0) scale(var(--brand-scale));
   transform-origin: top left;
   will-change: transform, top;
 }
 
 .animated-brand__content {
-  display: grid;
-  gap: 8px;
-  justify-items: center;
-  color: var(--color-forest);
+  display: block;
+  overflow: hidden;
+}
+
+.animated-brand__logo {
+  width: 100%;
+  filter: contrast(1.04);
+  transform: scale(1.12);
+  transform-origin: center;
 }
 
 .animated-brand__title {
@@ -236,10 +262,10 @@ img {
 
 .brand-stage {
   display: grid;
-  min-height: 520px;
+  min-height: 720px;
   align-content: end;
   justify-items: center;
-  padding: 330px 0 86px;
+  padding: 540px 0 86px;
   text-align: center;
 }
 
@@ -977,16 +1003,26 @@ textarea:focus {
   }
 
   .scroll-header__whatsapp {
-    right: 14px;
     min-height: 38px;
-    max-width: 154px;
+    max-width: 142px;
     padding: 0 12px;
     font-size: 0.62rem;
     text-align: center;
   }
 
+  .scroll-header__actions {
+    top: 13px;
+    gap: 8px;
+  }
+
+  .admin-icon-button {
+    width: 38px;
+    min-width: 38px;
+    min-height: 38px;
+  }
+
   .animated-brand {
-    width: min(82vw, 430px);
+    width: min(77vw, 300px);
   }
 
   .animated-brand__title {
@@ -1000,8 +1036,8 @@ textarea:focus {
   }
 
   .brand-stage {
-    min-height: 460px;
-    padding-top: 260px;
+    min-height: 590px;
+    padding-top: 400px;
     padding-bottom: 64px;
   }
 
