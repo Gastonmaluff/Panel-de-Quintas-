@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { LayoutDashboard } from "lucide-react";
+import BrandLogo from "../branding/BrandLogo.jsx";
 import { buildBaseWhatsappUrl } from "../../utils/whatsapp.js";
 
 function clamp(value, min, max) {
@@ -21,7 +22,6 @@ export default function AnimatedBrandHeader({ venue }) {
   const [isMobile, setIsMobile] = useState(false);
   const [viewport, setViewport] = useState({
     width: 1280,
-    brandWidth: 520,
     actionsWidth: 300,
   });
 
@@ -36,7 +36,6 @@ export default function AnimatedBrandHeader({ venue }) {
         setIsMobile(visualWidth < 720);
         setViewport({
           width: visualWidth,
-          brandWidth: brandRef.current?.offsetWidth || 520,
           actionsWidth: actionsRef.current?.offsetWidth || 300,
         });
       });
@@ -54,30 +53,42 @@ export default function AnimatedBrandHeader({ venue }) {
   }, []);
 
   const style = useMemo(() => {
-    const scale = 1 - easeOutCubic(progress) * (isMobile ? 0.8 : 0.86);
+    const eased = easeOutCubic(progress);
+    const initialWidth = isMobile
+      ? Math.min(viewport.width * 0.76, 300)
+      : Math.min(viewport.width * 0.32, 420);
+    const finalWidth = isMobile ? 138 : 210;
+    const width = initialWidth + (finalWidth - initialWidth) * eased;
+    const initialHeight = initialWidth * (335 / 360);
+    const finalHeight = finalWidth * (128 / 520);
+    const height = initialHeight + (finalHeight - initialHeight) * eased;
     const topStart = isMobile ? 56 : 58;
-    const topEnd = isMobile ? 6 : 5;
+    const topEnd = isMobile ? 12 : 10;
     const top = topStart + (topEnd - topStart) * easeOutCubic(progress);
     const leftShift = easeOutCubic(rangeProgress(progress, 0.34, 1));
     const leftEnd = isMobile ? 18 : 24;
-    const centeredLeft = (viewport.width - viewport.brandWidth) / 2;
+    const centeredLeft = (viewport.width - width) / 2;
     const x = centeredLeft + (leftEnd - centeredLeft) * leftShift;
     const headerOpacity = easeOutCubic(rangeProgress(progress, 0.18, 0.95));
     const buttonOpacity = easeOutCubic(rangeProgress(progress, 0.62, 1));
+    const stackedOpacity = 1 - easeOutCubic(rangeProgress(progress, 0.28, 0.74));
+    const horizontalOpacity = easeOutCubic(rangeProgress(progress, 0.48, 0.95));
     const buttonInset = isMobile ? 14 : 24;
     const buttonX = viewport.width - viewport.actionsWidth - buttonInset;
 
     return {
-      "--brand-scale": scale,
+      "--brand-width": `${width}px`,
+      "--brand-height": `${height}px`,
       "--brand-top": `${top}px`,
       "--brand-x": `${x}px`,
       "--button-x": `${buttonX}px`,
       "--header-opacity": headerOpacity,
       "--button-opacity": buttonOpacity,
+      "--stacked-opacity": stackedOpacity,
+      "--horizontal-opacity": horizontalOpacity,
     };
   }, [isMobile, progress, viewport]);
 
-  const logoSrc = `${import.meta.env.BASE_URL}${venue.logoImage}`;
   const adminUrl = `${import.meta.env.BASE_URL}admin`;
 
   return (
@@ -106,7 +117,11 @@ export default function AnimatedBrandHeader({ venue }) {
 
       <div className="animated-brand" style={style} ref={brandRef}>
         <a className="animated-brand__content" href="#inicio" aria-label={venue.name}>
-          <img className="animated-brand__logo" src={logoSrc} alt={venue.name} />
+          <BrandLogo variant="stacked" className="animated-brand__logo animated-brand__logo--stacked" />
+          <BrandLogo
+            variant="horizontal"
+            className="animated-brand__logo animated-brand__logo--horizontal"
+          />
         </a>
       </div>
     </>
