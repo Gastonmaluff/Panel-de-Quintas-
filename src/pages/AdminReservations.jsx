@@ -1,9 +1,9 @@
-import { useState } from "react";
-import {
-  adminReservationsMock,
-  adminReservationStatuses,
-} from "../data/adminData.js";
+import { useMemo, useState } from "react";
+import { buildAdminAvailability, useAdminData } from "../admin/AdminDataProvider.jsx";
+import DateAvailabilityPicker from "../components/calendar/DateAvailabilityPicker.jsx";
+import { adminReservationStatuses } from "../data/adminData.js";
 import { venues } from "../data/venues.js";
+import { isDateSelectable } from "../utils/availability.js";
 import { formatGuaranies } from "../utils/pricing.js";
 
 function buildClientWhatsappUrl(venue, reservation) {
@@ -19,43 +19,42 @@ function getStatusClass(status) {
     .replaceAll(" ", "-");
 }
 
+function createReservationDraft() {
+  return {
+    id: `res-${Date.now()}`,
+    customerName: "Nuevo cliente",
+    customerPhone: "",
+    eventDate: "",
+    timeSlot: "Día completo",
+    eventType: "Consulta",
+    guestCount: 0,
+    totalPrice: 0,
+    depositAmount: 0,
+    balanceAmount: 0,
+    status: "consulta",
+    notes: "",
+  };
+}
+
 export default function AdminReservations() {
   const venue = venues[0];
-  const [reservations, setReservations] = useState(adminReservationsMock);
+  const { reservations, addReservation, updateReservation, removeReservation } = useAdminData();
   const [openMenuId, setOpenMenuId] = useState(null);
   const [editingReservation, setEditingReservation] = useState(null);
 
-  const updateReservation = (id, changes) => {
-    setReservations((current) =>
-      current.map((reservation) =>
-        reservation.id === id ? { ...reservation, ...changes } : reservation,
-      ),
-    );
-  };
+  const editingAvailability = useMemo(
+    () =>
+      editingReservation
+        ? buildAdminAvailability(reservations, editingReservation.id)
+        : { reserved: [], preReserved: [], blocked: [] },
+    [editingReservation, reservations],
+  );
+  const canSaveEditedReservation =
+    !!editingReservation?.eventDate &&
+    isDateSelectable(editingReservation.eventDate, editingAvailability);
 
-  const addReservation = () => {
-    const newReservation = {
-      id: `res-${Date.now()}`,
-      customerName: "Nuevo cliente",
-      customerPhone: "",
-      eventDate: "2026-05-22",
-      timeSlot: "Día completo",
-      eventType: "Consulta",
-      guestCount: 0,
-      totalPrice: 0,
-      depositAmount: 0,
-      balanceAmount: 0,
-      status: "consulta",
-      notes: "",
-    };
-
-    setReservations((current) => [newReservation, ...current]);
-    setEditingReservation(newReservation);
-  };
-
-  const removeReservation = (id) => {
-    setReservations((current) => current.filter((reservation) => reservation.id !== id));
-    setOpenMenuId(null);
+  const openNewReservation = () => {
+    setEditingReservation(createReservationDraft());
   };
 
   const markDepositPaid = (reservation) => {
@@ -74,7 +73,18 @@ export default function AdminReservations() {
   };
 
   const saveEditedReservation = () => {
-    updateReservation(editingReservation.id, editingReservation);
+    if (!canSaveEditedReservation) return;
+
+    const existingReservation = reservations.some(
+      (reservation) => reservation.id === editingReservation.id,
+    );
+
+    if (existingReservation) {
+      updateReservation(editingReservation.id, editingReservation);
+    } else {
+      addReservation(editingReservation);
+    }
+
     setEditingReservation(null);
   };
 
@@ -85,7 +95,7 @@ export default function AdminReservations() {
           <h2>Reservas</h2>
           <p>Revisá cada fecha, seguí pagos pendientes y contactá al cliente en un toque.</p>
         </div>
-        <button type="button" onClick={addReservation}>
+        <button type="button" onClick={openNewReservation}>
           Crear reserva manual
         </button>
       </div>
@@ -100,9 +110,9 @@ export default function AdminReservations() {
               <th>Horario</th>
               <th>Evento</th>
               <th>Personas</th>
-              <th>Total</th>
-              <th>Seña</th>
-              <th>Saldo</th>
+              <th className="money-column money-column--total">Total</th>
+              <th className="money-column money-column--deposit">Seña</th>
+              <th className="money-column money-column--balance">Saldo</th>
               <th>Estado</th>
               <th>Acciones</th>
             </tr>
@@ -118,9 +128,9 @@ export default function AdminReservations() {
                 <td>{reservation.timeSlot}</td>
                 <td>{reservation.eventType}</td>
                 <td>{reservation.guestCount || "No aplica"}</td>
-                <td>{formatGuaranies(reservation.totalPrice)}</td>
-                <td>{formatGuaranies(reservation.depositAmount)}</td>
-                <td>{formatGuaranies(reservation.balanceAmount)}</td>
+                <td className="money-column money-column--total">{formatGuaranies(reservation.totalPrice)}</td>
+                <td className="money-column money-column--deposit">{formatGuaranies(reservation.depositAmount)}</td>
+                <td className="money-column money-column--balance">{formatGuaranies(reservation.balanceAmount)}</td>
                 <td>
                   <span className={`admin-status-pill admin-status-pill--${getStatusClass(reservation.status)}`}>
                     {reservation.status}
@@ -218,19 +228,18 @@ export default function AdminReservations() {
                   }
                 />
               </label>
-              <label>
-                Fecha
-                <input
-                  type="date"
+              <div className="reservation-date-control">
+                <DateAvailabilityPicker
+                  availability={editingAvailability}
                   value={editingReservation.eventDate}
-                  onChange={(event) =>
+                  onChange={(date) =>
                     setEditingReservation((current) => ({
                       ...current,
-                      eventDate: event.target.value,
+                      eventDate: date,
                     }))
                   }
                 />
-              </label>
+              </div>
               <label>
                 Horario
                 <input
@@ -340,7 +349,7 @@ export default function AdminReservations() {
             </div>
 
             <div className="admin-modal__actions">
-              <button type="button" onClick={saveEditedReservation}>
+              <button type="button" onClick={saveEditedReservation} disabled={!canSaveEditedReservation}>
                 Guardar cambios
               </button>
               <button type="button" onClick={() => setEditingReservation(null)}>

@@ -1,19 +1,6 @@
 import { useId, useState } from "react";
-import logoHorizontal from "../assets/branding/logo-official-horizontal.png";
-import logoMark from "../assets/branding/logo-official-mark.png";
-import logoStacked from "../assets/branding/logo-official-stacked.png";
 import { publicContentMock } from "../data/adminData.js";
 import { venues } from "../data/venues.js";
-
-const logoPreviewByName = {
-  "logo-official-stacked.png": logoStacked,
-  "logo-official-horizontal.png": logoHorizontal,
-  "logo-official-mark.png": logoMark,
-};
-
-function getImagePreview(value) {
-  return logoPreviewByName[value] || value;
-}
 
 function TextField({ label, value, onChange, type = "text" }) {
   return (
@@ -48,7 +35,6 @@ function VisibilityToggle({ checked, onChange, label = "Visible en la página" }
 
 function ImagePicker({ label, value, onChange, buttonText = "Cambiar imagen" }) {
   const inputId = useId();
-  const preview = getImagePreview(value);
 
   const handleFileChange = (event) => {
     const file = event.target.files?.[0];
@@ -60,7 +46,7 @@ function ImagePicker({ label, value, onChange, buttonText = "Cambiar imagen" }) 
     <div className="admin-image-picker">
       <span>{label}</span>
       <div className="admin-image-picker__preview">
-        {preview ? <img src={preview} alt="" /> : <small>Sin imagen</small>}
+        {value ? <img src={value} alt="" /> : <small>Sin imagen</small>}
       </div>
       <label className="admin-image-picker__button" htmlFor={inputId}>
         {value ? buttonText : "Agregar imagen"}
@@ -183,9 +169,6 @@ export default function AdminContent() {
             <TextField label="Subtítulo" value={venue.subtitle} onChange={(value) => updateVenue("subtitle", value)} />
             <TextField label="WhatsApp" value={venue.whatsappNumber} onChange={(value) => updateVenue("whatsappNumber", value)} />
             <TextField label="Ubicación" value={venue.location} onChange={(value) => updateVenue("location", value)} />
-            <ImagePicker label="Logo principal" value={venue.logoStacked} onChange={(value) => updateVenue("logoStacked", value)} />
-            <ImagePicker label="Logo del encabezado" value={venue.logoHorizontal} onChange={(value) => updateVenue("logoHorizontal", value)} />
-            <ImagePicker label="Ícono de marca" value={venue.logoMark} onChange={(value) => updateVenue("logoMark", value)} />
           </div>
         </article>
 

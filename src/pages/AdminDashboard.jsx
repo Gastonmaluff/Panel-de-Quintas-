@@ -7,13 +7,9 @@ import {
   PiggyBank,
   TrendingUp,
 } from "lucide-react";
-import { adminReservationsMock } from "../data/adminData.js";
+import { useAdminData } from "../admin/AdminDataProvider.jsx";
 import { formatGuaranies } from "../utils/pricing.js";
 import { venues } from "../data/venues.js";
-
-function getCurrentMonthReservations() {
-  return adminReservationsMock.filter((reservation) => reservation.status !== "bloqueada");
-}
 
 function buildClientWhatsappUrl(reservation) {
   const venue = venues[0];
@@ -29,40 +25,37 @@ function getStatusClass(status) {
     .replaceAll(" ", "-");
 }
 
-const occupancyStatuses = new Set(["confirmada", "seña pendiente", "pre-reserva"]);
+const occupancyStatuses = new Set(["confirmada", "seña pendiente", "pre-reserva", "bloqueada"]);
 
-function getDashboardMonth(reservations) {
-  const current = new Date();
-  const currentMonthReservations = reservations.filter((reservation) => {
-    const date = new Date(`${reservation.eventDate}T12:00:00`);
-    return date.getMonth() === current.getMonth() && date.getFullYear() === current.getFullYear();
-  });
-
-  if (currentMonthReservations.length) {
-    return { year: current.getFullYear(), month: current.getMonth() };
-  }
-
-  const nextReservation = reservations
-    .map((reservation) => new Date(`${reservation.eventDate}T12:00:00`))
-    .sort((a, b) => a - b)[0];
-
-  return {
-    year: nextReservation?.getFullYear() || current.getFullYear(),
-    month: nextReservation?.getMonth() ?? current.getMonth(),
-  };
+function formatShortEventDate(dateValue) {
+  return new Intl.DateTimeFormat("es-PY", {
+    day: "2-digit",
+    month: "long",
+  }).format(new Date(`${dateValue}T12:00:00`));
 }
 
 export default function AdminDashboard() {
-  const reservations = getCurrentMonthReservations();
-  const dashboardMonth = getDashboardMonth(reservations);
-  const estimatedIncome = reservations.reduce(
+  const { reservations } = useAdminData();
+  const activeReservations = reservations.filter((reservation) => reservation.status !== "bloqueada");
+  const today = new Date();
+  const currentMonth = today.getMonth();
+  const currentYear = today.getFullYear();
+  const todayISO = today.toISOString().slice(0, 10);
+  const currentMonthReservations = activeReservations.filter((reservation) => {
+    const date = new Date(`${reservation.eventDate}T12:00:00`);
+    return date.getMonth() === currentMonth && date.getFullYear() === currentYear;
+  });
+  const upcomingReservations = activeReservations
+    .filter((reservation) => reservation.eventDate >= todayISO)
+    .sort((a, b) => a.eventDate.localeCompare(b.eventDate));
+  const estimatedIncome = currentMonthReservations.reduce(
     (total, reservation) => total + reservation.totalPrice,
     0,
   );
-  const pendingDeposits = reservations.filter(
+  const pendingDeposits = currentMonthReservations.filter(
     (reservation) => reservation.status === "seña pendiente",
   ).length;
-  const pendingQueries = reservations.filter(
+  const pendingQueries = currentMonthReservations.filter(
     (reservation) =>
       reservation.status === "consulta" || reservation.status === "cotización enviada",
   ).length;
@@ -70,33 +63,29 @@ export default function AdminDashboard() {
     const date = new Date(`${reservation.eventDate}T12:00:00`);
     return (
       occupancyStatuses.has(reservation.status) &&
-      date.getMonth() === dashboardMonth.month &&
-      date.getFullYear() === dashboardMonth.year
+      date.getMonth() === currentMonth &&
+      date.getFullYear() === currentYear
     );
   });
-  const daysInMonth = new Date(dashboardMonth.year, dashboardMonth.month + 1, 0).getDate();
+  const daysInMonth = new Date(currentYear, currentMonth + 1, 0).getDate();
   const occupancyPercent = Math.round((occupiedDates.length / daysInMonth) * 100);
   const monthLabel = new Intl.DateTimeFormat("es-PY", {
     month: "long",
-  }).format(new Date(dashboardMonth.year, dashboardMonth.month, 1));
+  }).format(today);
 
   const metrics = [
-    { label: "Reservas del mes", value: reservations.length, icon: CalendarCheck },
+    { label: "Reservas del mes", value: currentMonthReservations.length, icon: CalendarCheck },
     { label: "Ingresos estimados", value: formatGuaranies(estimatedIncome), icon: TrendingUp },
     { label: "Señas pendientes", value: pendingDeposits, icon: PiggyBank },
-    { label: "Fechas ocupadas", value: adminReservationsMock.length, icon: CalendarDays },
+    { label: "Fechas ocupadas", value: occupiedDates.length, icon: CalendarDays },
     { label: "Consultas pendientes", value: pendingQueries, icon: MessageCircle },
-    { label: "Próximos eventos", value: reservations.slice(0, 3).length, icon: Clock3 },
+    { label: "Próximos eventos", value: upcomingReservations.slice(0, 3).length, icon: Clock3 },
   ];
 
   return (
     <section className="admin-section admin-dashboard">
-      <div className="admin-dashboard-hero">
-        <div>
-          <p className="eyebrow">Resumen general</p>
-          <h1>Todo lo importante de la quinta, en un solo lugar.</h1>
-          <span>Seguimiento de reservas, cobros, fechas comprometidas y contenido público.</span>
-        </div>
+      <div className="admin-dashboard-hero admin-dashboard-hero--compact">
+        <p className="eyebrow">Resumen general</p>
         <Link to="/admin/reservas">Nueva reserva</Link>
       </div>
 
@@ -134,11 +123,10 @@ export default function AdminDashboard() {
             <Link to="/admin/calendario">Abrir calendario</Link>
           </div>
           <div className="admin-event-list">
-            {reservations.slice(0, 4).map((reservation) => (
+            {upcomingReservations.slice(0, 4).map((reservation) => (
               <article key={reservation.id}>
-                <div className="admin-event-list__date">
-                  <strong>{reservation.eventDate.slice(8, 10)}</strong>
-                  <span>{reservation.eventDate.slice(5, 7)}</span>
+                <div className="admin-event-list__date admin-event-list__date--text">
+                  <strong>{formatShortEventDate(reservation.eventDate)}</strong>
                 </div>
                 <div className="admin-event-list__body">
                   <div>

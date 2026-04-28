@@ -8,6 +8,7 @@ import {
   Tag,
   WalletCards,
 } from "lucide-react";
+import { AdminDataProvider } from "../admin/AdminDataProvider.jsx";
 import { useAuth } from "../auth/AuthProvider.jsx";
 import BrandLogo from "../components/branding/BrandLogo.jsx";
 import { venues } from "../data/venues.js";
@@ -84,7 +85,9 @@ export default function AdminLayout() {
             </button>
           </div>
         </header>
-        <Outlet />
+        <AdminDataProvider>
+          <Outlet />
+        </AdminDataProvider>
       </main>
     </div>
   );

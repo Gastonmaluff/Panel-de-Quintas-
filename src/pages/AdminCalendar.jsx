@@ -1,7 +1,10 @@
 import { useMemo, useState } from "react";
-import { adminReservationsMock, adminReservationStatuses } from "../data/adminData.js";
-import { formatGuaranies } from "../utils/pricing.js";
+import { buildAdminAvailability, useAdminData } from "../admin/AdminDataProvider.jsx";
+import DateAvailabilityPicker from "../components/calendar/DateAvailabilityPicker.jsx";
+import { adminReservationStatuses } from "../data/adminData.js";
 import { getMonthMatrix } from "../utils/date.js";
+import { isDateSelectable } from "../utils/availability.js";
+import { formatGuaranies } from "../utils/pricing.js";
 
 const weekdays = ["Lun", "Mar", "Mié", "Jue", "Vie", "Sáb", "Dom"];
 
@@ -10,6 +13,15 @@ function getStatusClass(status) {
     .normalize("NFD")
     .replace(/[\u0300-\u036f]/g, "")
     .replaceAll(" ", "-");
+}
+
+function formatLongDate(dateValue) {
+  return new Intl.DateTimeFormat("es-PY", {
+    weekday: "long",
+    day: "2-digit",
+    month: "long",
+    year: "numeric",
+  }).format(new Date(`${dateValue}T12:00:00`));
 }
 
 function DetailItem({ label, value }) {
@@ -90,28 +102,54 @@ function ReservationDetails({ reservation, variant = "compact" }) {
   );
 }
 
+function createReservationDraft(dateValue) {
+  return {
+    customerName: "",
+    customerPhone: "",
+    eventDate: dateValue,
+    timeSlot: "Día completo",
+    eventType: "Cumpleaños",
+    guestCount: 0,
+    totalPrice: 0,
+    depositAmount: 0,
+    balanceAmount: 0,
+    status: "pre-reserva",
+    notes: "",
+  };
+}
+
 export default function AdminCalendar() {
   const today = new Date();
+  const { reservations, addReservation } = useAdminData();
   const [visibleMonth, setVisibleMonth] = useState({
     year: today.getFullYear(),
     month: today.getMonth(),
   });
   const [selectedDay, setSelectedDay] = useState(null);
+  const [reservationDraft, setReservationDraft] = useState(null);
+  const [freeDateMode, setFreeDateMode] = useState(null);
+  const [blockReason, setBlockReason] = useState("");
 
   const reservationsByDate = useMemo(
     () =>
-      adminReservationsMock.reduce((accumulator, reservation) => {
+      reservations.reduce((accumulator, reservation) => {
         accumulator[reservation.eventDate] = reservation;
         return accumulator;
       }, {}),
-    [],
+    [reservations],
   );
 
+  const availability = useMemo(() => buildAdminAvailability(reservations), [reservations]);
   const cells = getMonthMatrix(visibleMonth.year, visibleMonth.month);
   const monthLabel = new Intl.DateTimeFormat("es-PY", {
     month: "long",
     year: "numeric",
   }).format(new Date(visibleMonth.year, visibleMonth.month, 1));
+  const selectedReservation = selectedDay ? reservationsByDate[selectedDay.iso] : null;
+  const canSaveReservation =
+    reservationDraft?.eventDate &&
+    isDateSelectable(reservationDraft.eventDate, availability) &&
+    reservationDraft.customerName.trim();
 
   const moveMonth = (direction) => {
     setVisibleMonth((current) => {
@@ -120,18 +158,55 @@ export default function AdminCalendar() {
     });
   };
 
-  const selectedReservation = selectedDay ? reservationsByDate[selectedDay.iso] : null;
+  const closeModal = () => {
+    setSelectedDay(null);
+    setReservationDraft(null);
+    setFreeDateMode(null);
+    setBlockReason("");
+  };
+
+  const openReservationForm = (dateValue) => {
+    setReservationDraft(createReservationDraft(dateValue));
+    setFreeDateMode("reservation");
+    setBlockReason("");
+  };
+
+  const saveReservation = () => {
+    if (!canSaveReservation) return;
+    addReservation(reservationDraft);
+    closeModal();
+  };
+
+  const openBlockForm = () => {
+    setReservationDraft(null);
+    setFreeDateMode("block");
+    setBlockReason("");
+  };
+
+  const saveBlockedDate = () => {
+    if (!selectedDay?.iso || !isDateSelectable(selectedDay.iso, availability)) return;
+    addReservation({
+      customerName: "Fecha bloqueada",
+      customerPhone: "",
+      eventDate: selectedDay.iso,
+      timeSlot: "Día completo",
+      eventType: "Bloqueo",
+      guestCount: 0,
+      totalPrice: 0,
+      depositAmount: 0,
+      balanceAmount: 0,
+      status: "bloqueada",
+      notes: blockReason || "Fecha bloqueada desde calendario.",
+    });
+    closeModal();
+  };
 
   return (
     <section className="admin-section admin-calendar-section">
       <div className="admin-section-heading">
         <div>
           <h2>Calendario interno</h2>
-          <p>Vista mensual para administrar reservas, bloqueos y pagos.</p>
-        </div>
-        <div>
-          <button type="button">Bloquear fecha</button>
-          <button type="button">Nueva reserva</button>
+          <p>Elegí una fecha para ver el detalle, crear una reserva o bloquear el día.</p>
         </div>
       </div>
 
@@ -179,7 +254,7 @@ export default function AdminCalendar() {
                     </div>
                   </>
                 ) : (
-                  <small>Libre para consulta o bloqueo</small>
+                  <strong className="admin-calendar-day__free">LIBRE</strong>
                 )}
               </button>
             );
@@ -201,10 +276,10 @@ export default function AdminCalendar() {
           <div className="admin-modal" role="dialog" aria-modal="true">
             <div className="admin-modal__header">
               <div>
-                <p className="eyebrow">{selectedDay.iso}</p>
+                <p className="eyebrow">{formatLongDate(selectedDay.iso)}</p>
                 <h3>{selectedReservation ? "Detalle de reserva" : "Fecha libre"}</h3>
               </div>
-              <button type="button" onClick={() => setSelectedDay(null)}>
+              <button type="button" onClick={closeModal}>
                 Cerrar
               </button>
             </div>
@@ -213,16 +288,204 @@ export default function AdminCalendar() {
               <>
                 <ReservationDetails reservation={selectedReservation} variant="full" />
                 <div className="admin-modal__actions">
-                  <button type="button">Editar reserva</button>
+                  <button type="button" onClick={() => openReservationForm(selectedReservation.eventDate)}>
+                    Crear otra consulta
+                  </button>
                   <button type="button">Marcar seña recibida</button>
                   <button type="button">Cancelar reserva</button>
                 </div>
               </>
+            ) : freeDateMode === "reservation" && reservationDraft ? (
+              <>
+                <div className="reservation-edit-form">
+                  <div className="reservation-date-control">
+                    <DateAvailabilityPicker
+                      availability={availability}
+                      value={reservationDraft.eventDate}
+                      onChange={(date) =>
+                        setReservationDraft((current) => ({ ...current, eventDate: date }))
+                      }
+                    />
+                  </div>
+                  <label>
+                    Nombre del cliente
+                    <input
+                      value={reservationDraft.customerName}
+                      onChange={(event) =>
+                        setReservationDraft((current) => ({
+                          ...current,
+                          customerName: event.target.value,
+                        }))
+                      }
+                    />
+                  </label>
+                  <label>
+                    Teléfono
+                    <input
+                      value={reservationDraft.customerPhone}
+                      onChange={(event) =>
+                        setReservationDraft((current) => ({
+                          ...current,
+                          customerPhone: event.target.value,
+                        }))
+                      }
+                    />
+                  </label>
+                  <label>
+                    Horario
+                    <input
+                      value={reservationDraft.timeSlot}
+                      onChange={(event) =>
+                        setReservationDraft((current) => ({
+                          ...current,
+                          timeSlot: event.target.value,
+                        }))
+                      }
+                    />
+                  </label>
+                  <label>
+                    Tipo de evento
+                    <input
+                      value={reservationDraft.eventType}
+                      onChange={(event) =>
+                        setReservationDraft((current) => ({
+                          ...current,
+                          eventType: event.target.value,
+                        }))
+                      }
+                    />
+                  </label>
+                  <label>
+                    Personas
+                    <input
+                      type="number"
+                      value={reservationDraft.guestCount}
+                      onChange={(event) =>
+                        setReservationDraft((current) => ({
+                          ...current,
+                          guestCount: Number(event.target.value),
+                        }))
+                      }
+                    />
+                  </label>
+                  <label>
+                    Precio total
+                    <input
+                      type="number"
+                      value={reservationDraft.totalPrice}
+                      onChange={(event) =>
+                        setReservationDraft((current) => ({
+                          ...current,
+                          totalPrice: Number(event.target.value),
+                        }))
+                      }
+                    />
+                  </label>
+                  <label>
+                    Seña
+                    <input
+                      type="number"
+                      value={reservationDraft.depositAmount}
+                      onChange={(event) =>
+                        setReservationDraft((current) => ({
+                          ...current,
+                          depositAmount: Number(event.target.value),
+                        }))
+                      }
+                    />
+                  </label>
+                  <label>
+                    Saldo
+                    <input
+                      type="number"
+                      value={reservationDraft.balanceAmount}
+                      onChange={(event) =>
+                        setReservationDraft((current) => ({
+                          ...current,
+                          balanceAmount: Number(event.target.value),
+                        }))
+                      }
+                    />
+                  </label>
+                  <label>
+                    Estado
+                    <select
+                      value={reservationDraft.status}
+                      onChange={(event) =>
+                        setReservationDraft((current) => ({
+                          ...current,
+                          status: event.target.value,
+                        }))
+                      }
+                    >
+                      {adminReservationStatuses
+                        .filter((status) => status !== "bloqueada")
+                        .map((status) => (
+                          <option key={status} value={status}>
+                            {status}
+                          </option>
+                        ))}
+                    </select>
+                  </label>
+                  <label className="reservation-edit-form__notes">
+                    Notas internas
+                    <textarea
+                      value={reservationDraft.notes}
+                      onChange={(event) =>
+                        setReservationDraft((current) => ({
+                          ...current,
+                          notes: event.target.value,
+                        }))
+                      }
+                    />
+                  </label>
+                </div>
+                <div className="admin-modal__actions">
+                  <button type="button" onClick={saveReservation} disabled={!canSaveReservation}>
+                    Guardar reserva
+                  </button>
+                  <button type="button" onClick={() => setReservationDraft(null)}>
+                    Volver
+                  </button>
+                </div>
+              </>
+            ) : freeDateMode === "block" ? (
+              <>
+                <div className="admin-free-date-panel">
+                  <strong>{formatLongDate(selectedDay.iso)}</strong>
+                  <p>Agregá un motivo opcional para recordar por qué esta fecha no se ofrece.</p>
+                  <label>
+                    Motivo
+                    <textarea
+                      value={blockReason}
+                      onChange={(event) => setBlockReason(event.target.value)}
+                    />
+                  </label>
+                </div>
+                <div className="admin-modal__actions">
+                  <button type="button" onClick={saveBlockedDate}>
+                    Guardar bloqueo
+                  </button>
+                  <button type="button" onClick={() => setFreeDateMode(null)}>
+                    Volver
+                  </button>
+                </div>
+              </>
             ) : (
-              <div className="admin-empty-action">
-                <p>Esta fecha no tiene reservas ni bloqueos.</p>
-                <button type="button">Crear reserva manual</button>
-                <button type="button">Bloquear fecha</button>
+              <div className="admin-free-date-panel">
+                <strong>{formatLongDate(selectedDay.iso)}</strong>
+                <p>Esta fecha está disponible para crear una reserva o bloquearla.</p>
+                <div className="admin-modal__actions">
+                  <button type="button" onClick={() => openReservationForm(selectedDay.iso)}>
+                    Crear reserva
+                  </button>
+                  <button type="button" onClick={openBlockForm}>
+                    Bloquear fecha
+                  </button>
+                  <button type="button" onClick={closeModal}>
+                    Cancelar
+                  </button>
+                </div>
               </div>
             )}
           </div>
