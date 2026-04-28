@@ -1,6 +1,6 @@
-import logoHorizontal from "../../assets/branding/logo-horizontal.svg";
-import logoMark from "../../assets/branding/logo-mark.svg";
-import logoStacked from "../../assets/branding/logo-stacked.svg";
+import logoHorizontal from "../../assets/branding/logo-official-horizontal.png";
+import logoMark from "../../assets/branding/logo-official-mark.png";
+import logoStacked from "../../assets/branding/logo-official-stacked.png";
 
 const logoSources = {
   stacked: logoStacked,

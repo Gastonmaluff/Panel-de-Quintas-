@@ -272,15 +272,15 @@ img {
 }
 
 .brand-logo--stacked {
-  aspect-ratio: 1;
+  aspect-ratio: 676 / 716;
 }
 
 .brand-logo--horizontal {
-  aspect-ratio: 560 / 138;
+  aspect-ratio: 640 / 210;
 }
 
 .brand-logo--mark {
-  aspect-ratio: 1;
+  aspect-ratio: 327 / 327;
 }
 
 .animated-brand__legacy-logo {
