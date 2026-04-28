@@ -1,37 +1,33 @@
-import { useState } from "react";
-import { NavLink, Outlet } from "react-router-dom";
-import { signInWithEmailAndPassword } from "firebase/auth";
-import { auth } from "../config/firebase.js";
+import { NavLink, Outlet, useNavigate } from "react-router-dom";
+import { useAuth } from "../auth/AuthProvider.jsx";
+import { venues } from "../data/venues.js";
 
 const adminLinks = [
   { to: "/admin", label: "Dashboard", end: true },
-  { to: "/admin/reservas", label: "Reservas" },
+  { to: "/admin/contenido", label: "Contenido público" },
   { to: "/admin/calendario", label: "Calendario" },
+  { to: "/admin/reservas", label: "Reservas" },
   { to: "/admin/precios", label: "Precios" },
   { to: "/admin/configuracion", label: "Configuración" },
 ];
 
 export default function AdminLayout() {
-  const homePath = import.meta.env.BASE_URL;
-  const [credentials, setCredentials] = useState({ email: "", password: "" });
-  const [authMessage, setAuthMessage] = useState("Base lista para Firebase Auth.");
+  const navigate = useNavigate();
+  const { logout, user } = useAuth();
+  const venue = venues[0];
+  const publicPath = import.meta.env.BASE_URL;
 
-  const handleLogin = async (event) => {
-    event.preventDefault();
-    try {
-      await signInWithEmailAndPassword(auth, credentials.email, credentials.password);
-      setAuthMessage("Sesión iniciada.");
-    } catch (error) {
-      setAuthMessage("Firebase Auth está configurado. Creá el usuario para iniciar sesión.");
-    }
+  const handleLogout = async () => {
+    await logout();
+    navigate("/admin/login", { replace: true });
   };
 
   return (
     <div className="admin-app">
       <aside className="admin-sidebar">
-        <a className="admin-brand" href={homePath}>
+        <a className="admin-brand" href={publicPath}>
           <span>QuintaFlow</span>
-          <small>Paraíso Escondido</small>
+          <small>{venue.name}</small>
         </a>
         <nav>
           {adminLinks.map((link) => (
@@ -48,32 +44,21 @@ export default function AdminLayout() {
       </aside>
 
       <main className="admin-main">
-        <section className="admin-login">
+        <header className="admin-topbar">
           <div>
-            <p className="eyebrow">Acceso administrador</p>
-            <h1>Panel de gestión</h1>
-            <span>{authMessage}</span>
+            <p className="eyebrow">Panel administrador</p>
+            <h1>{venue.name}</h1>
+            <span>{user?.email}</span>
           </div>
-          <form onSubmit={handleLogin}>
-            <input
-              type="email"
-              placeholder="Email"
-              value={credentials.email}
-              onChange={(event) =>
-                setCredentials((current) => ({ ...current, email: event.target.value }))
-              }
-            />
-            <input
-              type="password"
-              placeholder="Contraseña"
-              value={credentials.password}
-              onChange={(event) =>
-                setCredentials((current) => ({ ...current, password: event.target.value }))
-              }
-            />
-            <button type="submit">Entrar</button>
-          </form>
-        </section>
+          <div className="admin-topbar__actions">
+            <a href={publicPath} target="_blank" rel="noreferrer">
+              Ver página pública
+            </a>
+            <button type="button" onClick={handleLogout}>
+              Cerrar sesión
+            </button>
+          </div>
+        </header>
         <Outlet />
       </main>
     </div>

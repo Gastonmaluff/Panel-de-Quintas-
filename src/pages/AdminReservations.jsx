@@ -1,77 +1,189 @@
-import { buildBaseWhatsappUrl } from "../utils/whatsapp.js";
+import { useState } from "react";
+import {
+  adminReservationsMock,
+  adminReservationStatuses,
+} from "../data/adminData.js";
 import { venues } from "../data/venues.js";
+import { formatGuaranies } from "../utils/pricing.js";
 
-const reservations = [
-  {
-    customerName: "Laura Benítez",
-    customerPhone: "+595 981 111 222",
-    eventDate: "2026-05-03",
-    timeSlot: "Día completo",
-    eventType: "Casamiento",
-    guestCount: 95,
-    extras: "Limpieza, sonido, seguridad",
-    totalPrice: "Gs. 2.850.000",
-    deposit: "Gs. 855.000",
-    balance: "Gs. 1.995.000",
-    status: "confirmada",
-    notes: "Requiere ingreso para catering a las 10:00.",
-  },
-  {
-    customerName: "Martín Rojas",
-    customerPhone: "+595 981 333 444",
-    eventDate: "2026-05-09",
-    timeSlot: "Noche",
-    eventType: "Cumpleaños",
-    guestCount: 45,
-    extras: "Mesas y sillas",
-    totalPrice: "Gs. 1.750.000",
-    deposit: "Gs. 525.000",
-    balance: "Gs. 1.225.000",
-    status: "pre-reserva",
-    notes: "Esperando confirmación de seña.",
-  },
-];
+function buildClientWhatsappUrl(venue, reservation) {
+  const phone = reservation.customerPhone.replace(/\D/g, "");
+  const message = `Hola ${reservation.customerName}, te escribo por tu reserva en ${venue.name} para el ${reservation.eventDate}.`;
+  return `https://wa.me/${phone || venue.whatsappNumber}?text=${encodeURIComponent(message)}`;
+}
 
 export default function AdminReservations() {
   const venue = venues[0];
+  const [reservations, setReservations] = useState(adminReservationsMock);
+
+  const updateReservation = (id, key, value) => {
+    setReservations((current) =>
+      current.map((reservation) =>
+        reservation.id === id ? { ...reservation, [key]: value } : reservation,
+      ),
+    );
+  };
+
+  const addReservation = () => {
+    setReservations((current) => [
+      {
+        id: `res-${Date.now()}`,
+        customerName: "Nuevo cliente",
+        customerPhone: "",
+        eventDate: "2026-05-22",
+        timeSlot: "Día completo",
+        eventType: "Consulta",
+        guestCount: 0,
+        totalPrice: 0,
+        depositAmount: 0,
+        balanceAmount: 0,
+        status: "consulta",
+        notes: "",
+      },
+      ...current,
+    ]);
+  };
 
   return (
     <section className="admin-section">
       <div className="admin-section-heading">
-        <h2>Reservas</h2>
-        <button type="button">Crear reserva manual</button>
+        <div>
+          <h2>Reservas</h2>
+          <p>Creá reservas manuales, cambiá estados y abrí WhatsApp del cliente.</p>
+        </div>
+        <button type="button" onClick={addReservation}>
+          Crear reserva manual
+        </button>
       </div>
 
       <div className="reservation-grid">
         {reservations.map((reservation) => (
-          <article className="reservation-card" key={reservation.customerPhone}>
+          <article className="reservation-card reservation-card--editable" key={reservation.id}>
             <div>
-              <h3>{reservation.customerName}</h3>
-              <span>{reservation.status}</span>
+              <input
+                aria-label="Nombre del cliente"
+                value={reservation.customerName}
+                onChange={(event) =>
+                  updateReservation(reservation.id, "customerName", event.target.value)
+                }
+              />
+              <select
+                value={reservation.status}
+                onChange={(event) =>
+                  updateReservation(reservation.id, "status", event.target.value)
+                }
+              >
+                {adminReservationStatuses.map((status) => (
+                  <option key={status} value={status}>
+                    {status}
+                  </option>
+                ))}
+              </select>
             </div>
-            <dl>
-              <dt>Fecha</dt>
-              <dd>{reservation.eventDate}</dd>
-              <dt>Horario</dt>
-              <dd>{reservation.timeSlot}</dd>
-              <dt>Evento</dt>
-              <dd>{reservation.eventType}</dd>
-              <dt>Personas</dt>
-              <dd>{reservation.guestCount}</dd>
-              <dt>Extras</dt>
-              <dd>{reservation.extras}</dd>
-              <dt>Precio total</dt>
-              <dd>{reservation.totalPrice}</dd>
-              <dt>Seña</dt>
-              <dd>{reservation.deposit}</dd>
-              <dt>Saldo</dt>
-              <dd>{reservation.balance}</dd>
-              <dt>Notas internas</dt>
-              <dd>{reservation.notes}</dd>
-            </dl>
-            <a href={buildBaseWhatsappUrl(venue)} target="_blank" rel="noreferrer">
-              WhatsApp
-            </a>
+
+            <div className="reservation-form-grid">
+              <label>
+                Teléfono
+                <input
+                  value={reservation.customerPhone}
+                  onChange={(event) =>
+                    updateReservation(reservation.id, "customerPhone", event.target.value)
+                  }
+                />
+              </label>
+              <label>
+                Fecha
+                <input
+                  type="date"
+                  value={reservation.eventDate}
+                  onChange={(event) =>
+                    updateReservation(reservation.id, "eventDate", event.target.value)
+                  }
+                />
+              </label>
+              <label>
+                Horario
+                <input
+                  value={reservation.timeSlot}
+                  onChange={(event) =>
+                    updateReservation(reservation.id, "timeSlot", event.target.value)
+                  }
+                />
+              </label>
+              <label>
+                Tipo de evento
+                <input
+                  value={reservation.eventType}
+                  onChange={(event) =>
+                    updateReservation(reservation.id, "eventType", event.target.value)
+                  }
+                />
+              </label>
+              <label>
+                Personas
+                <input
+                  type="number"
+                  value={reservation.guestCount}
+                  onChange={(event) =>
+                    updateReservation(reservation.id, "guestCount", Number(event.target.value))
+                  }
+                />
+              </label>
+              <label>
+                Precio total
+                <input
+                  type="number"
+                  value={reservation.totalPrice}
+                  onChange={(event) =>
+                    updateReservation(reservation.id, "totalPrice", Number(event.target.value))
+                  }
+                />
+              </label>
+              <label>
+                Seña
+                <input
+                  type="number"
+                  value={reservation.depositAmount}
+                  onChange={(event) =>
+                    updateReservation(reservation.id, "depositAmount", Number(event.target.value))
+                  }
+                />
+              </label>
+              <label>
+                Saldo
+                <input
+                  type="number"
+                  value={reservation.balanceAmount}
+                  onChange={(event) =>
+                    updateReservation(reservation.id, "balanceAmount", Number(event.target.value))
+                  }
+                />
+              </label>
+            </div>
+
+            <label>
+              Notas internas
+              <textarea
+                value={reservation.notes}
+                onChange={(event) =>
+                  updateReservation(reservation.id, "notes", event.target.value)
+                }
+              />
+            </label>
+
+            <div className="reservation-card__summary">
+              <span>Total: {formatGuaranies(reservation.totalPrice)}</span>
+              <span>Seña: {formatGuaranies(reservation.depositAmount)}</span>
+              <span>Saldo: {formatGuaranies(reservation.balanceAmount)}</span>
+            </div>
+
+            <div className="reservation-card__actions">
+              <button type="button">Marcar seña recibida</button>
+              <button type="button">Marcar saldo pagado</button>
+              <a href={buildClientWhatsappUrl(venue, reservation)} target="_blank" rel="noreferrer">
+                WhatsApp
+              </a>
+            </div>
           </article>
         ))}
       </div>

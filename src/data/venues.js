@@ -6,6 +6,9 @@ export const venues = [
     name: "Paraíso Escondido",
     slug: "paraiso-escondido",
     logoText: "PARAÍSO ESCONDIDO",
+    logoStacked: "logo-official-stacked.png",
+    logoHorizontal: "logo-official-horizontal.png",
+    logoMark: "logo-official-mark.png",
     subtitle: "quinta & eventos",
     description:
       "Un espacio privado para celebrar momentos inolvidables en un entorno natural, cuidado y elegante.",
@@ -125,9 +128,11 @@ export const pricingRules = {
   id: "pricing-paraiso-escondido",
   venueId,
   weekdayBasePrice: 800000,
+  fridayBasePrice: 1100000,
   saturdayBasePrice: 1500000,
   sundayBasePrice: 1200000,
   holidayBasePrice: 1700000,
+  currency: "PYG",
   eventTypeRules: {
     cumpleanos: 0,
     casamiento: 800000,
@@ -141,17 +146,10 @@ export const pricingRules = {
     { min: 51, amount: 300000 },
     { min: 101, amount: 700000 },
   ],
-  extrasRules: {
-    limpieza: 150000,
-    mesas_sillas: 250000,
-    seguridad: 300000,
-    decoracion: 350000,
-    sonido: 250000,
-    hora_extra: 150000,
-    habitaciones: 450000,
-  },
+  optionalExtras: [],
   depositType: "percentage",
   depositValue: 30,
+  minimumDepositAmount: 0,
 };
 
 export const availabilityMock = {

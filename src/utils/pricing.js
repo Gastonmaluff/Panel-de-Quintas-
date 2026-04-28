@@ -15,16 +15,6 @@ export const timeSlotLabels = {
   fin_de_semana: "Fin de semana",
 };
 
-export const extraLabels = {
-  limpieza: "Limpieza",
-  mesas_sillas: "Mesas y sillas",
-  seguridad: "Seguridad",
-  decoracion: "Decoración",
-  sonido: "Sonido",
-  hora_extra: "Hora extra",
-  habitaciones: "Uso de habitaciones",
-};
-
 export function formatGuaranies(value) {
   return new Intl.NumberFormat("es-PY", {
     style: "currency",
@@ -37,8 +27,10 @@ function getBasePrice(dateValue, rules) {
   if (!dateValue) return rules.weekdayBasePrice;
   const date = new Date(`${dateValue}T12:00:00`);
   const day = date.getDay();
+
   if (day === 6) return rules.saturdayBasePrice;
   if (day === 0) return rules.sundayBasePrice;
+  if (day === 5) return rules.fridayBasePrice || rules.weekdayBasePrice;
   return rules.weekdayBasePrice;
 }
 
@@ -49,27 +41,22 @@ export function calculateQuote(values, rules) {
     .sort((a, b) => b.min - a.min)
     .find((rule) => Number(values.guestCount || 0) >= rule.min);
   const guestAmount = guestRule?.amount || 0;
-  const extrasAmount = values.extras.reduce(
-    (total, extra) => total + (rules.extrasRules[extra] || 0),
-    0,
-  );
   const timeSlotMultiplier = values.timeSlot === "medio_dia" ? 0.72 : 1;
   const weekendExtra = values.timeSlot === "fin_de_semana" ? 900000 : 0;
   const subtotal =
-    (basePrice + eventTypeAmount + guestAmount + extrasAmount + weekendExtra) *
-    timeSlotMultiplier;
+    (basePrice + eventTypeAmount + guestAmount + weekendExtra) * timeSlotMultiplier;
   const totalPrice = Math.round(subtotal / 10000) * 10000;
-  const depositAmount =
+  const calculatedDeposit =
     rules.depositType === "percentage"
       ? Math.round((totalPrice * rules.depositValue) / 100)
       : rules.depositValue;
+  const depositAmount = Math.max(calculatedDeposit, rules.minimumDepositAmount || 0);
   const balanceAmount = totalPrice - depositAmount;
 
   return {
     basePrice,
     eventTypeAmount,
     guestAmount,
-    extrasAmount,
     weekendExtra,
     totalPrice,
     depositAmount,

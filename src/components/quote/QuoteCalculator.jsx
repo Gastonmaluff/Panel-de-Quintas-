@@ -5,7 +5,6 @@ import { buildWhatsappUrl } from "../../utils/whatsapp.js";
 import {
   calculateQuote,
   eventTypeLabels,
-  extraLabels,
   formatGuaranies,
   timeSlotLabels,
 } from "../../utils/pricing.js";
@@ -15,7 +14,6 @@ const initialQuoteValues = {
   eventType: "cumpleanos",
   guestCount: 45,
   timeSlot: "dia_completo",
-  extras: ["limpieza", "mesas_sillas"],
 };
 
 export default function QuoteCalculator({ venue, rules, availability }) {
@@ -49,15 +47,6 @@ export default function QuoteCalculator({ venue, rules, availability }) {
   const updateValue = (key, value) => {
     if (key === "date") setDateWarning("");
     setValues((current) => ({ ...current, [key]: value }));
-  };
-
-  const toggleExtra = (extra) => {
-    setValues((current) => ({
-      ...current,
-      extras: current.extras.includes(extra)
-        ? current.extras.filter((item) => item !== extra)
-        : [...current.extras, extra],
-    }));
   };
 
   return (
@@ -120,22 +109,6 @@ export default function QuoteCalculator({ venue, rules, availability }) {
               </select>
             </label>
           </div>
-
-          <fieldset className="extras-fieldset">
-            <legend>Extras</legend>
-            <div className="extras-grid">
-              {Object.entries(extraLabels).map(([value, label]) => (
-                <label className="check-pill" key={value}>
-                  <input
-                    type="checkbox"
-                    checked={values.extras.includes(value)}
-                    onChange={() => toggleExtra(value)}
-                  />
-                  <span>{label}</span>
-                </label>
-              ))}
-            </div>
-          </fieldset>
 
           {quote ? (
             <div className="quote-result">
