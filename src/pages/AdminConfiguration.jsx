@@ -13,7 +13,7 @@ export default function AdminConfiguration() {
       <div className="admin-section-heading">
         <div>
           <h2>Configuración de quinta</h2>
-          <p>Datos base del venue y estructura multi-quinta.</p>
+          <p>Datos principales que ayudan a mantener actualizada la información de contacto.</p>
         </div>
         <button type="button">Actualizar</button>
       </div>
@@ -22,10 +22,6 @@ export default function AdminConfiguration() {
         <label>
           Nombre
           <input value={venue.name} onChange={(event) => updateVenue("name", event.target.value)} />
-        </label>
-        <label>
-          Slug
-          <input value={venue.slug} onChange={(event) => updateVenue("slug", event.target.value)} />
         </label>
         <label>
           WhatsApp

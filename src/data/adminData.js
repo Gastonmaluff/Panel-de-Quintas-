@@ -23,6 +23,7 @@ export const publicContentMock = {
     alt: image.alt,
     order: index + 1,
     featured: index === 0,
+    visible: true,
   })),
   amenitiesSection: {
     eyebrow: "Servicios incluidos",

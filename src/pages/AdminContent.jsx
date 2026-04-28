@@ -1,6 +1,19 @@
-import { useState } from "react";
+import { useId, useState } from "react";
+import logoHorizontal from "../assets/branding/logo-official-horizontal.png";
+import logoMark from "../assets/branding/logo-official-mark.png";
+import logoStacked from "../assets/branding/logo-official-stacked.png";
 import { publicContentMock } from "../data/adminData.js";
 import { venues } from "../data/venues.js";
+
+const logoPreviewByName = {
+  "logo-official-stacked.png": logoStacked,
+  "logo-official-horizontal.png": logoHorizontal,
+  "logo-official-mark.png": logoMark,
+};
+
+function getImagePreview(value) {
+  return logoPreviewByName[value] || value;
+}
 
 function TextField({ label, value, onChange, type = "text" }) {
   return (
@@ -20,7 +33,7 @@ function TextAreaField({ label, value, onChange }) {
   );
 }
 
-function VisibilityToggle({ checked, onChange }) {
+function VisibilityToggle({ checked, onChange, label = "Visible en la página" }) {
   return (
     <label className="admin-toggle">
       <input
@@ -28,8 +41,41 @@ function VisibilityToggle({ checked, onChange }) {
         checked={checked}
         onChange={(event) => onChange(event.target.checked)}
       />
-      <span>Sección visible</span>
+      <span>{label}</span>
     </label>
+  );
+}
+
+function ImagePicker({ label, value, onChange, buttonText = "Cambiar imagen" }) {
+  const inputId = useId();
+  const preview = getImagePreview(value);
+
+  const handleFileChange = (event) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+    onChange(URL.createObjectURL(file));
+  };
+
+  return (
+    <div className="admin-image-picker">
+      <span>{label}</span>
+      <div className="admin-image-picker__preview">
+        {preview ? <img src={preview} alt="" /> : <small>Sin imagen</small>}
+      </div>
+      <label className="admin-image-picker__button" htmlFor={inputId}>
+        {value ? buttonText : "Agregar imagen"}
+      </label>
+      <input id={inputId} type="file" accept="image/*" onChange={handleFileChange} />
+    </div>
+  );
+}
+
+function CollapsibleCard({ title, children }) {
+  return (
+    <details className="admin-editor-card admin-collapsible-card">
+      <summary>{title}</summary>
+      <div className="admin-collapsible-card__content">{children}</div>
+    </details>
   );
 }
 
@@ -78,6 +124,13 @@ export default function AdminContent() {
     }));
   };
 
+  const removeArrayItem = (section, id) => {
+    setContent((current) => ({
+      ...current,
+      [section]: current[section].filter((item) => item.id !== id),
+    }));
+  };
+
   const addGalleryImage = () => {
     setContent((current) => ({
       ...current,
@@ -88,7 +141,7 @@ export default function AdminContent() {
           image: "",
           alt: "",
           order: current.gallery.length + 1,
-          featured: false,
+          visible: true,
         },
       ],
     }));
@@ -117,36 +170,36 @@ export default function AdminContent() {
       <div className="admin-section-heading">
         <div>
           <h2>Contenido de la página pública</h2>
-          <p>Mock editable listo para migrar a Firestore y Firebase Storage.</p>
+          <p>Actualizá textos, imágenes y secciones visibles para tus visitantes.</p>
         </div>
-        <button type="button">Guardar borrador</button>
+        <button type="button">Guardar cambios</button>
       </div>
 
       <div className="admin-editor-grid">
         <article className="admin-editor-card">
-          <h3>Branding / datos generales</h3>
+          <h3>Marca y datos generales</h3>
           <div className="config-form config-form--stacked">
             <TextField label="Nombre de la quinta" value={venue.name} onChange={(value) => updateVenue("name", value)} />
             <TextField label="Subtítulo" value={venue.subtitle} onChange={(value) => updateVenue("subtitle", value)} />
             <TextField label="WhatsApp" value={venue.whatsappNumber} onChange={(value) => updateVenue("whatsappNumber", value)} />
             <TextField label="Ubicación" value={venue.location} onChange={(value) => updateVenue("location", value)} />
-            <TextField label="Logo principal" value={venue.logoStacked} onChange={(value) => updateVenue("logoStacked", value)} />
-            <TextField label="Logo horizontal" value={venue.logoHorizontal} onChange={(value) => updateVenue("logoHorizontal", value)} />
-            <TextField label="Isotipo" value={venue.logoMark} onChange={(value) => updateVenue("logoMark", value)} />
+            <ImagePicker label="Logo principal" value={venue.logoStacked} onChange={(value) => updateVenue("logoStacked", value)} />
+            <ImagePicker label="Logo del encabezado" value={venue.logoHorizontal} onChange={(value) => updateVenue("logoHorizontal", value)} />
+            <ImagePicker label="Ícono de marca" value={venue.logoMark} onChange={(value) => updateVenue("logoMark", value)} />
           </div>
         </article>
 
         <article className="admin-editor-card">
-          <h3>Hero / portada</h3>
+          <h3>Portada</h3>
           <div className="config-form config-form--stacked">
             <VisibilityToggle
               checked={content.hero.visible}
               onChange={(value) => updateSection("hero", "visible", value)}
             />
             <TextField label="Frase principal" value={content.hero.title} onChange={(value) => updateSection("hero", "title", value)} />
-            <TextAreaField label="Bajada" value={content.hero.subtitle} onChange={(value) => updateSection("hero", "subtitle", value)} />
-            <TextField label="Imagen principal" value={content.hero.image} onChange={(value) => updateSection("hero", "image", value)} />
-            <TextField label="Texto CTA" value={content.hero.ctaText} onChange={(value) => updateSection("hero", "ctaText", value)} />
+            <TextAreaField label="Descripción corta" value={content.hero.subtitle} onChange={(value) => updateSection("hero", "subtitle", value)} />
+            <ImagePicker label="Imagen principal" value={content.hero.image} onChange={(value) => updateSection("hero", "image", value)} />
+            <TextField label="Texto del botón" value={content.hero.ctaText} onChange={(value) => updateSection("hero", "ctaText", value)} />
           </div>
         </article>
 
@@ -160,7 +213,7 @@ export default function AdminContent() {
             <TextField label="Etiqueta superior" value={content.experience.eyebrow} onChange={(value) => updateSection("experience", "eyebrow", value)} />
             <TextField label="Título" value={content.experience.title} onChange={(value) => updateSection("experience", "title", value)} />
             <TextAreaField label="Descripción" value={content.experience.description} onChange={(value) => updateSection("experience", "description", value)} />
-            <TextField label="Imagen" value={content.experience.image} onChange={(value) => updateSection("experience", "image", value)} />
+            <ImagePicker label="Imagen de la sección" value={content.experience.image} onChange={(value) => updateSection("experience", "image", value)} />
           </div>
         </article>
 
@@ -173,21 +226,25 @@ export default function AdminContent() {
           </div>
           <div className="admin-repeat-list">
             {content.gallery.map((item) => (
-              <div className="admin-repeat-item" key={item.id}>
-                <TextField label="Imagen" value={item.image} onChange={(value) => updateArrayItem("gallery", item.id, "image", value)} />
+              <div className="admin-repeat-item admin-gallery-item" key={item.id}>
+                <ImagePicker label="Foto" value={item.image} onChange={(value) => updateArrayItem("gallery", item.id, "image", value)} />
                 <TextField label="Texto alternativo" value={item.alt} onChange={(value) => updateArrayItem("gallery", item.id, "alt", value)} />
                 <TextField label="Orden" type="number" value={item.order} onChange={(value) => updateArrayItem("gallery", item.id, "order", Number(value))} />
                 <VisibilityToggle
-                  checked={item.featured}
-                  onChange={(value) => updateArrayItem("gallery", item.id, "featured", value)}
+                  checked={item.visible ?? true}
+                  label="Visible"
+                  onChange={(value) => updateArrayItem("gallery", item.id, "visible", value)}
                 />
+                <button type="button" className="admin-danger-button" onClick={() => removeArrayItem("gallery", item.id)}>
+                  Eliminar
+                </button>
               </div>
             ))}
           </div>
         </article>
 
         <article className="admin-editor-card admin-editor-card--wide">
-          <h3>Servicios incluidos / amenities</h3>
+          <h3>Servicios incluidos</h3>
           <div className="config-form">
             <TextField label="Etiqueta" value={content.amenitiesSection.eyebrow} onChange={(value) => updateSection("amenitiesSection", "eyebrow", value)} />
             <TextField label="Título" value={content.amenitiesSection.title} onChange={(value) => updateSection("amenitiesSection", "title", value)} />
@@ -203,23 +260,25 @@ export default function AdminContent() {
           <div className="admin-amenity-editor">
             {content.amenities.map((amenity) => (
               <article key={amenity.id}>
-                <img src={amenity.image} alt={amenity.alt} />
+                <ImagePicker label="Imagen del servicio" value={amenity.image} onChange={(value) => updateArrayItem("amenities", amenity.id, "image", value)} />
                 <TextField label="Título" value={amenity.title} onChange={(value) => updateArrayItem("amenities", amenity.id, "title", value)} />
                 <TextAreaField label="Descripción" value={amenity.description} onChange={(value) => updateArrayItem("amenities", amenity.id, "description", value)} />
-                <TextField label="Imagen" value={amenity.image} onChange={(value) => updateArrayItem("amenities", amenity.id, "image", value)} />
-                <TextField label="Alt" value={amenity.alt} onChange={(value) => updateArrayItem("amenities", amenity.id, "alt", value)} />
+                <TextField label="Texto alternativo" value={amenity.alt} onChange={(value) => updateArrayItem("amenities", amenity.id, "alt", value)} />
                 <TextField label="Orden" type="number" value={amenity.order} onChange={(value) => updateArrayItem("amenities", amenity.id, "order", Number(value))} />
                 <VisibilityToggle
                   checked={amenity.active}
+                  label="Visible"
                   onChange={(value) => updateArrayItem("amenities", amenity.id, "active", value)}
                 />
+                <button type="button" className="admin-danger-button" onClick={() => removeArrayItem("amenities", amenity.id)}>
+                  Eliminar servicio
+                </button>
               </article>
             ))}
           </div>
         </article>
 
-        <article className="admin-editor-card">
-          <h3>CTA final</h3>
+        <CollapsibleCard title="Llamado final">
           <div className="config-form config-form--stacked">
             <VisibilityToggle
               checked={content.cta.visible}
@@ -227,20 +286,19 @@ export default function AdminContent() {
             />
             <TextField label="Título" value={content.cta.title} onChange={(value) => updateSection("cta", "title", value)} />
             <TextAreaField label="Descripción" value={content.cta.description} onChange={(value) => updateSection("cta", "description", value)} />
-            <TextField label="Imagen de fondo" value={content.cta.image} onChange={(value) => updateSection("cta", "image", value)} />
-            <TextField label="Texto botón" value={content.cta.buttonText} onChange={(value) => updateSection("cta", "buttonText", value)} />
+            <ImagePicker label="Imagen de fondo" value={content.cta.image} onChange={(value) => updateSection("cta", "image", value)} />
+            <TextField label="Texto del botón" value={content.cta.buttonText} onChange={(value) => updateSection("cta", "buttonText", value)} />
           </div>
-        </article>
+        </CollapsibleCard>
 
-        <article className="admin-editor-card">
-          <h3>Footer</h3>
+        <CollapsibleCard title="Pie de página">
           <div className="config-form config-form--stacked">
             <TextField label="Texto legal" value={content.footer.text} onChange={(value) => updateSection("footer", "text", value)} />
             <TextField label="Ubicación" value={content.footer.location} onChange={(value) => updateSection("footer", "location", value)} />
             <TextField label="Instagram" value={content.footer.socialLinks[0]?.url || ""} onChange={(value) => updateSocialLink(0, value)} />
             <TextField label="Facebook" value={content.footer.socialLinks[1]?.url || ""} onChange={(value) => updateSocialLink(1, value)} />
           </div>
-        </article>
+        </CollapsibleCard>
       </div>
     </section>
   );

@@ -1168,16 +1168,21 @@ textarea:focus {
 
 .admin-brand {
   display: grid;
-  gap: 8px;
+  gap: 10px;
+  padding-bottom: 16px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.14);
 }
 
 .admin-brand span {
-  font-size: 1.2rem;
-  font-weight: 650;
+  max-width: 180px;
+  color: white;
+  font-size: 1.55rem;
+  font-weight: 520;
+  line-height: 1.08;
 }
 
 .admin-brand small {
-  color: rgba(255, 255, 255, 0.62);
+  color: rgba(255, 255, 255, 0.74);
   letter-spacing: 0.12em;
   text-transform: uppercase;
 }
@@ -1226,6 +1231,18 @@ textarea:focus {
 
 .admin-topbar span {
   color: var(--color-muted);
+}
+
+.admin-topbar__brand {
+  display: grid;
+  gap: 10px;
+}
+
+.admin-topbar__logo {
+  width: clamp(160px, 24vw, 230px);
+  max-height: 82px;
+  object-fit: contain;
+  object-position: left center;
 }
 
 .admin-topbar__actions {
@@ -1285,13 +1302,47 @@ textarea:focus {
   gap: 14px;
 }
 
+.admin-table-card--wide {
+  grid-column: span 2;
+}
+
+.admin-pricing-explain {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px 18px;
+  align-items: center;
+  border: 1px solid var(--color-line);
+  background: #fbfaf7;
+  color: var(--color-muted);
+  padding: 16px 18px;
+}
+
+.admin-pricing-explain strong {
+  color: var(--color-forest);
+}
+
 .admin-extra-list div {
-  grid-template-columns: 1fr 160px 1.4fr auto;
+  grid-template-columns: 1fr 160px 1.4fr auto auto;
 }
 
 .admin-muted-note {
   color: var(--color-muted);
   line-height: 1.7;
+}
+
+.admin-event-type-list {
+  display: grid;
+  gap: 12px;
+}
+
+.admin-event-type-list > div {
+  display: grid;
+  grid-template-columns: minmax(0, 1.2fr) minmax(170px, 0.8fr) auto;
+  gap: 12px;
+  align-items: end;
+  border: 1px solid var(--color-line);
+  background: #fbfaf7;
+  padding: 14px;
 }
 
 .admin-dashboard-columns,
@@ -1364,6 +1415,105 @@ textarea:focus {
   padding: 14px 0;
 }
 
+.admin-event-list {
+  display: grid;
+  gap: 12px;
+  margin-top: 18px;
+}
+
+.admin-event-list article {
+  display: grid;
+  grid-template-columns: 58px minmax(0, 1fr) auto;
+  gap: 16px;
+  align-items: center;
+  border: 1px solid var(--color-line);
+  background: #fbfaf7;
+  padding: 14px;
+}
+
+.admin-event-list__date {
+  display: grid;
+  place-items: center;
+  min-height: 58px;
+  border: 1px solid rgba(6, 27, 14, 0.14);
+  background: white;
+}
+
+.admin-event-list__date strong {
+  color: var(--color-forest);
+  font-size: 1.4rem;
+  line-height: 1;
+}
+
+.admin-event-list__date span {
+  color: var(--color-muted);
+  font-size: 0.72rem;
+  letter-spacing: 0.1em;
+}
+
+.admin-event-list__body {
+  display: grid;
+  gap: 6px;
+  min-width: 0;
+}
+
+.admin-event-list__body > div {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: center;
+}
+
+.admin-event-list__body h3 {
+  margin: 0;
+  color: var(--color-forest);
+  font-size: 1.05rem;
+}
+
+.admin-event-list__body p,
+.admin-event-list__body small {
+  margin: 0;
+  color: var(--color-muted);
+}
+
+.admin-event-list__amount {
+  display: grid;
+  gap: 8px;
+  justify-items: end;
+}
+
+.admin-status-pill {
+  display: inline-flex;
+  width: max-content;
+  align-items: center;
+  border: 1px solid rgba(6, 27, 14, 0.12);
+  border-radius: 999px;
+  background: #edf6ef;
+  color: var(--color-forest);
+  font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  padding: 4px 9px;
+  text-transform: uppercase;
+}
+
+.admin-status-pill--pre-reserva,
+.admin-status-pill--sena-pendiente {
+  background: #f3ead0;
+  color: #6d5b25;
+}
+
+.admin-status-pill--confirmada {
+  background: #e1f0e5;
+  color: #214b2c;
+}
+
+.admin-status-pill--bloqueada,
+.admin-status-pill--cancelada {
+  background: #e5e5e2;
+  color: #5f5e5b;
+}
+
 .admin-editor-card {
   display: grid;
   gap: 18px;
@@ -1390,12 +1540,74 @@ textarea:focus {
 .admin-repeat-item,
 .admin-extra-list div {
   display: grid;
-  grid-template-columns: minmax(0, 1.2fr) minmax(0, 1fr) 90px auto;
+  grid-template-columns: minmax(150px, 0.9fr) minmax(0, 1fr) 90px auto auto;
   gap: 12px;
   align-items: end;
   border: 1px solid var(--color-line);
   background: #fbfaf7;
   padding: 14px;
+}
+
+.admin-gallery-item {
+  align-items: stretch;
+}
+
+.admin-image-picker {
+  display: grid;
+  gap: 9px;
+}
+
+.admin-image-picker > span {
+  color: var(--color-muted);
+  font-size: 0.72rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.admin-image-picker__preview {
+  display: grid;
+  min-height: 92px;
+  place-items: center;
+  overflow: hidden;
+  border: 1px solid var(--color-line);
+  background: white;
+}
+
+.admin-image-picker__preview img {
+  width: 100%;
+  height: 100%;
+  max-height: 150px;
+  object-fit: cover;
+}
+
+.admin-image-picker__preview small {
+  color: var(--color-muted);
+}
+
+.admin-image-picker__button {
+  display: inline-flex !important;
+  min-height: 38px;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid var(--color-forest);
+  background: white;
+  color: var(--color-forest);
+  cursor: pointer;
+  font-size: 0.72rem !important;
+  font-weight: 800 !important;
+  letter-spacing: 0.1em !important;
+  padding: 0 12px;
+  text-transform: uppercase;
+}
+
+.admin-image-picker input[type="file"] {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
 }
 
 .admin-amenity-editor {
@@ -1410,13 +1622,6 @@ textarea:focus {
   padding: 14px;
 }
 
-.admin-amenity-editor img {
-  width: 100%;
-  aspect-ratio: 16 / 9;
-  object-fit: cover;
-  background: var(--color-paper-deep);
-}
-
 .admin-toggle {
   display: flex !important;
   min-height: 42px;
@@ -1427,6 +1632,35 @@ textarea:focus {
 
 .admin-toggle input {
   width: auto;
+}
+
+.admin-danger-button {
+  min-height: 38px;
+  border: 1px solid #d8b9ae;
+  background: #fff8f5;
+  color: #7a3b2f;
+  font-size: 0.7rem;
+  font-weight: 800;
+  letter-spacing: 0.09em;
+  padding: 0 12px;
+  text-transform: uppercase;
+}
+
+.admin-collapsible-card {
+  align-content: start;
+}
+
+.admin-collapsible-card summary {
+  cursor: pointer;
+  color: var(--color-forest);
+  font-size: 1.35rem;
+  font-weight: 500;
+}
+
+.admin-collapsible-card__content {
+  display: grid;
+  gap: 16px;
+  margin-top: 18px;
 }
 
 .reservation-grid {
@@ -1520,6 +1754,109 @@ textarea:focus {
   background: white;
   color: var(--color-forest);
   padding: 0 12px;
+}
+
+.admin-reservations-table-wrap {
+  overflow: auto;
+  border: 1px solid var(--color-line);
+  background: white;
+  box-shadow: 0 16px 60px rgba(20, 32, 25, 0.06);
+}
+
+.admin-reservations-table {
+  width: 100%;
+  min-width: 1180px;
+  border-collapse: collapse;
+}
+
+.admin-reservations-table th,
+.admin-reservations-table td {
+  border-bottom: 1px solid var(--color-line);
+  padding: 14px 12px;
+  text-align: left;
+  vertical-align: middle;
+}
+
+.admin-reservations-table th {
+  color: var(--color-muted);
+  font-size: 0.72rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.admin-reservations-table td {
+  color: var(--color-forest);
+  font-size: 0.92rem;
+}
+
+.admin-actions-cell {
+  position: relative;
+}
+
+.admin-actions-button {
+  min-height: 36px;
+  border: 1px solid var(--color-forest);
+  background: white;
+  color: var(--color-forest);
+  font-size: 0.7rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  padding: 0 10px;
+  text-transform: uppercase;
+}
+
+.admin-actions-menu {
+  position: absolute;
+  right: 12px;
+  top: calc(100% - 6px);
+  z-index: 15;
+  display: grid;
+  width: 240px;
+  gap: 4px;
+  border: 1px solid var(--color-line);
+  background: white;
+  box-shadow: var(--shadow-soft);
+  padding: 10px;
+}
+
+.admin-actions-menu button,
+.admin-actions-menu a,
+.admin-actions-menu label {
+  justify-content: flex-start;
+  min-height: 34px;
+  border: 0;
+  background: transparent;
+  color: var(--color-forest);
+  font-size: 0.82rem;
+  font-weight: 600;
+  letter-spacing: 0;
+  padding: 7px 8px;
+  text-align: left;
+  text-transform: none;
+}
+
+.admin-actions-menu a:hover,
+.admin-actions-menu button:hover {
+  background: #f5f3ed;
+}
+
+.admin-actions-menu .is-danger {
+  color: #7a3b2f;
+}
+
+.admin-actions-menu select {
+  margin-top: 6px;
+}
+
+.reservation-edit-form {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 14px;
+}
+
+.reservation-edit-form__notes {
+  grid-column: 1 / -1;
 }
 
 .admin-calendar-shell {
@@ -1718,6 +2055,83 @@ textarea:focus {
   margin: 0;
 }
 
+.admin-reservation-panel {
+  display: grid;
+  gap: 18px;
+}
+
+.admin-reservation-panel__hero {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 18px;
+  align-items: end;
+  border: 1px solid var(--color-line);
+  background: #fbfaf7;
+  padding: 18px;
+}
+
+.admin-reservation-panel__hero h4 {
+  margin: 10px 0 6px;
+  color: var(--color-forest);
+  font-size: clamp(1.6rem, 4vw, 2.25rem);
+  font-weight: 420;
+}
+
+.admin-reservation-panel__hero p,
+.admin-reservation-panel__hero small {
+  margin: 0;
+  color: var(--color-muted);
+}
+
+.admin-reservation-panel__hero > div:last-child {
+  display: grid;
+  gap: 6px;
+  justify-items: end;
+}
+
+.admin-reservation-panel__hero > div:last-child strong {
+  color: var(--color-forest);
+  font-size: 1.3rem;
+}
+
+.admin-detail-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.admin-detail-item,
+.admin-detail-note {
+  border: 1px solid var(--color-line);
+  background: white;
+  padding: 14px;
+}
+
+.admin-detail-item {
+  display: grid;
+  gap: 6px;
+}
+
+.admin-detail-item span,
+.admin-detail-note span {
+  color: var(--color-muted);
+  font-size: 0.72rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.admin-detail-item strong {
+  color: var(--color-forest);
+  font-size: 1rem;
+}
+
+.admin-detail-note p {
+  margin: 8px 0 0;
+  color: var(--color-forest);
+  line-height: 1.6;
+}
+
 .admin-modal-backdrop {
   position: fixed;
   inset: 0;
@@ -1784,7 +2198,9 @@ textarea:focus {
   .pricing-admin-grid,
   .admin-dashboard-columns,
   .admin-editor-grid,
-  .admin-amenity-editor {
+  .admin-amenity-editor,
+  .admin-event-type-list > div,
+  .admin-detail-grid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 
@@ -1855,11 +2271,16 @@ textarea:focus {
   .reservation-grid,
   .config-form,
   .admin-dashboard-columns,
-  .admin-editor-grid,
-  .admin-amenity-editor,
-  .reservation-form-grid,
-  .admin-repeat-item,
-  .admin-extra-list div {
+    .admin-editor-grid,
+    .admin-amenity-editor,
+    .admin-event-list article,
+    .admin-event-type-list > div,
+    .admin-detail-grid,
+    .admin-reservation-panel__hero,
+    .reservation-edit-form,
+    .reservation-form-grid,
+    .admin-repeat-item,
+    .admin-extra-list div {
     grid-template-columns: 1fr;
   }
 
@@ -1880,6 +2301,20 @@ textarea:focus {
   .admin-topbar {
     align-items: flex-start;
     flex-direction: column;
+  }
+
+  .admin-topbar__logo {
+    width: min(190px, 72vw);
+  }
+
+  .admin-event-list__amount {
+    justify-items: start;
+  }
+
+  .admin-actions-menu {
+    position: static;
+    width: 100%;
+    margin-top: 8px;
   }
 
   .admin-calendar-shell {

@@ -30,8 +30,8 @@ export default function AvailabilityCalendar({ availability }) {
         <p className="eyebrow">Disponibilidad</p>
         <h2>Calendario público</h2>
         <p>
-          Datos mockeados en esta etapa, con estructura preparada para leer
-          reservas y bloqueos desde Firestore por venue.
+          Revisá las fechas libres, reservadas, pre-reservadas o bloqueadas antes
+          de consultar por tu evento.
         </p>
       </div>
 

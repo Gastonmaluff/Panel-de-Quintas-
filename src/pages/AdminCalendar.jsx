@@ -12,8 +12,55 @@ function getStatusClass(status) {
     .replaceAll(" ", "-");
 }
 
-function ReservationDetails({ reservation }) {
+function DetailItem({ label, value }) {
+  return (
+    <div className="admin-detail-item">
+      <span>{label}</span>
+      <strong>{value}</strong>
+    </div>
+  );
+}
+
+function ReservationDetails({ reservation, variant = "compact" }) {
   if (!reservation) return null;
+
+  if (variant === "full") {
+    const statusClass = getStatusClass(reservation.status);
+
+    return (
+      <div className="admin-reservation-panel">
+        <div className="admin-reservation-panel__hero">
+          <div>
+            <span className={`admin-status-pill admin-status-pill--${statusClass}`}>
+              {reservation.status}
+            </span>
+            <h4>{reservation.customerName}</h4>
+            <p>
+              {reservation.eventType} · {reservation.timeSlot}
+            </p>
+          </div>
+          <div>
+            <small>Total estimado</small>
+            <strong>{formatGuaranies(reservation.totalPrice)}</strong>
+          </div>
+        </div>
+
+        <div className="admin-detail-grid">
+          <DetailItem label="Fecha" value={reservation.eventDate} />
+          <DetailItem label="Teléfono" value={reservation.customerPhone || "Sin teléfono"} />
+          <DetailItem label="Personas" value={reservation.guestCount || "No aplica"} />
+          <DetailItem label="Seña" value={formatGuaranies(reservation.depositAmount)} />
+          <DetailItem label="Saldo" value={formatGuaranies(reservation.balanceAmount)} />
+          <DetailItem label="Horario" value={reservation.timeSlot} />
+        </div>
+
+        <div className="admin-detail-note">
+          <span>Notas internas</span>
+          <p>{reservation.notes || "Sin notas cargadas."}</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <dl className="admin-reservation-detail">
@@ -164,7 +211,7 @@ export default function AdminCalendar() {
 
             {selectedReservation ? (
               <>
-                <ReservationDetails reservation={selectedReservation} />
+                <ReservationDetails reservation={selectedReservation} variant="full" />
                 <div className="admin-modal__actions">
                   <button type="button">Editar reserva</button>
                   <button type="button">Marcar seña recibida</button>

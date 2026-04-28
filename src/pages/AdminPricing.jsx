@@ -1,33 +1,74 @@
 import { useState } from "react";
+import { optionalExtrasMock } from "../data/adminData.js";
 import { pricingRules } from "../data/venues.js";
 import { eventTypeLabels, formatGuaranies } from "../utils/pricing.js";
-import { optionalExtrasMock } from "../data/adminData.js";
+
+const numberFormatter = new Intl.NumberFormat("es-PY", {
+  maximumFractionDigits: 0,
+});
+
+function formatAdminNumber(value) {
+  return numberFormatter.format(Number(value || 0));
+}
+
+function parseAdminNumber(value) {
+  return Number(String(value).replace(/\D/g, "")) || 0;
+}
+
+function MoneyInput({ value, onChange, ariaLabel }) {
+  return (
+    <input
+      aria-label={ariaLabel}
+      inputMode="numeric"
+      value={formatAdminNumber(value)}
+      onChange={(event) => onChange(parseAdminNumber(event.target.value))}
+    />
+  );
+}
+
+function buildInitialEventTypes() {
+  return Object.entries(pricingRules.eventTypeRules).map(([id, amount]) => ({
+    id,
+    name: eventTypeLabels[id] || id,
+    amount,
+  }));
+}
 
 export default function AdminPricing() {
   const [rules, setRules] = useState(pricingRules);
+  const [eventTypes, setEventTypes] = useState(buildInitialEventTypes);
   const [extras, setExtras] = useState(optionalExtrasMock);
 
   const updateRule = (key, value) => {
-    setRules((current) => ({ ...current, [key]: Number(value) }));
-  };
-
-  const updateEventRule = (key, value) => {
-    setRules((current) => ({
-      ...current,
-      eventTypeRules: {
-        ...current.eventTypeRules,
-        [key]: Number(value),
-      },
-    }));
+    setRules((current) => ({ ...current, [key]: value }));
   };
 
   const updateGuestRule = (index, key, value) => {
     setRules((current) => ({
       ...current,
       guestCountRules: current.guestCountRules.map((rule, ruleIndex) =>
-        ruleIndex === index ? { ...rule, [key]: Number(value) } : rule,
+        ruleIndex === index ? { ...rule, [key]: value } : rule,
       ),
     }));
+  };
+
+  const addEventType = () => {
+    setEventTypes((current) => [
+      ...current,
+      { id: `event-${Date.now()}`, name: "Nuevo tipo de evento", amount: 0 },
+    ]);
+  };
+
+  const updateEventType = (id, key, value) => {
+    setEventTypes((current) =>
+      current.map((eventType) =>
+        eventType.id === id ? { ...eventType, [key]: value } : eventType,
+      ),
+    );
+  };
+
+  const removeEventType = (id) => {
+    setEventTypes((current) => current.filter((eventType) => eventType.id !== id));
   };
 
   const addExtra = () => {
@@ -35,7 +76,7 @@ export default function AdminPricing() {
       ...current,
       {
         id: `extra-${Date.now()}`,
-        name: "Nuevo extra",
+        name: "Nuevo adicional",
         price: 0,
         description: "",
         active: false,
@@ -49,93 +90,108 @@ export default function AdminPricing() {
     );
   };
 
+  const removeExtra = (id) => {
+    setExtras((current) => current.filter((extra) => extra.id !== id));
+  };
+
   return (
     <section className="admin-section">
       <div className="admin-section-heading">
         <div>
           <h2>Precios y cotizador</h2>
-          <p>Reglas mockeadas listas para persistir en Firestore.</p>
+          <p>Definí las tarifas que se usan para estimar una reserva.</p>
         </div>
-        <button type="button">Guardar reglas</button>
+        <button type="button">Guardar cambios</button>
       </div>
+
+      <article className="admin-pricing-explain">
+        <strong>Cómo se calcula el precio</strong>
+        <span>
+          Tarifa base del día + adicional por tipo de evento + recargo por cantidad de personas
+          + extras activos, si decidís ofrecerlos.
+        </span>
+      </article>
 
       <div className="pricing-admin-grid pricing-admin-grid--forms">
         <article className="admin-table-card">
-          <h3>Bases por día</h3>
+          <h3>Tarifa base por día</h3>
           <label>
             Lunes a jueves
-            <input
-              type="number"
-              value={rules.weekdayBasePrice}
-              onChange={(event) => updateRule("weekdayBasePrice", event.target.value)}
-            />
+            <MoneyInput value={rules.weekdayBasePrice} onChange={(value) => updateRule("weekdayBasePrice", value)} ariaLabel="Precio de lunes a jueves" />
           </label>
           <label>
             Viernes
-            <input
-              type="number"
-              value={rules.fridayBasePrice}
-              onChange={(event) => updateRule("fridayBasePrice", event.target.value)}
-            />
+            <MoneyInput value={rules.fridayBasePrice} onChange={(value) => updateRule("fridayBasePrice", value)} ariaLabel="Precio de viernes" />
           </label>
           <label>
             Sábado
-            <input
-              type="number"
-              value={rules.saturdayBasePrice}
-              onChange={(event) => updateRule("saturdayBasePrice", event.target.value)}
-            />
+            <MoneyInput value={rules.saturdayBasePrice} onChange={(value) => updateRule("saturdayBasePrice", value)} ariaLabel="Precio de sábado" />
           </label>
           <label>
             Domingo
-            <input
-              type="number"
-              value={rules.sundayBasePrice}
-              onChange={(event) => updateRule("sundayBasePrice", event.target.value)}
-            />
+            <MoneyInput value={rules.sundayBasePrice} onChange={(value) => updateRule("sundayBasePrice", value)} ariaLabel="Precio de domingo" />
           </label>
           <label>
             Feriado
-            <input
-              type="number"
-              value={rules.holidayBasePrice}
-              onChange={(event) => updateRule("holidayBasePrice", event.target.value)}
-            />
+            <MoneyInput value={rules.holidayBasePrice} onChange={(value) => updateRule("holidayBasePrice", value)} ariaLabel="Precio de feriado" />
           </label>
         </article>
 
-        <article className="admin-table-card">
-          <h3>Tipo de evento</h3>
-          {Object.entries(rules.eventTypeRules).map(([key, value]) => (
-            <label key={key}>
-              {eventTypeLabels[key]}
-              <input
-                type="number"
-                value={value}
-                onChange={(event) => updateEventRule(key, event.target.value)}
-              />
-            </label>
-          ))}
+        <article className="admin-table-card admin-table-card--wide">
+          <div className="admin-section-heading">
+            <div>
+              <h3>Tipos de evento</h3>
+              <p>Este valor se suma a la tarifa base cuando el visitante elige ese evento.</p>
+            </div>
+            <button type="button" onClick={addEventType}>
+              Agregar tipo
+            </button>
+          </div>
+          <div className="admin-event-type-list">
+            {eventTypes.map((eventType) => (
+              <div key={eventType.id}>
+                <label>
+                  Nombre
+                  <input
+                    value={eventType.name}
+                    onChange={(event) => updateEventType(eventType.id, "name", event.target.value)}
+                  />
+                </label>
+                <label>
+                  Se suma al precio base
+                  <MoneyInput
+                    value={eventType.amount}
+                    onChange={(value) => updateEventType(eventType.id, "amount", value)}
+                    ariaLabel={`Adicional para ${eventType.name}`}
+                  />
+                </label>
+                <button type="button" className="admin-danger-button" onClick={() => removeEventType(eventType.id)}>
+                  Eliminar
+                </button>
+              </div>
+            ))}
+          </div>
         </article>
 
         <article className="admin-table-card">
-          <h3>Personas</h3>
+          <h3>Cantidad de personas</h3>
+          <p>Agregá un recargo cuando el evento supera cierta cantidad de invitados.</p>
           {rules.guestCountRules.map((rule, index) => (
-            <div className="pricing-rule-row" key={rule.min}>
+            <div className="pricing-rule-row" key={`${rule.min}-${index}`}>
               <label>
-                Desde
+                Desde cuántas personas
                 <input
-                  type="number"
-                  value={rule.min}
-                  onChange={(event) => updateGuestRule(index, "min", event.target.value)}
+                  inputMode="numeric"
+                  value={formatAdminNumber(rule.min)}
+                  onChange={(event) => updateGuestRule(index, "min", parseAdminNumber(event.target.value))}
                 />
               </label>
               <label>
                 Recargo
-                <input
-                  type="number"
+                <MoneyInput
                   value={rule.amount}
-                  onChange={(event) => updateGuestRule(index, "amount", event.target.value)}
+                  onChange={(value) => updateGuestRule(index, "amount", value)}
+                  ariaLabel="Recargo por cantidad de personas"
                 />
               </label>
             </div>
@@ -147,17 +203,17 @@ export default function AdminPricing() {
           <label>
             Porcentaje de seña
             <input
-              type="number"
+              inputMode="numeric"
               value={rules.depositValue}
-              onChange={(event) => updateRule("depositValue", event.target.value)}
+              onChange={(event) => updateRule("depositValue", Number(event.target.value) || 0)}
             />
           </label>
           <label>
             Monto mínimo de seña
-            <input
-              type="number"
+            <MoneyInput
               value={rules.minimumDepositAmount}
-              onChange={(event) => updateRule("minimumDepositAmount", event.target.value)}
+              onChange={(value) => updateRule("minimumDepositAmount", value)}
+              ariaLabel="Monto mínimo de seña"
             />
           </label>
           <label>
@@ -176,9 +232,10 @@ export default function AdminPricing() {
       <article className="admin-table-card">
         <div className="admin-section-heading">
           <div>
-            <h2>Extras flexibles</h2>
+            <h2>Extras opcionales</h2>
             <p>
-              No se muestran en la landing pública hasta que se creen y se activen.
+              Desde acá podés crear servicios o adicionales para sumar al presupuesto.
+              Si no querés ofrecer extras, dejá esta sección vacía.
             </p>
           </div>
           <button type="button" onClick={addExtra}>
@@ -190,23 +247,30 @@ export default function AdminPricing() {
           <div className="admin-extra-list">
             {extras.map((extra) => (
               <div key={extra.id}>
-                <input
-                  value={extra.name}
-                  onChange={(event) => updateExtra(extra.id, "name", event.target.value)}
-                />
-                <input
-                  type="number"
-                  value={extra.price}
-                  onChange={(event) =>
-                    updateExtra(extra.id, "price", Number(event.target.value))
-                  }
-                />
-                <input
-                  value={extra.description}
-                  onChange={(event) =>
-                    updateExtra(extra.id, "description", event.target.value)
-                  }
-                />
+                <label>
+                  Nombre
+                  <input
+                    value={extra.name}
+                    onChange={(event) => updateExtra(extra.id, "name", event.target.value)}
+                  />
+                </label>
+                <label>
+                  Precio
+                  <MoneyInput
+                    value={extra.price}
+                    onChange={(value) => updateExtra(extra.id, "price", value)}
+                    ariaLabel={`Precio de ${extra.name}`}
+                  />
+                </label>
+                <label>
+                  Descripción
+                  <input
+                    value={extra.description}
+                    onChange={(event) =>
+                      updateExtra(extra.id, "description", event.target.value)
+                    }
+                  />
+                </label>
                 <label className="admin-toggle">
                   <input
                     type="checkbox"
@@ -217,13 +281,16 @@ export default function AdminPricing() {
                   />
                   <span>Activo</span>
                 </label>
+                <button type="button" className="admin-danger-button" onClick={() => removeExtra(extra.id)}>
+                  Eliminar
+                </button>
               </div>
             ))}
           </div>
         ) : (
           <p className="admin-muted-note">
-            Todavía no hay extras cargados. El cotizador público no ofrece extras
-            predefinidos.
+            No hay extras creados. El presupuesto se calcula solo con fecha, tipo de evento,
+            cantidad de personas y horario.
           </p>
         )}
       </article>

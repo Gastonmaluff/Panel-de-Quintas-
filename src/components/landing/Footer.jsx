@@ -17,7 +17,7 @@ export default function Footer({ venue }) {
         <a href="#cotizador">Cotizador</a>
         <a href={adminPath}>Admin</a>
       </nav>
-      <p>{venue.location} · © 2026 QuintaFlow</p>
+      <p>{venue.location} · © 2026 {venue.name}</p>
     </footer>
   );
 }

@@ -1,5 +1,6 @@
 import { NavLink, Outlet, useNavigate } from "react-router-dom";
 import { useAuth } from "../auth/AuthProvider.jsx";
+import BrandLogo from "../components/branding/BrandLogo.jsx";
 import { venues } from "../data/venues.js";
 
 const adminLinks = [
@@ -26,7 +27,7 @@ export default function AdminLayout() {
     <div className="admin-app">
       <aside className="admin-sidebar">
         <a className="admin-brand" href={publicPath}>
-          <span>QuintaFlow</span>
+          <span>Panel de control</span>
           <small>{venue.name}</small>
         </a>
         <nav>
@@ -45,9 +46,9 @@ export default function AdminLayout() {
 
       <main className="admin-main">
         <header className="admin-topbar">
-          <div>
+          <div className="admin-topbar__brand">
             <p className="eyebrow">Panel administrador</p>
-            <h1>{venue.name}</h1>
+            <BrandLogo variant="horizontal" className="admin-topbar__logo" />
             <span>{user?.email}</span>
           </div>
           <div className="admin-topbar__actions">
