@@ -1,4 +1,12 @@
 import { Link } from "react-router-dom";
+import {
+  CalendarCheck,
+  CalendarDays,
+  Clock3,
+  MessageCircle,
+  PiggyBank,
+  TrendingUp,
+} from "lucide-react";
 import { adminReservationsMock } from "../data/adminData.js";
 import { formatGuaranies } from "../utils/pricing.js";
 import { venues } from "../data/venues.js";
@@ -21,8 +29,32 @@ function getStatusClass(status) {
     .replaceAll(" ", "-");
 }
 
+const occupancyStatuses = new Set(["confirmada", "seña pendiente", "pre-reserva"]);
+
+function getDashboardMonth(reservations) {
+  const current = new Date();
+  const currentMonthReservations = reservations.filter((reservation) => {
+    const date = new Date(`${reservation.eventDate}T12:00:00`);
+    return date.getMonth() === current.getMonth() && date.getFullYear() === current.getFullYear();
+  });
+
+  if (currentMonthReservations.length) {
+    return { year: current.getFullYear(), month: current.getMonth() };
+  }
+
+  const nextReservation = reservations
+    .map((reservation) => new Date(`${reservation.eventDate}T12:00:00`))
+    .sort((a, b) => a - b)[0];
+
+  return {
+    year: nextReservation?.getFullYear() || current.getFullYear(),
+    month: nextReservation?.getMonth() ?? current.getMonth(),
+  };
+}
+
 export default function AdminDashboard() {
   const reservations = getCurrentMonthReservations();
+  const dashboardMonth = getDashboardMonth(reservations);
   const estimatedIncome = reservations.reduce(
     (total, reservation) => total + reservation.totalPrice,
     0,
@@ -34,29 +66,66 @@ export default function AdminDashboard() {
     (reservation) =>
       reservation.status === "consulta" || reservation.status === "cotización enviada",
   ).length;
+  const occupiedDates = reservations.filter((reservation) => {
+    const date = new Date(`${reservation.eventDate}T12:00:00`);
+    return (
+      occupancyStatuses.has(reservation.status) &&
+      date.getMonth() === dashboardMonth.month &&
+      date.getFullYear() === dashboardMonth.year
+    );
+  });
+  const daysInMonth = new Date(dashboardMonth.year, dashboardMonth.month + 1, 0).getDate();
+  const occupancyPercent = Math.round((occupiedDates.length / daysInMonth) * 100);
+  const monthLabel = new Intl.DateTimeFormat("es-PY", {
+    month: "long",
+  }).format(new Date(dashboardMonth.year, dashboardMonth.month, 1));
 
   const metrics = [
-    ["Reservas del mes", reservations.length],
-    ["Ingresos estimados", formatGuaranies(estimatedIncome)],
-    ["Señas pendientes", pendingDeposits],
-    ["Fechas ocupadas", adminReservationsMock.length],
-    ["Consultas pendientes", pendingQueries],
-    ["Próximos eventos", reservations.slice(0, 3).length],
+    { label: "Reservas del mes", value: reservations.length, icon: CalendarCheck },
+    { label: "Ingresos estimados", value: formatGuaranies(estimatedIncome), icon: TrendingUp },
+    { label: "Señas pendientes", value: pendingDeposits, icon: PiggyBank },
+    { label: "Fechas ocupadas", value: adminReservationsMock.length, icon: CalendarDays },
+    { label: "Consultas pendientes", value: pendingQueries, icon: MessageCircle },
+    { label: "Próximos eventos", value: reservations.slice(0, 3).length, icon: Clock3 },
   ];
 
   return (
-    <section className="admin-section">
+    <section className="admin-section admin-dashboard">
+      <div className="admin-dashboard-hero">
+        <div>
+          <p className="eyebrow">Resumen general</p>
+          <h1>Todo lo importante de la quinta, en un solo lugar.</h1>
+          <span>Seguimiento de reservas, cobros, fechas comprometidas y contenido público.</span>
+        </div>
+        <Link to="/admin/reservas">Nueva reserva</Link>
+      </div>
+
       <div className="admin-grid">
-        {metrics.map(([label, value]) => (
+        {metrics.map(({ label, value, icon: Icon }) => (
           <article className="admin-card" key={label}>
+            <i>
+              <Icon size={18} strokeWidth={1.8} aria-hidden="true" />
+            </i>
             <span>{label}</span>
             <strong>{value}</strong>
           </article>
         ))}
+        <article className="admin-card admin-card--occupancy">
+          <div>
+            <span>Ocupación</span>
+            <strong>{occupancyPercent}%</strong>
+          </div>
+          <div className="admin-occupancy-bar" aria-hidden="true">
+            <span style={{ width: `${occupancyPercent}%` }} />
+          </div>
+          <small>
+            {occupiedDates.length} de {daysInMonth} días comprometidos en {monthLabel}
+          </small>
+        </article>
       </div>
 
       <div className="admin-dashboard-columns">
-        <article className="admin-table-card">
+        <article className="admin-table-card admin-table-card--large">
           <div className="admin-section-heading">
             <div>
               <h2>Próximos eventos</h2>
@@ -94,7 +163,7 @@ export default function AdminDashboard() {
           </div>
         </article>
 
-        <article className="admin-table-card">
+        <article className="admin-table-card admin-public-content-card">
           <div className="admin-section-heading">
             <div>
               <h2>Contenido público</h2>

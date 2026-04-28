@@ -1,15 +1,24 @@
 import { NavLink, Outlet, useNavigate } from "react-router-dom";
+import {
+  CalendarDays,
+  FileText,
+  LayoutDashboard,
+  LogOut,
+  Settings,
+  Tag,
+  WalletCards,
+} from "lucide-react";
 import { useAuth } from "../auth/AuthProvider.jsx";
 import BrandLogo from "../components/branding/BrandLogo.jsx";
 import { venues } from "../data/venues.js";
 
 const adminLinks = [
-  { to: "/admin", label: "Dashboard", end: true },
-  { to: "/admin/contenido", label: "Contenido público" },
-  { to: "/admin/calendario", label: "Calendario" },
-  { to: "/admin/reservas", label: "Reservas" },
-  { to: "/admin/precios", label: "Precios" },
-  { to: "/admin/configuracion", label: "Configuración" },
+  { to: "/admin", label: "Dashboard", icon: LayoutDashboard, end: true },
+  { to: "/admin/contenido", label: "Contenido público", icon: FileText },
+  { to: "/admin/calendario", label: "Calendario", icon: CalendarDays },
+  { to: "/admin/reservas", label: "Reservas", icon: WalletCards },
+  { to: "/admin/precios", label: "Precios", icon: Tag },
+  { to: "/admin/configuracion", label: "Configuración", icon: Settings },
 ];
 
 export default function AdminLayout() {
@@ -27,21 +36,36 @@ export default function AdminLayout() {
     <div className="admin-app">
       <aside className="admin-sidebar">
         <a className="admin-brand" href={publicPath}>
+          <BrandLogo variant="mark" className="admin-brand__mark" />
           <span>Panel de control</span>
           <small>{venue.name}</small>
         </a>
         <nav>
-          {adminLinks.map((link) => (
-            <NavLink
-              end={link.end}
-              key={link.to}
-              to={link.to}
-              className={({ isActive }) => (isActive ? "is-active" : "")}
-            >
-              {link.label}
-            </NavLink>
-          ))}
+          {adminLinks.map((link) => {
+            const Icon = link.icon;
+
+            return (
+              <NavLink
+                end={link.end}
+                key={link.to}
+                to={link.to}
+                className={({ isActive }) => (isActive ? "is-active" : "")}
+              >
+                <Icon size={18} strokeWidth={1.8} aria-hidden="true" />
+                {link.label}
+              </NavLink>
+            );
+          })}
         </nav>
+        <div className="admin-sidebar__footer">
+          <a href={publicPath} target="_blank" rel="noreferrer">
+            Ver página pública
+          </a>
+          <button type="button" onClick={handleLogout}>
+            <LogOut size={17} strokeWidth={1.8} aria-hidden="true" />
+            Cerrar sesión
+          </button>
+        </div>
       </aside>
 
       <main className="admin-main">
@@ -49,7 +73,7 @@ export default function AdminLayout() {
           <div className="admin-topbar__brand">
             <p className="eyebrow">Panel administrador</p>
             <BrandLogo variant="horizontal" className="admin-topbar__logo" />
-            <span>{user?.email}</span>
+            <span>Sesión activa: {user?.email}</span>
           </div>
           <div className="admin-topbar__actions">
             <a href={publicPath} target="_blank" rel="noreferrer">
