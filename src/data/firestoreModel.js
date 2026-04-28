@@ -10,7 +10,7 @@ export const firestoreCollections = {
     location: "string",
     coverImage: "storageUrl",
     galleryImages: "array<storageUrl>",
-    amenities: "array<string>",
+    amenities: "array<{ title: string, description: string, image: storageUrl, alt: string }>",
     active: "boolean",
   },
   reservations: {
