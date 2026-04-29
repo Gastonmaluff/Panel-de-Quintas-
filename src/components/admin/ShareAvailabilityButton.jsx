@@ -1,9 +1,8 @@
 import { useMemo, useRef, useState } from "react";
 import { createPortal } from "react-dom";
-import { Download, MessageCircle, Share2 } from "lucide-react";
+import { Download, Share2 } from "lucide-react";
 import { toBlob } from "html-to-image";
 import { useAdminData } from "../../admin/AdminDataProvider.jsx";
-import { venues } from "../../data/venues.js";
 import ShareableAvailabilityCalendar from "./ShareableAvailabilityCalendar.jsx";
 
 function getMonthOffset(offset = 0) {
@@ -30,13 +29,6 @@ function downloadBlob(blob, fileName) {
   window.setTimeout(() => URL.revokeObjectURL(url), 1000);
 }
 
-function openWhatsappText(venue) {
-  const message =
-    "Te comparto la disponibilidad actualizada de Paraíso Escondido. Te adjunto la imagen en este chat.";
-  const url = `https://wa.me/${venue.whatsappNumber}?text=${encodeURIComponent(message)}`;
-  window.open(url, "_blank", "noopener,noreferrer");
-}
-
 export default function ShareAvailabilityButton() {
   const { availability } = useAdminData();
   const buttonRef = useRef(null);
@@ -52,7 +44,6 @@ export default function ShareAvailabilityButton() {
     }),
     [],
   );
-  const venue = venues[0];
   const isGenerating = Boolean(generatingAction);
 
   const openMenu = () => {
@@ -131,13 +122,6 @@ export default function ShareAvailabilityButton() {
       );
     });
 
-  const handleWhatsapp = (monthKey) =>
-    runAction(`whatsapp-${monthKey}`, async () => {
-      const blob = await createPngBlob(monthKey);
-      downloadBlob(blob, getFileName(months[monthKey]));
-      openWhatsappText(venue);
-    });
-
   const menu = isMenuOpen ? (
     <div
       className="share-availability__menu"
@@ -163,17 +147,6 @@ export default function ShareAvailabilityButton() {
         <button type="button" onClick={() => handleDownload("next")} disabled={isGenerating}>
           <Download size={15} strokeWidth={1.8} aria-hidden="true" />
           Mes siguiente
-        </button>
-      </div>
-      <div>
-        <strong>Compartir por WhatsApp</strong>
-        <button type="button" onClick={() => handleWhatsapp("current")} disabled={isGenerating}>
-          <MessageCircle size={15} strokeWidth={1.8} aria-hidden="true" />
-          Este mes
-        </button>
-        <button type="button" onClick={() => handleWhatsapp("next")} disabled={isGenerating}>
-          <MessageCircle size={15} strokeWidth={1.8} aria-hidden="true" />
-          Mes que viene
         </button>
       </div>
     </div>
