@@ -5,8 +5,8 @@ import { adminReservationStatuses } from "../data/adminData.js";
 import { getMonthMatrix } from "../utils/date.js";
 import { isRangeAvailable } from "../utils/availability.js";
 import {
-  bookingModeLabels,
   formatBookingRange,
+  getBookingModeLabel,
   getBookingDurationLabel,
   getReservationDates,
   normalizeBooking,
@@ -58,7 +58,7 @@ function ReservationDetails({ reservation, variant = "compact" }) {
             </span>
             <h4>{reservation.customerName}</h4>
             <p>
-              {reservation.eventType} · {bookingModeLabels[booking.bookingMode]}
+              {reservation.eventType} · {getBookingModeLabel(booking.bookingMode)}
             </p>
           </div>
           <div>
@@ -100,7 +100,7 @@ function ReservationDetails({ reservation, variant = "compact" }) {
       <dt>Personas</dt>
       <dd>{reservation.guestCount || "No aplica"}</dd>
       <dt>Tipo de reserva</dt>
-      <dd>{bookingModeLabels[booking.bookingMode]}</dd>
+      <dd>{getBookingModeLabel(booking.bookingMode)}</dd>
       <dt>Precio total</dt>
       <dd>{formatGuaranies(reservation.totalPrice)}</dd>
       <dt>Seña</dt>
@@ -273,7 +273,7 @@ export default function AdminCalendar() {
                     <span className="admin-calendar-day__status">{status}</span>
                     <strong>{reservation.customerName}</strong>
                     <small>
-                      {reservation.eventType} · {bookingModeLabels[booking.bookingMode]}
+                      {reservation.eventType} · {getBookingModeLabel(booking.bookingMode)}
                     </small>
                     <div className="admin-calendar-popover">
                       <ReservationDetails reservation={reservation} />
@@ -321,13 +321,6 @@ export default function AdminCalendar() {
             ) : freeDateMode === "reservation" && reservationDraft ? (
               <>
                 <div className="reservation-edit-form">
-                  <BookingFields
-                    availability={availability}
-                    value={reservationDraft}
-                    onChange={(booking) =>
-                      setReservationDraft((current) => ({ ...current, ...booking }))
-                    }
-                  />
                   <label>
                     Nombre del cliente
                     <input
@@ -352,18 +345,27 @@ export default function AdminCalendar() {
                       }
                     />
                   </label>
-                  <label>
-                    Tipo de evento
-                    <input
-                      value={reservationDraft.eventType}
-                      onChange={(event) =>
-                        setReservationDraft((current) => ({
-                          ...current,
-                          eventType: event.target.value,
-                        }))
-                      }
-                    />
-                  </label>
+                  <BookingFields
+                    availability={availability}
+                    value={reservationDraft}
+                    onChange={(booking) =>
+                      setReservationDraft((current) => ({ ...current, ...booking }))
+                    }
+                    eventField={(
+                      <label>
+                        Tipo de evento
+                        <input
+                          value={reservationDraft.eventType}
+                          onChange={(event) =>
+                            setReservationDraft((current) => ({
+                              ...current,
+                              eventType: event.target.value,
+                            }))
+                          }
+                        />
+                      </label>
+                    )}
+                  />
                   <label>
                     Personas
                     <input
@@ -376,6 +378,26 @@ export default function AdminCalendar() {
                         }))
                       }
                     />
+                  </label>
+                  <label>
+                    Estado
+                    <select
+                      value={reservationDraft.status}
+                      onChange={(event) =>
+                        setReservationDraft((current) => ({
+                          ...current,
+                          status: event.target.value,
+                        }))
+                      }
+                    >
+                      {adminReservationStatuses
+                        .filter((status) => status !== "bloqueada")
+                        .map((status) => (
+                          <option key={status} value={status}>
+                            {status}
+                          </option>
+                        ))}
+                    </select>
                   </label>
                   <label>
                     Precio total
@@ -415,26 +437,6 @@ export default function AdminCalendar() {
                         }))
                       }
                     />
-                  </label>
-                  <label>
-                    Estado
-                    <select
-                      value={reservationDraft.status}
-                      onChange={(event) =>
-                        setReservationDraft((current) => ({
-                          ...current,
-                          status: event.target.value,
-                        }))
-                      }
-                    >
-                      {adminReservationStatuses
-                        .filter((status) => status !== "bloqueada")
-                        .map((status) => (
-                          <option key={status} value={status}>
-                            {status}
-                          </option>
-                        ))}
-                    </select>
                   </label>
                   <label className="reservation-edit-form__notes">
                     Notas internas

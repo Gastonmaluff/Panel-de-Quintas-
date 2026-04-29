@@ -38,6 +38,9 @@ export default function AdminPricing() {
   const [rules, setRules] = useState(pricingRules);
   const [eventTypes, setEventTypes] = useState(buildInitialEventTypes);
   const [extras, setExtras] = useState(optionalExtrasMock);
+  const sortedGuestRules = rules.guestCountRules
+    .map((rule, index) => ({ ...rule, index }))
+    .sort((a, b) => a.min - b.min);
 
   const updateRule = (key, value) => {
     setRules((current) => ({ ...current, [key]: value }));
@@ -49,6 +52,20 @@ export default function AdminPricing() {
       guestCountRules: current.guestCountRules.map((rule, ruleIndex) =>
         ruleIndex === index ? { ...rule, [key]: value } : rule,
       ),
+    }));
+  };
+
+  const addGuestRule = () => {
+    setRules((current) => ({
+      ...current,
+      guestCountRules: [...current.guestCountRules, { min: 12, amount: 0 }],
+    }));
+  };
+
+  const removeGuestRule = (index) => {
+    setRules((current) => ({
+      ...current,
+      guestCountRules: current.guestCountRules.filter((_, ruleIndex) => ruleIndex !== index),
     }));
   };
 
@@ -174,28 +191,40 @@ export default function AdminPricing() {
         </article>
 
         <article className="admin-table-card">
-          <h3>Cantidad de personas</h3>
-          <p>Agregá un recargo cuando el evento supera cierta cantidad de invitados.</p>
-          {rules.guestCountRules.map((rule, index) => (
-            <div className="pricing-rule-row" key={`${rule.min}-${index}`}>
+          <div className="admin-section-heading admin-section-heading--compact">
+            <div>
+              <h3>Cantidad de personas</h3>
+              <p>Agregá un recargo cuando el evento supere cierta cantidad de invitados.</p>
+            </div>
+            <button type="button" onClick={addGuestRule}>
+              Agregar recargo
+            </button>
+          </div>
+          <div className="pricing-guest-rules">
+            {sortedGuestRules.map((rule) => (
+              <div className="pricing-rule-row" key={`${rule.min}-${rule.index}`}>
               <label>
                 Desde cuántas personas
                 <input
                   inputMode="numeric"
                   value={formatAdminNumber(rule.min)}
-                  onChange={(event) => updateGuestRule(index, "min", parseAdminNumber(event.target.value))}
+                  onChange={(event) => updateGuestRule(rule.index, "min", parseAdminNumber(event.target.value))}
                 />
               </label>
               <label>
-                Recargo
+                Se suma al precio base
                 <MoneyInput
                   value={rule.amount}
-                  onChange={(value) => updateGuestRule(index, "amount", value)}
+                  onChange={(value) => updateGuestRule(rule.index, "amount", value)}
                   ariaLabel="Recargo por cantidad de personas"
                 />
               </label>
-            </div>
-          ))}
+              <button type="button" className="admin-danger-button" onClick={() => removeGuestRule(rule.index)}>
+                Eliminar
+              </button>
+              </div>
+            ))}
+          </div>
         </article>
 
         <article className="admin-table-card">

@@ -1,7 +1,7 @@
 import { formatDateLong } from "./date.js";
 import {
-  bookingModeLabels,
   formatDateTimeShort,
+  getBookingModeLabel,
 } from "./booking.js";
 import { eventTypeLabels, formatGuaranies, timeSlotLabels } from "./pricing.js";
 
@@ -11,7 +11,7 @@ export function buildWhatsappUrl({ venue, quoteValues, quote }) {
 
   if (isRangeQuote) {
     lines.push(
-      `Tipo de reserva: ${bookingModeLabels[quoteValues.bookingMode]}`,
+      `Tipo de reserva: ${getBookingModeLabel(quoteValues.bookingMode)}`,
       `Ingreso: ${formatDateTimeShort(quoteValues.startDate, quoteValues.startTime)}`,
       `Egreso: ${formatDateTimeShort(quoteValues.endDate, quoteValues.endTime)}`,
     );

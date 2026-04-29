@@ -7,8 +7,8 @@ import {
 } from "../../utils/availability.js";
 import {
   applyBookingMode,
-  bookingModeLabels,
   bookingTimes,
+  getBookingModeLabel,
 } from "../../utils/booking.js";
 import { buildWhatsappUrl } from "../../utils/whatsapp.js";
 import {
@@ -96,9 +96,9 @@ export default function QuoteCalculator({ venue, rules, availability }) {
               value={values.bookingMode}
               onChange={(event) => updateValue("bookingMode", event.target.value)}
             >
-              {Object.entries(bookingModeLabels).map(([value, label]) => (
+              {["day", "night", "multi_day"].map((value) => (
                 <option key={value} value={value}>
-                  {label}
+                  {getBookingModeLabel(value, "select")}
                 </option>
               ))}
             </select>

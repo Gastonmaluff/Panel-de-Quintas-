@@ -1,10 +1,11 @@
 import { useMemo, useState } from "react";
+import { MoreVertical } from "lucide-react";
 import { buildAdminAvailability, useAdminData } from "../admin/AdminDataProvider.jsx";
 import BookingFields from "../components/admin/BookingFields.jsx";
 import { adminReservationStatuses } from "../data/adminData.js";
 import { venues } from "../data/venues.js";
 import { isRangeAvailable } from "../utils/availability.js";
-import { bookingModeLabels, normalizeBooking } from "../utils/booking.js";
+import { getBookingModeLabel, normalizeBooking } from "../utils/booking.js";
 import { formatGuaranies } from "../utils/pricing.js";
 
 function buildClientWhatsappUrl(venue, reservation) {
@@ -196,7 +197,7 @@ export default function AdminReservations() {
               <th className="money-column money-column--deposit">Seña</th>
               <th className="money-column money-column--balance">Saldo</th>
               <th>Estado</th>
-              <th>Acciones</th>
+              <th>Menú</th>
             </tr>
           </thead>
           <tbody>
@@ -218,7 +219,10 @@ export default function AdminReservations() {
                   <strong>{formatTableDate(booking.endDate)}</strong>
                   <small>{booking.endTime}</small>
                 </td>
-                <td className="admin-reservations-table__event">{reservation.eventType}</td>
+                <td className="admin-reservations-table__event">
+                  {reservation.eventType}
+                  <small>{getBookingModeLabel(booking.bookingMode)}</small>
+                </td>
                 <td>{reservation.guestCount || "No aplica"}</td>
                 <td className="money-column money-column--total">{formatGuaranies(reservation.totalPrice)}</td>
                 <td className="money-column money-column--deposit">{formatGuaranies(reservation.depositAmount)}</td>
@@ -227,17 +231,17 @@ export default function AdminReservations() {
                   <span className={`admin-status-pill admin-status-pill--${getStatusClass(reservation.status)}`}>
                     {reservation.status}
                   </span>
-                  <small>{bookingModeLabels[booking.bookingMode]}</small>
                 </td>
                 <td className="admin-actions-cell">
                   <button
                     type="button"
                     className="admin-actions-button"
+                    aria-label={`Abrir acciones de ${reservation.customerName}`}
                     onClick={() =>
                       setOpenMenuId((current) => (current === reservation.id ? null : reservation.id))
                     }
                   >
-                    Acciones
+                    <MoreVertical size={18} strokeWidth={2} aria-hidden="true" />
                   </button>
                   {openMenuId === reservation.id ? (
                     <div className="admin-actions-menu">
@@ -298,6 +302,8 @@ export default function AdminReservations() {
                   <h3>{reservation.customerName}</h3>
                   <p>
                     {reservation.eventType} · {reservation.guestCount || "No aplica"} personas
+                    <br />
+                    {getBookingModeLabel(booking.bookingMode)}
                   </p>
                 </div>
                 <span className={`admin-status-pill admin-status-pill--${getStatusClass(reservation.status)}`}>
@@ -349,11 +355,12 @@ export default function AdminReservations() {
                   <button
                     type="button"
                     className="admin-actions-button"
+                    aria-label={`Abrir acciones de ${reservation.customerName}`}
                     onClick={() =>
                       setOpenMenuId((current) => (current === reservation.id ? null : reservation.id))
                     }
                   >
-                    Acciones
+                    <MoreVertical size={18} strokeWidth={2} aria-hidden="true" />
                   </button>
                   {renderActionsMenu(reservation)}
                 </div>
@@ -407,19 +414,21 @@ export default function AdminReservations() {
                 onChange={(booking) =>
                   setEditingReservation((current) => ({ ...current, ...booking }))
                 }
+                eventField={(
+                  <label>
+                    Tipo de evento
+                    <input
+                      value={editingReservation.eventType}
+                      onChange={(event) =>
+                        setEditingReservation((current) => ({
+                          ...current,
+                          eventType: event.target.value,
+                        }))
+                      }
+                    />
+                  </label>
+                )}
               />
-              <label>
-                Tipo de evento
-                <input
-                  value={editingReservation.eventType}
-                  onChange={(event) =>
-                    setEditingReservation((current) => ({
-                      ...current,
-                      eventType: event.target.value,
-                    }))
-                  }
-                />
-              </label>
               <label>
                 Personas
                 <input
@@ -432,6 +441,24 @@ export default function AdminReservations() {
                     }))
                   }
                 />
+              </label>
+              <label>
+                Estado
+                <select
+                  value={editingReservation.status}
+                  onChange={(event) =>
+                    setEditingReservation((current) => ({
+                      ...current,
+                      status: event.target.value,
+                    }))
+                  }
+                >
+                  {adminReservationStatuses.map((status) => (
+                    <option key={status} value={status}>
+                      {status}
+                    </option>
+                  ))}
+                </select>
               </label>
               <label>
                 Precio total
@@ -471,24 +498,6 @@ export default function AdminReservations() {
                     }))
                   }
                 />
-              </label>
-              <label>
-                Estado
-                <select
-                  value={editingReservation.status}
-                  onChange={(event) =>
-                    setEditingReservation((current) => ({
-                      ...current,
-                      status: event.target.value,
-                    }))
-                  }
-                >
-                  {adminReservationStatuses.map((status) => (
-                    <option key={status} value={status}>
-                      {status}
-                    </option>
-                  ))}
-                </select>
               </label>
               <label className="reservation-edit-form__notes">
                 Notas internas

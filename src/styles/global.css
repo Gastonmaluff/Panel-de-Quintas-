@@ -1390,6 +1390,16 @@ textarea:focus {
   gap: 16px;
 }
 
+.admin-section-heading--compact {
+  align-items: flex-start;
+  gap: 14px;
+}
+
+.admin-section-heading--compact button {
+  min-height: 38px;
+  padding-inline: 14px;
+}
+
 .admin-section-heading h2,
 .admin-table-card h3,
 .admin-editor-card h3 {
@@ -1731,11 +1741,22 @@ textarea:focus {
   font-weight: 700;
 }
 
-.reservation-form-grid,
-.pricing-rule-row {
+.reservation-form-grid {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 12px;
+}
+
+.pricing-guest-rules {
+  display: grid;
+  gap: 10px;
+}
+
+.pricing-rule-row {
+  display: grid;
+  grid-template-columns: minmax(120px, 1fr) minmax(140px, 1fr) auto;
+  gap: 10px;
+  align-items: end;
 }
 
 .reservation-card__summary,
@@ -1799,15 +1820,16 @@ textarea:focus {
 }
 
 .admin-actions-button {
-  min-height: 36px;
+  display: inline-grid;
+  width: 38px;
+  min-width: 38px;
+  min-height: 38px;
+  place-items: center;
   border: 1px solid var(--color-forest);
+  border-radius: 12px;
   background: white;
   color: var(--color-forest);
-  font-size: 0.7rem;
-  font-weight: 800;
-  letter-spacing: 0.08em;
-  padding: 0 10px;
-  text-transform: uppercase;
+  padding: 0;
 }
 
 .admin-actions-menu {
@@ -1980,7 +2002,6 @@ textarea:focus {
 .admin-reservation-mobile-card__actions > button,
 .admin-reservation-mobile-card__actions .admin-actions-button {
   display: inline-flex;
-  width: 100%;
   min-height: 46px;
   align-items: center;
   justify-content: center;
@@ -1992,14 +2013,21 @@ textarea:focus {
 }
 
 .admin-reservation-mobile-card__actions > a {
+  width: 100%;
   background: var(--color-forest);
   color: white;
 }
 
 .admin-reservation-mobile-card__actions > button {
+  width: 100%;
   border: 1px solid var(--color-line);
   background: #f3f2ed;
   color: #869086;
+}
+
+.admin-reservation-mobile-card__actions .admin-actions-button {
+  width: 54px;
+  justify-self: end;
 }
 
 .admin-calendar-shell {
@@ -3040,7 +3068,7 @@ textarea:focus {
 
 .admin-reservations-table th,
 .admin-reservations-table td {
-  padding: 12px 8px;
+  padding: 10px 6px;
 }
 
 .admin-reservations-table td {
@@ -3051,12 +3079,12 @@ textarea:focus {
 
 .admin-reservations-table th:nth-child(1),
 .admin-reservations-table td:nth-child(1) {
-  width: 13%;
+  width: 12%;
 }
 
 .admin-reservations-table th:nth-child(2),
 .admin-reservations-table td:nth-child(2) {
-  width: 10%;
+  width: 9%;
 }
 
 .admin-reservations-table th:nth-child(3),
@@ -3071,7 +3099,7 @@ textarea:focus {
 
 .admin-reservations-table th:nth-child(5),
 .admin-reservations-table td:nth-child(5) {
-  width: 10%;
+  width: 13%;
 }
 
 .admin-reservations-table th:nth-child(6),
@@ -3081,12 +3109,15 @@ textarea:focus {
 
 .admin-reservations-table th:nth-child(10),
 .admin-reservations-table td:nth-child(10) {
-  width: 10%;
+  width: 8%;
+  white-space: nowrap;
 }
 
 .admin-reservations-table th:nth-child(11),
 .admin-reservations-table td:nth-child(11) {
-  width: 7%;
+  width: 44px;
+  text-align: center;
+  white-space: nowrap;
 }
 
 .admin-reservations-table .money-column {
@@ -3100,11 +3131,8 @@ textarea:focus {
 }
 
 .admin-actions-button {
-  width: 100%;
-  min-height: 34px;
-  font-size: 0.64rem;
-  letter-spacing: 0.06em;
-  padding: 0 8px;
+  width: 38px;
+  min-height: 38px;
 }
 
 .admin-extras-card {
@@ -3494,6 +3522,7 @@ textarea:focus {
     .admin-amenity-editor,
     .admin-event-list article,
     .admin-event-type-list > div,
+    .pricing-rule-row,
     .admin-detail-grid,
     .admin-reservation-panel__hero,
     .reservation-edit-form,

@@ -9,8 +9,8 @@ import {
 } from "lucide-react";
 import { useAdminData } from "../admin/AdminDataProvider.jsx";
 import {
-  bookingModeLabels,
   formatBookingRange,
+  getBookingModeLabel,
   getReservationDates,
   normalizeBooking,
 } from "../utils/booking.js";
@@ -155,7 +155,7 @@ export default function AdminDashboard() {
                       </span>
                     </div>
                     <p>
-                      {reservation.eventType} · {bookingModeLabels[booking.bookingMode]} · {reservation.guestCount || "Sin"} personas
+                      {reservation.eventType} · {getBookingModeLabel(booking.bookingMode)} · {reservation.guestCount || "Sin"} personas
                     </p>
                     <small>Ingreso: {range.start}</small>
                     <small>Egreso: {range.end}</small>

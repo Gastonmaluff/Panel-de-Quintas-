@@ -1,12 +1,14 @@
 import DateAvailabilityPicker from "../calendar/DateAvailabilityPicker.jsx";
 import {
   applyBookingMode,
-  bookingModeLabels,
   bookingTimes,
+  getBookingModeLabel,
   normalizeBooking,
 } from "../../utils/booking.js";
 
-export default function BookingFields({ availability, value, onChange }) {
+const bookingModes = ["day", "night", "multi_day"];
+
+export default function BookingFields({ availability, value, onChange, eventField = null }) {
   const booking = normalizeBooking(value);
 
   const updateBooking = (key, nextValue) => {
@@ -25,20 +27,6 @@ export default function BookingFields({ availability, value, onChange }) {
 
   return (
     <div className="booking-fields">
-      <label>
-        Tipo de reserva
-        <select
-          value={booking.bookingMode}
-          onChange={(event) => updateBooking("bookingMode", event.target.value)}
-        >
-          {Object.entries(bookingModeLabels).map(([mode, label]) => (
-            <option key={mode} value={mode}>
-              {label}
-            </option>
-          ))}
-        </select>
-      </label>
-
       <DateAvailabilityPicker
         availability={availability}
         value={booking.startDate}
@@ -89,6 +77,22 @@ export default function BookingFields({ availability, value, onChange }) {
           ))}
         </select>
       </label>
+
+      <label>
+        Tipo de reserva
+        <select
+          value={booking.bookingMode}
+          onChange={(event) => updateBooking("bookingMode", event.target.value)}
+        >
+          {bookingModes.map((mode) => (
+            <option key={mode} value={mode}>
+              {getBookingModeLabel(mode, "select")}
+            </option>
+          ))}
+        </select>
+      </label>
+
+      {eventField}
     </div>
   );
 }

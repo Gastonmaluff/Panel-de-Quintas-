@@ -6,6 +6,24 @@ export const bookingModeLabels = {
   multi_day: "Varios días",
 };
 
+export const bookingModeDetailLabels = {
+  day: "Turno día · 7:00 a.m. a 7:00 p.m.",
+  night: "Turno noche · 7:00 p.m. a 7:00 a.m.",
+  multi_day: "Varios días",
+};
+
+export const bookingModeSelectLabels = {
+  day: "Turno día (7 a.m. - 7 p.m.)",
+  night: "Turno noche (7 p.m. - 7 a.m.)",
+  multi_day: "Varios días",
+};
+
+export function getBookingModeLabel(bookingMode, variant = "detail") {
+  if (variant === "select") return bookingModeSelectLabels[bookingMode] || bookingModeLabels[bookingMode];
+  if (variant === "short") return bookingModeLabels[bookingMode] || bookingMode;
+  return bookingModeDetailLabels[bookingMode] || bookingModeLabels[bookingMode] || bookingMode;
+}
+
 export const bookingTimes = ["07:00", "19:00"];
 
 const blockingStatuses = new Set(["confirmada", "pre-reserva", "seña pendiente", "bloqueada"]);
