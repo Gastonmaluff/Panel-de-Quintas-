@@ -29,6 +29,20 @@ function downloadBlob(blob, fileName) {
   window.setTimeout(() => URL.revokeObjectURL(url), 1000);
 }
 
+async function waitForImages(container) {
+  const images = Array.from(container.querySelectorAll("img"));
+  await Promise.all(
+    images.map((image) => {
+      if (image.complete && image.naturalWidth > 0) return Promise.resolve();
+
+      return new Promise((resolve) => {
+        image.onload = resolve;
+        image.onerror = resolve;
+      });
+    }),
+  );
+}
+
 export default function ShareAvailabilityButton() {
   const { availability } = useAdminData();
   const buttonRef = useRef(null);
@@ -63,6 +77,8 @@ export default function ShareAvailabilityButton() {
   const createPngBlob = async (monthKey) => {
     const node = exportRefs.current[monthKey];
     if (!node) throw new Error("Missing export node");
+
+    await waitForImages(node);
 
     const blob = await toBlob(node, {
       cacheBust: true,

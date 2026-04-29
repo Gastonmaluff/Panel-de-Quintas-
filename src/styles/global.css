@@ -1306,6 +1306,10 @@ textarea:focus {
   grid-column: span 2;
 }
 
+.admin-guest-rules-card {
+  grid-column: 1 / -1;
+}
+
 .admin-pricing-explain {
   display: flex;
   flex-wrap: wrap;
@@ -1749,14 +1753,48 @@ textarea:focus {
 
 .pricing-guest-rules {
   display: grid;
-  gap: 10px;
+  gap: 8px;
+  overflow: hidden;
 }
 
 .pricing-rule-row {
   display: grid;
-  grid-template-columns: minmax(120px, 1fr) minmax(140px, 1fr) auto;
-  gap: 10px;
+  grid-template-columns: minmax(180px, 1fr) minmax(220px, 1fr) 112px;
+  gap: 12px;
   align-items: end;
+  border: 1px solid rgba(17, 52, 32, 0.08);
+  border-radius: 16px;
+  background: #fbfcfa;
+  padding: 12px;
+}
+
+.pricing-rule-row--header {
+  border: 0;
+  background: transparent;
+  color: #8a96aa;
+  font-size: 0.68rem;
+  font-weight: 850;
+  letter-spacing: 0.1em;
+  padding: 0 12px 2px;
+  text-transform: uppercase;
+}
+
+.pricing-rule-row label {
+  display: grid;
+  gap: 7px;
+}
+
+.pricing-rule-row label span {
+  color: var(--color-muted);
+  font-size: 0.7rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.pricing-rule-row .admin-danger-button {
+  width: 100%;
+  min-height: 46px;
 }
 
 .reservation-card__summary,
@@ -3139,6 +3177,10 @@ textarea:focus {
   grid-column: span 3;
 }
 
+.admin-guest-rules-card {
+  grid-column: 1 / -1;
+}
+
 .admin-extras-card .admin-extra-list div {
   grid-template-columns: minmax(120px, 1fr) minmax(120px, 0.7fr) minmax(160px, 1.2fr) auto auto;
 }
@@ -3696,6 +3738,14 @@ textarea:focus {
     grid-column: 1 / -1;
     width: 100%;
     margin-top: 0;
+  }
+
+  .pricing-rule-row--header {
+    display: none;
+  }
+
+  .pricing-rule-row .admin-danger-button {
+    width: 100%;
   }
 
   .admin-list div,

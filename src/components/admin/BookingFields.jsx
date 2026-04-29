@@ -27,6 +27,22 @@ export default function BookingFields({ availability, value, onChange, eventFiel
 
   return (
     <div className="booking-fields">
+      <label>
+        Tipo de reserva
+        <select
+          value={booking.bookingMode}
+          onChange={(event) => updateBooking("bookingMode", event.target.value)}
+        >
+          {bookingModes.map((mode) => (
+            <option key={mode} value={mode}>
+              {getBookingModeLabel(mode, "select")}
+            </option>
+          ))}
+        </select>
+      </label>
+
+      {eventField}
+
       <DateAvailabilityPicker
         availability={availability}
         value={booking.startDate}
@@ -77,22 +93,6 @@ export default function BookingFields({ availability, value, onChange, eventFiel
           ))}
         </select>
       </label>
-
-      <label>
-        Tipo de reserva
-        <select
-          value={booking.bookingMode}
-          onChange={(event) => updateBooking("bookingMode", event.target.value)}
-        >
-          {bookingModes.map((mode) => (
-            <option key={mode} value={mode}>
-              {getBookingModeLabel(mode, "select")}
-            </option>
-          ))}
-        </select>
-      </label>
-
-      {eventField}
     </div>
   );
 }

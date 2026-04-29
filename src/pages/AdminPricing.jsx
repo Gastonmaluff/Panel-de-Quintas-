@@ -190,38 +190,43 @@ export default function AdminPricing() {
           </div>
         </article>
 
-        <article className="admin-table-card">
+        <article className="admin-table-card admin-guest-rules-card">
           <div className="admin-section-heading admin-section-heading--compact">
             <div>
               <h3>Cantidad de personas</h3>
-              <p>Agregá un recargo cuando el evento supere cierta cantidad de invitados.</p>
+              <p>Agregá recargos cuando el evento supere cierta cantidad de invitados.</p>
             </div>
             <button type="button" onClick={addGuestRule}>
               Agregar recargo
             </button>
           </div>
           <div className="pricing-guest-rules">
+            <div className="pricing-rule-row pricing-rule-row--header" aria-hidden="true">
+              <span>Desde cuántas personas</span>
+              <span>Se suma al precio base</span>
+              <span>Acción</span>
+            </div>
             {sortedGuestRules.map((rule) => (
               <div className="pricing-rule-row" key={`${rule.min}-${rule.index}`}>
-              <label>
-                Desde cuántas personas
-                <input
-                  inputMode="numeric"
-                  value={formatAdminNumber(rule.min)}
-                  onChange={(event) => updateGuestRule(rule.index, "min", parseAdminNumber(event.target.value))}
-                />
-              </label>
-              <label>
-                Se suma al precio base
-                <MoneyInput
-                  value={rule.amount}
-                  onChange={(value) => updateGuestRule(rule.index, "amount", value)}
-                  ariaLabel="Recargo por cantidad de personas"
-                />
-              </label>
-              <button type="button" className="admin-danger-button" onClick={() => removeGuestRule(rule.index)}>
-                Eliminar
-              </button>
+                <label>
+                  <span>Desde cuántas personas</span>
+                  <input
+                    inputMode="numeric"
+                    value={formatAdminNumber(rule.min)}
+                    onChange={(event) => updateGuestRule(rule.index, "min", parseAdminNumber(event.target.value))}
+                  />
+                </label>
+                <label>
+                  <span>Se suma al precio base</span>
+                  <MoneyInput
+                    value={rule.amount}
+                    onChange={(value) => updateGuestRule(rule.index, "amount", value)}
+                    ariaLabel="Recargo por cantidad de personas"
+                  />
+                </label>
+                <button type="button" className="admin-danger-button" onClick={() => removeGuestRule(rule.index)}>
+                  Eliminar
+                </button>
               </div>
             ))}
           </div>
