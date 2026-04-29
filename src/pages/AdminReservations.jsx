@@ -51,6 +51,55 @@ function createReservationDraft() {
   };
 }
 
+function ReservationActionsMenu({
+  reservation,
+  venue,
+  openMenuId,
+  setEditingReservation,
+  markDepositPaid,
+  markBalancePaid,
+  updateReservation,
+  removeReservation,
+}) {
+  if (openMenuId !== reservation.id) return null;
+
+  return (
+    <div className="admin-actions-menu">
+      <button type="button" onClick={() => setEditingReservation(normalizeBooking(reservation))}>
+        Editar reserva
+      </button>
+      <a href={buildClientWhatsappUrl(venue, reservation)} target="_blank" rel="noreferrer">
+        Escribir por WhatsApp
+      </a>
+      <button type="button" onClick={() => markDepositPaid(reservation)}>
+        Marcar seña recibida
+      </button>
+      <button type="button" onClick={() => markBalancePaid(reservation)}>
+        Marcar saldo pagado
+      </button>
+      <label>
+        Cambiar estado
+        <select
+          value={reservation.status}
+          onChange={(event) => updateReservation(reservation.id, { status: event.target.value })}
+        >
+          {adminReservationStatuses.map((status) => (
+            <option key={status} value={status}>
+              {status}
+            </option>
+          ))}
+        </select>
+      </label>
+      <button type="button" onClick={() => updateReservation(reservation.id, { status: "cancelada" })}>
+        Cancelar reserva
+      </button>
+      <button type="button" className="is-danger" onClick={() => removeReservation(reservation.id)}>
+        Eliminar reserva
+      </button>
+    </div>
+  );
+}
+
 export default function AdminReservations() {
   const venue = venues[0];
   const { reservations, addReservation, updateReservation, removeReservation } = useAdminData();
@@ -107,6 +156,19 @@ export default function AdminReservations() {
 
     setEditingReservation(null);
   };
+
+  const renderActionsMenu = (reservation) => (
+    <ReservationActionsMenu
+      reservation={reservation}
+      venue={venue}
+      openMenuId={openMenuId}
+      setEditingReservation={setEditingReservation}
+      markDepositPaid={markDepositPaid}
+      markBalancePaid={markBalancePaid}
+      updateReservation={updateReservation}
+      removeReservation={removeReservation}
+    />
+  );
 
   return (
     <section className="admin-section">
@@ -222,6 +284,83 @@ export default function AdminReservations() {
             ))}
           </tbody>
         </table>
+      </div>
+
+      <div className="admin-reservations-mobile-list">
+        {reservations.map((reservation) => {
+          const booking = normalizeBooking(reservation);
+          const hasPhone = Boolean(reservation.customerPhone?.replace(/\D/g, ""));
+
+          return (
+            <article className="admin-reservation-mobile-card" key={reservation.id}>
+              <header>
+                <div>
+                  <h3>{reservation.customerName}</h3>
+                  <p>
+                    {reservation.eventType} · {reservation.guestCount || "No aplica"} personas
+                  </p>
+                </div>
+                <span className={`admin-status-pill admin-status-pill--${getStatusClass(reservation.status)}`}>
+                  {reservation.status}
+                </span>
+              </header>
+
+              <p className="admin-reservation-mobile-card__phone">
+                {reservation.customerPhone || "Sin telefono"}
+              </p>
+
+              <div className="admin-reservation-mobile-card__dates">
+                <div>
+                  <span>Ingreso</span>
+                  <strong>{formatTableDate(booking.startDate)} · {booking.startTime}</strong>
+                </div>
+                <div>
+                  <span>Egreso</span>
+                  <strong>{formatTableDate(booking.endDate)} · {booking.endTime}</strong>
+                </div>
+              </div>
+
+              <div className="admin-reservation-mobile-card__money">
+                <div>
+                  <span>Total</span>
+                  <strong>{formatGuaranies(reservation.totalPrice)}</strong>
+                </div>
+                <div>
+                  <span>Seña</span>
+                  <strong>{formatGuaranies(reservation.depositAmount)}</strong>
+                </div>
+                <div>
+                  <span>Saldo</span>
+                  <strong>{formatGuaranies(reservation.balanceAmount)}</strong>
+                </div>
+              </div>
+
+              <footer className="admin-reservation-mobile-card__actions">
+                {hasPhone ? (
+                  <a href={buildClientWhatsappUrl(venue, reservation)} target="_blank" rel="noreferrer">
+                    WhatsApp
+                  </a>
+                ) : (
+                  <button type="button" disabled>
+                    Sin telefono
+                  </button>
+                )}
+                <div className="admin-actions-cell">
+                  <button
+                    type="button"
+                    className="admin-actions-button"
+                    onClick={() =>
+                      setOpenMenuId((current) => (current === reservation.id ? null : reservation.id))
+                    }
+                  >
+                    Acciones
+                  </button>
+                  {renderActionsMenu(reservation)}
+                </div>
+              </footer>
+            </article>
+          );
+        })}
       </div>
 
       {editingReservation ? (
