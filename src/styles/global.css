@@ -3059,11 +3059,50 @@ textarea:focus {
   gap: 8px;
 }
 
+.share-availability__menu {
+  position: absolute;
+  right: 0;
+  top: calc(100% + 10px);
+  z-index: 30;
+  display: grid;
+  width: min(280px, 82vw);
+  gap: 6px;
+  border: 1px solid rgba(17, 52, 32, 0.1);
+  border-radius: 18px;
+  background: white;
+  box-shadow: 0 24px 70px rgba(18, 35, 25, 0.16);
+  padding: 10px;
+}
+
+.share-availability__menu button {
+  display: inline-flex;
+  min-height: 42px;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 10px;
+  border: 0;
+  border-radius: 12px;
+  background: transparent;
+  box-shadow: none;
+  color: var(--color-forest);
+  font-size: 0.86rem;
+  font-weight: 720;
+  letter-spacing: 0;
+  padding: 0 12px;
+  text-align: left;
+  text-transform: none;
+}
+
+.share-availability__menu button:hover {
+  background: #f5f3ed;
+}
+
 .share-availability > small {
   position: absolute;
   right: 0;
   top: calc(100% + 8px);
-  width: min(280px, 70vw);
+  z-index: 31;
+  width: min(320px, 82vw);
   border: 1px solid #efd5cd;
   border-radius: 12px;
   background: #fff8f5;
