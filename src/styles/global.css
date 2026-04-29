@@ -3168,10 +3168,8 @@ textarea:focus {
 }
 
 .share-availability__menu {
-  position: absolute;
-  right: 0;
-  top: calc(100% + 10px);
-  z-index: 30;
+  position: fixed;
+  z-index: 9999;
   display: grid;
   width: min(280px, 82vw);
   gap: 6px;
@@ -3182,9 +3180,30 @@ textarea:focus {
   padding: 10px;
 }
 
+.share-availability__menu > div {
+  display: grid;
+  gap: 4px;
+  border-bottom: 1px solid rgba(17, 52, 32, 0.08);
+  padding-bottom: 8px;
+}
+
+.share-availability__menu > div:last-child {
+  border-bottom: 0;
+  padding-bottom: 0;
+}
+
+.share-availability__menu strong {
+  color: #7c897f;
+  font-size: 0.68rem;
+  font-weight: 850;
+  letter-spacing: 0.1em;
+  padding: 4px 10px 2px;
+  text-transform: uppercase;
+}
+
 .share-availability__menu button {
   display: inline-flex;
-  min-height: 42px;
+  min-height: 38px;
   align-items: center;
   justify-content: flex-start;
   gap: 10px;
@@ -3223,9 +3242,11 @@ textarea:focus {
   position: fixed;
   left: -12000px;
   top: 0;
+  display: grid;
+  gap: 24px;
   width: 1080px;
-  height: 1350px;
-  overflow: hidden;
+  height: auto;
+  overflow: visible;
   pointer-events: none;
 }
 
@@ -3665,6 +3686,14 @@ textarea:focus {
 }
 
 @media (max-width: 760px) {
+  .share-availability__menu {
+    inset: auto 14px 14px 14px !important;
+    width: auto;
+    max-height: calc(100dvh - 28px);
+    overflow-y: auto;
+    border-radius: 22px;
+  }
+
   .admin-event-list__amount {
     min-width: 0;
     justify-items: start;

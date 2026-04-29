@@ -15,7 +15,7 @@ export default function BrandLogo({ variant = "stacked", className = "" }) {
     <img
       className={`brand-logo brand-logo--${variant} ${className}`.trim()}
       src={source}
-      alt="El Paraiso Escondido"
+      alt="El Paraíso Escondido"
       draggable="false"
     />
   );

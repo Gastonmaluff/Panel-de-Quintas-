@@ -32,7 +32,7 @@ function getStatusClass(status) {
     .replaceAll(" ", "-");
 }
 
-const occupancyStatuses = new Set(["confirmada", "seÃ±a pendiente", "pre-reserva", "bloqueada"]);
+const occupancyStatuses = new Set(["confirmada", "seña pendiente", "pre-reserva", "bloqueada"]);
 
 function formatShortEventDate(dateValue) {
   return new Intl.DateTimeFormat("es-PY", {
@@ -66,11 +66,11 @@ export default function AdminDashboard() {
     0,
   );
   const pendingDeposits = currentMonthReservations.filter(
-    (reservation) => reservation.status === "seÃ±a pendiente",
+    (reservation) => reservation.status === "seña pendiente",
   ).length;
   const pendingQueries = currentMonthReservations.filter(
     (reservation) =>
-      reservation.status === "consulta" || reservation.status === "cotizaciÃ³n enviada",
+      reservation.status === "consulta" || reservation.status === "cotización enviada",
   ).length;
   const occupiedDateSet = new Set();
   reservations.forEach((reservation) => {
@@ -91,10 +91,10 @@ export default function AdminDashboard() {
   const metrics = [
     { label: "Reservas del mes", value: currentMonthReservations.length, icon: CalendarCheck },
     { label: "Ingresos estimados", value: formatGuaranies(estimatedIncome), icon: TrendingUp },
-    { label: "SeÃ±as pendientes", value: pendingDeposits, icon: PiggyBank },
+    { label: "Señas pendientes", value: pendingDeposits, icon: PiggyBank },
     { label: "Fechas ocupadas", value: occupiedDateSet.size, icon: CalendarDays },
     { label: "Consultas pendientes", value: pendingQueries, icon: MessageCircle },
-    { label: "PrÃ³ximos eventos", value: upcomingReservations.slice(0, 3).length, icon: Clock3 },
+    { label: "Próximos eventos", value: upcomingReservations.slice(0, 3).length, icon: Clock3 },
   ];
 
   return (
@@ -116,14 +116,14 @@ export default function AdminDashboard() {
         ))}
         <article className="admin-card admin-card--occupancy">
           <div>
-            <span>Ocupacion</span>
+            <span>Ocupación</span>
             <strong>{occupancyPercent}%</strong>
           </div>
           <div className="admin-occupancy-bar" aria-hidden="true">
             <span style={{ width: `${occupancyPercent}%` }} />
           </div>
           <small>
-            {occupiedDateSet.size} de {daysInMonth} dias comprometidos en {monthLabel}
+            {occupiedDateSet.size} de {daysInMonth} días comprometidos en {monthLabel}
           </small>
         </article>
       </div>
@@ -132,7 +132,7 @@ export default function AdminDashboard() {
         <article className="admin-table-card admin-table-card--large admin-events-card">
           <div className="admin-section-heading">
             <div>
-              <h2>Proximos eventos</h2>
+              <h2>Próximos eventos</h2>
               <p>Fechas cercanas con los datos clave para hacer seguimiento.</p>
             </div>
             <Link to="/admin/calendario">Abrir calendario</Link>
@@ -159,7 +159,7 @@ export default function AdminDashboard() {
                     </p>
                     <small>Ingreso: {range.start}</small>
                     <small>Egreso: {range.end}</small>
-                    <small>{reservation.customerPhone || "Sin telefono cargado"}</small>
+                    <small>{reservation.customerPhone || "Sin teléfono cargado"}</small>
                   </div>
                   <div className="admin-event-list__amount">
                     <span>Total estimado</span>

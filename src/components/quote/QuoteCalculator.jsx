@@ -58,13 +58,13 @@ export default function QuoteCalculator({ venue, rules, availability }) {
 
   useEffect(() => {
     if (values.startDate && !selectedStartAvailability.selectable) {
-      setDateWarning(`${selectedStartAvailability.reason}. Elegi otra fecha disponible.`);
+      setDateWarning(`${selectedStartAvailability.reason}. Elegí otra fecha disponible.`);
       setValues((current) => ({ ...current, startDate: "", endDate: "" }));
       return;
     }
 
     if (unavailableRangeDates.length) {
-      setDateWarning("El rango seleccionado incluye fechas no disponibles. Elegi otras fechas.");
+      setDateWarning("El rango seleccionado incluye fechas no disponibles. Elegí otras fechas.");
     }
   }, [selectedStartAvailability, unavailableRangeDates.length, values.startDate]);
 
@@ -82,10 +82,10 @@ export default function QuoteCalculator({ venue, rules, availability }) {
       <div className="section-shell quote-layout">
         <div className="quote-copy">
           <p className="eyebrow">Cotizador</p>
-          <h2>Estima tu evento antes de consultar.</h2>
+          <h2>Estimá tu evento antes de consultar.</h2>
           <p>
-            Elegi turno dia, turno noche o varios dias. El rango usa la misma
-            disponibilidad que el calendario publico.
+            Elegí turno día, turno noche o varios días. El rango usa la misma
+            disponibilidad que el calendario público.
           </p>
         </div>
 
@@ -188,14 +188,14 @@ export default function QuoteCalculator({ venue, rules, availability }) {
             <div className="quote-result">
               <div>
                 <span>Rango elegido</span>
-                <strong>{quote.daysCount} dia{quote.daysCount === 1 ? "" : "s"}</strong>
+                <strong>{quote.daysCount} día{quote.daysCount === 1 ? "" : "s"}</strong>
               </div>
               <div>
                 <span>Precio estimado</span>
                 <strong>{formatGuaranies(quote.totalPrice)}</strong>
               </div>
               <div>
-                <span>Sena sugerida</span>
+                <span>Seña sugerida</span>
                 <strong>{formatGuaranies(quote.depositAmount)}</strong>
               </div>
               <div>
@@ -205,7 +205,7 @@ export default function QuoteCalculator({ venue, rules, availability }) {
             </div>
           ) : (
             <div className="quote-empty-state">
-              Elegi una fecha disponible para estimar tu evento.
+              Elegí una fecha disponible para estimar tu evento.
             </div>
           )}
 

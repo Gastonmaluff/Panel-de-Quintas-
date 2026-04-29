@@ -2,7 +2,7 @@ import logoStacked from "../../assets/branding/logo-official-stacked.png";
 import { getMonthMatrix } from "../../utils/date.js";
 import { getDateAvailability } from "../../utils/availability.js";
 
-const weekdays = ["Lun", "Mar", "Mie", "Jue", "Vie", "Sab", "Dom"];
+const weekdays = ["Lun", "Mar", "Mié", "Jue", "Vie", "Sáb", "Dom"];
 
 const statusText = {
   available: "Disponible",
@@ -35,7 +35,7 @@ export default function ShareableAvailabilityCalendar({ availability, month }) {
   return (
     <article className="shareable-calendar" aria-label="Imagen de disponibilidad">
       <header className="shareable-calendar__header">
-        <img src={logoStacked} alt="El Paraiso Escondido" />
+        <img src={logoStacked} alt="El Paraíso Escondido" />
         <p>Disponibilidad</p>
         <h2>{monthTitle}</h2>
       </header>

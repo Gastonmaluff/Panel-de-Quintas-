@@ -16,11 +16,11 @@ import { venues } from "../data/venues.js";
 
 const adminLinks = [
   { to: "/admin", label: "Dashboard", icon: LayoutDashboard, end: true },
-  { to: "/admin/contenido", label: "Contenido publico", icon: FileText },
+  { to: "/admin/contenido", label: "Contenido público", icon: FileText },
   { to: "/admin/calendario", label: "Calendario", icon: CalendarDays },
   { to: "/admin/reservas", label: "Reservas", icon: WalletCards },
   { to: "/admin/precios", label: "Precios", icon: Tag },
-  { to: "/admin/configuracion", label: "Configuracion", icon: Settings },
+  { to: "/admin/configuracion", label: "Configuración", icon: Settings },
 ];
 
 function AdminShell() {
@@ -61,11 +61,11 @@ function AdminShell() {
         </nav>
         <div className="admin-sidebar__footer">
           <a href={publicPath} target="_blank" rel="noreferrer">
-            Ver pagina publica
+            Ver página pública
           </a>
           <button type="button" onClick={handleLogout}>
             <LogOut size={17} strokeWidth={1.8} aria-hidden="true" />
-            Cerrar sesion
+            Cerrar sesión
           </button>
         </div>
       </aside>
@@ -75,15 +75,15 @@ function AdminShell() {
           <div className="admin-topbar__brand">
             <p className="eyebrow">Panel administrador</p>
             <BrandLogo variant="horizontal" className="admin-topbar__logo" />
-            <span>Sesion activa: {user?.email}</span>
+            <span>Sesión activa: {user?.email}</span>
           </div>
           <div className="admin-topbar__actions">
             <a href={publicPath} target="_blank" rel="noreferrer">
-              Ver pagina publica
+              Ver página pública
             </a>
             <ShareAvailabilityButton />
             <button type="button" onClick={handleLogout}>
-              Cerrar sesion
+              Cerrar sesión
             </button>
           </div>
         </header>

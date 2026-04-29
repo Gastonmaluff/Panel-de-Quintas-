@@ -1,14 +1,14 @@
 import { toISODate } from "./date.js";
 
 export const bookingModeLabels = {
-  day: "Turno dÃ­a",
+  day: "Turno día",
   night: "Turno noche",
-  multi_day: "Varios dÃ­as",
+  multi_day: "Varios días",
 };
 
 export const bookingTimes = ["07:00", "19:00"];
 
-const blockingStatuses = new Set(["confirmada", "pre-reserva", "seÃ±a pendiente", "bloqueada"]);
+const blockingStatuses = new Set(["confirmada", "pre-reserva", "seña pendiente", "bloqueada"]);
 
 export function addDaysISO(dateValue, days) {
   if (!dateValue) return "";
@@ -165,6 +165,6 @@ export function formatBookingRange(reservation) {
 
 export function getBookingDurationLabel(reservation) {
   const dates = getReservationDates(reservation);
-  if (dates.length <= 1) return "1 dÃ­a";
-  return `${dates.length} dÃ­as`;
+  if (dates.length <= 1) return "1 día";
+  return `${dates.length} días`;
 }

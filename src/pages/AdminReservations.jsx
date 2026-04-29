@@ -306,7 +306,7 @@ export default function AdminReservations() {
               </header>
 
               <p className="admin-reservation-mobile-card__phone">
-                {reservation.customerPhone || "Sin telefono"}
+                {reservation.customerPhone || "Sin teléfono"}
               </p>
 
               <div className="admin-reservation-mobile-card__dates">
@@ -342,7 +342,7 @@ export default function AdminReservations() {
                   </a>
                 ) : (
                   <button type="button" disabled>
-                    Sin telefono
+                    Sin teléfono
                   </button>
                 )}
                 <div className="admin-actions-cell">
