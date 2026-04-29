@@ -10,19 +10,20 @@ import {
 } from "lucide-react";
 import { AdminDataProvider } from "../admin/AdminDataProvider.jsx";
 import { useAuth } from "../auth/AuthProvider.jsx";
+import ShareAvailabilityButton from "../components/admin/ShareAvailabilityButton.jsx";
 import BrandLogo from "../components/branding/BrandLogo.jsx";
 import { venues } from "../data/venues.js";
 
 const adminLinks = [
   { to: "/admin", label: "Dashboard", icon: LayoutDashboard, end: true },
-  { to: "/admin/contenido", label: "Contenido público", icon: FileText },
+  { to: "/admin/contenido", label: "Contenido publico", icon: FileText },
   { to: "/admin/calendario", label: "Calendario", icon: CalendarDays },
   { to: "/admin/reservas", label: "Reservas", icon: WalletCards },
   { to: "/admin/precios", label: "Precios", icon: Tag },
-  { to: "/admin/configuracion", label: "Configuración", icon: Settings },
+  { to: "/admin/configuracion", label: "Configuracion", icon: Settings },
 ];
 
-export default function AdminLayout() {
+function AdminShell() {
   const navigate = useNavigate();
   const { logout, user } = useAuth();
   const venue = venues[0];
@@ -60,11 +61,11 @@ export default function AdminLayout() {
         </nav>
         <div className="admin-sidebar__footer">
           <a href={publicPath} target="_blank" rel="noreferrer">
-            Ver página pública
+            Ver pagina publica
           </a>
           <button type="button" onClick={handleLogout}>
             <LogOut size={17} strokeWidth={1.8} aria-hidden="true" />
-            Cerrar sesión
+            Cerrar sesion
           </button>
         </div>
       </aside>
@@ -74,21 +75,28 @@ export default function AdminLayout() {
           <div className="admin-topbar__brand">
             <p className="eyebrow">Panel administrador</p>
             <BrandLogo variant="horizontal" className="admin-topbar__logo" />
-            <span>Sesión activa: {user?.email}</span>
+            <span>Sesion activa: {user?.email}</span>
           </div>
           <div className="admin-topbar__actions">
             <a href={publicPath} target="_blank" rel="noreferrer">
-              Ver página pública
+              Ver pagina publica
             </a>
+            <ShareAvailabilityButton />
             <button type="button" onClick={handleLogout}>
-              Cerrar sesión
+              Cerrar sesion
             </button>
           </div>
         </header>
-        <AdminDataProvider>
-          <Outlet />
-        </AdminDataProvider>
+        <Outlet />
       </main>
     </div>
+  );
+}
+
+export default function AdminLayout() {
+  return (
+    <AdminDataProvider>
+      <AdminShell />
+    </AdminDataProvider>
   );
 }

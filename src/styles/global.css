@@ -3047,6 +3047,203 @@ textarea:focus {
   line-height: 1.25;
 }
 
+.share-availability {
+  position: relative;
+  display: grid;
+  gap: 6px;
+}
+
+.share-availability > button {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.share-availability > small {
+  position: absolute;
+  right: 0;
+  top: calc(100% + 8px);
+  width: min(280px, 70vw);
+  border: 1px solid #efd5cd;
+  border-radius: 12px;
+  background: #fff8f5;
+  color: #7a3b2f;
+  font-size: 0.76rem;
+  padding: 9px 11px;
+}
+
+.share-availability__stage {
+  position: fixed;
+  left: -12000px;
+  top: 0;
+  width: 1080px;
+  height: 1350px;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+.shareable-calendar {
+  display: grid;
+  width: 1080px;
+  height: 1350px;
+  grid-template-rows: auto auto 1fr auto;
+  gap: 28px;
+  overflow: hidden;
+  background:
+    radial-gradient(circle at 50% -10%, rgba(95, 129, 114, 0.12), transparent 34%),
+    #fbf8f1;
+  color: #061b0e;
+  font-family: Inter, Arial, sans-serif;
+  padding: 78px 82px 70px;
+}
+
+.shareable-calendar__header {
+  display: grid;
+  justify-items: center;
+  gap: 16px;
+  text-align: center;
+}
+
+.shareable-calendar__header img {
+  width: 260px;
+  max-height: 160px;
+  object-fit: contain;
+}
+
+.shareable-calendar__header p {
+  margin: 8px 0 0;
+  color: #5f8172;
+  font-size: 18px;
+  font-weight: 800;
+  letter-spacing: 0.24em;
+  text-transform: uppercase;
+}
+
+.shareable-calendar__header h2 {
+  margin: 0;
+  color: #061b0e;
+  font-size: 58px;
+  font-weight: 520;
+  letter-spacing: 0;
+  line-height: 1.05;
+  text-transform: capitalize;
+}
+
+.shareable-calendar__weekdays,
+.shareable-calendar__grid {
+  display: grid;
+  grid-template-columns: repeat(7, minmax(0, 1fr));
+}
+
+.shareable-calendar__weekdays {
+  gap: 10px;
+  color: #65746b;
+  font-size: 17px;
+  font-weight: 850;
+  letter-spacing: 0.16em;
+  text-align: center;
+  text-transform: uppercase;
+}
+
+.shareable-calendar__grid {
+  gap: 10px;
+}
+
+.shareable-calendar__day {
+  display: grid;
+  min-height: 126px;
+  align-content: space-between;
+  border: 1px solid rgba(6, 27, 14, 0.08);
+  border-radius: 22px;
+  background: #e7f4e8;
+  padding: 20px 16px;
+}
+
+.shareable-calendar__day strong {
+  color: #061b0e;
+  font-size: 32px;
+  font-weight: 780;
+  line-height: 1;
+}
+
+.shareable-calendar__day span {
+  color: rgba(6, 27, 14, 0.66);
+  font-size: 15px;
+  font-weight: 780;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.shareable-calendar__day--reserved {
+  background: #f4dbd2;
+}
+
+.shareable-calendar__day--preReserved {
+  background: #f3ead0;
+}
+
+.shareable-calendar__day--blocked,
+.shareable-calendar__day--past {
+  background: #e7e6e1;
+}
+
+.shareable-calendar__day--outside {
+  background: #f2f0ec;
+  opacity: 0.46;
+}
+
+.shareable-calendar__footer {
+  display: grid;
+  gap: 24px;
+  justify-items: center;
+  border-top: 1px solid rgba(6, 27, 14, 0.1);
+  padding-top: 30px;
+}
+
+.shareable-calendar__legend {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 18px 26px;
+  color: #58665d;
+  font-size: 19px;
+  font-weight: 720;
+}
+
+.shareable-calendar__legend span {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.shareable-calendar__dot {
+  width: 18px;
+  height: 18px;
+  border-radius: 999px;
+  background: #e7f4e8;
+}
+
+.shareable-calendar__dot--reserved {
+  background: #f4dbd2;
+}
+
+.shareable-calendar__dot--preReserved {
+  background: #f3ead0;
+}
+
+.shareable-calendar__dot--blocked {
+  background: #cfcfca;
+}
+
+.shareable-calendar__footer p {
+  margin: 0;
+  color: #061b0e;
+  font-size: 22px;
+  font-weight: 760;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
 @media (max-width: 1100px) {
   .admin-grid,
   .pricing-admin-grid,
