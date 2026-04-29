@@ -242,7 +242,7 @@ export default function AdminCalendar() {
                 onClick={() => setSelectedDay({ ...cell, status })}
               >
                 <span className="admin-calendar-day__number">{cell.day}</span>
-                <span className="admin-calendar-day__status">{status}</span>
+                {reservation ? <span className="admin-calendar-day__status">{status}</span> : null}
                 {reservation ? (
                   <>
                     <strong>{reservation.customerName}</strong>

@@ -114,7 +114,7 @@ export default function AdminDashboard() {
       </div>
 
       <div className="admin-dashboard-columns">
-        <article className="admin-table-card admin-table-card--large">
+        <article className="admin-table-card admin-table-card--large admin-events-card">
           <div className="admin-section-heading">
             <div>
               <h2>Próximos eventos</h2>
@@ -141,6 +141,7 @@ export default function AdminDashboard() {
                   <small>{reservation.customerPhone || "Sin teléfono cargado"}</small>
                 </div>
                 <div className="admin-event-list__amount">
+                  <span>Total estimado</span>
                   <strong>{formatGuaranies(reservation.totalPrice)}</strong>
                   <a href={buildClientWhatsappUrl(reservation)} target="_blank" rel="noreferrer">
                     WhatsApp
@@ -151,19 +152,6 @@ export default function AdminDashboard() {
           </div>
         </article>
 
-        <article className="admin-table-card admin-public-content-card">
-          <div className="admin-section-heading">
-            <div>
-              <h2>Contenido público</h2>
-              <p>Editá los textos, imágenes y secciones que aparecen en tu página pública.</p>
-            </div>
-            <Link to="/admin/contenido">Editar contenido</Link>
-          </div>
-          <p>
-            Desde acá podés actualizar la portada, la galería, los servicios, el llamado final
-            y los datos de contacto de Paraíso Escondido.
-          </p>
-        </article>
       </div>
     </section>
   );

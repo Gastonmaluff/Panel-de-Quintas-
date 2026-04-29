@@ -19,6 +19,16 @@ function getStatusClass(status) {
     .replaceAll(" ", "-");
 }
 
+function formatTableDate(dateValue) {
+  if (!dateValue) return "Sin fecha";
+
+  return new Intl.DateTimeFormat("es-PY", {
+    day: "2-digit",
+    month: "2-digit",
+    year: "numeric",
+  }).format(new Date(`${dateValue}T12:00:00`));
+}
+
 function createReservationDraft() {
   return {
     id: `res-${Date.now()}`,
@@ -123,10 +133,10 @@ export default function AdminReservations() {
                 <td>
                   <strong>{reservation.customerName}</strong>
                 </td>
-                <td>{reservation.customerPhone || "Sin teléfono"}</td>
-                <td>{reservation.eventDate}</td>
+                <td className="admin-reservations-table__phone">{reservation.customerPhone || "Sin teléfono"}</td>
+                <td>{formatTableDate(reservation.eventDate)}</td>
                 <td>{reservation.timeSlot}</td>
-                <td>{reservation.eventType}</td>
+                <td className="admin-reservations-table__event">{reservation.eventType}</td>
                 <td>{reservation.guestCount || "No aplica"}</td>
                 <td className="money-column money-column--total">{formatGuaranies(reservation.totalPrice)}</td>
                 <td className="money-column money-column--deposit">{formatGuaranies(reservation.depositAmount)}</td>

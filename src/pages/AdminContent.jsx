@@ -1,4 +1,5 @@
 import { useId, useState } from "react";
+import { Trash2 } from "lucide-react";
 import { publicContentMock } from "../data/adminData.js";
 import { venues } from "../data/venues.js";
 
@@ -218,8 +219,14 @@ export default function AdminContent() {
                   label="Visible"
                   onChange={(value) => updateArrayItem("gallery", item.id, "visible", value)}
                 />
-                <button type="button" className="admin-danger-button" onClick={() => removeArrayItem("gallery", item.id)}>
-                  Eliminar
+                <button
+                  type="button"
+                  className="admin-danger-button admin-icon-danger-button"
+                  onClick={() => removeArrayItem("gallery", item.id)}
+                  aria-label="Eliminar imagen"
+                  title="Eliminar imagen"
+                >
+                  <Trash2 size={16} strokeWidth={1.8} aria-hidden="true" />
                 </button>
               </div>
             ))}

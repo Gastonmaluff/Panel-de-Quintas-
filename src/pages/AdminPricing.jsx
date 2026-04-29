@@ -227,9 +227,7 @@ export default function AdminPricing() {
           </label>
           <p>Vista previa: {formatGuaranies(rules.weekdayBasePrice)}</p>
         </article>
-      </div>
-
-      <article className="admin-table-card">
+        <article className="admin-table-card admin-extras-card">
         <div className="admin-section-heading">
           <div>
             <h2>Extras opcionales</h2>
@@ -293,7 +291,8 @@ export default function AdminPricing() {
             cantidad de personas y horario.
           </p>
         )}
-      </article>
+        </article>
+      </div>
     </section>
   );
 }
