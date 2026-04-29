@@ -154,7 +154,7 @@ export const pricingRules = {
 
 export const availabilityMock = {
   reserved: ["2026-05-03", "2026-05-18", "2026-06-06"],
-  preReserved: ["2026-05-09", "2026-05-24"],
+  preReserved: ["2026-05-09", "2026-05-10", "2026-05-24"],
   blocked: ["2026-05-14", "2026-06-13"],
 };
 

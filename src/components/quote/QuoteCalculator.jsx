@@ -1,36 +1,55 @@
 import { useEffect, useMemo, useState } from "react";
 import DateAvailabilityPicker from "../calendar/DateAvailabilityPicker.jsx";
-import { getDateAvailability } from "../../utils/availability.js";
+import {
+  getDateAvailability,
+  getUnavailableDatesInRange,
+  isRangeAvailable,
+} from "../../utils/availability.js";
+import {
+  applyBookingMode,
+  bookingModeLabels,
+  bookingTimes,
+} from "../../utils/booking.js";
 import { buildWhatsappUrl } from "../../utils/whatsapp.js";
 import {
   calculateQuote,
   eventTypeLabels,
   formatGuaranies,
-  timeSlotLabels,
 } from "../../utils/pricing.js";
 
 const initialQuoteValues = {
-  date: "",
+  bookingMode: "day",
+  startDate: "",
+  startTime: "07:00",
+  endDate: "",
+  endTime: "19:00",
   eventType: "cumpleanos",
   guestCount: 45,
-  timeSlot: "dia_completo",
 };
 
 export default function QuoteCalculator({ venue, rules, availability }) {
   const [values, setValues] = useState(initialQuoteValues);
   const [dateWarning, setDateWarning] = useState("");
 
-  const selectedDateAvailability = useMemo(
-    () => getDateAvailability(values.date, availability),
-    [availability, values.date],
+  const selectedStartAvailability = useMemo(
+    () => getDateAvailability(values.startDate, availability),
+    [availability, values.startDate],
   );
+  const unavailableRangeDates = useMemo(
+    () => getUnavailableDatesInRange(values.startDate, values.endDate, availability),
+    [availability, values.endDate, values.startDate],
+  );
+  const isBookingRangeValid =
+    Boolean(values.startDate) &&
+    Boolean(values.endDate) &&
+    values.endDate >= values.startDate &&
+    isRangeAvailable(values.startDate, values.endDate, availability);
   const isGuestCountValid = Number(values.guestCount) > 0;
   const isQuoteReady =
-    Boolean(values.date) &&
-    selectedDateAvailability.selectable &&
+    isBookingRangeValid &&
+    selectedStartAvailability.selectable &&
     isGuestCountValid &&
-    Boolean(values.eventType) &&
-    Boolean(values.timeSlot);
+    Boolean(values.eventType);
   const quote = useMemo(
     () => (isQuoteReady ? calculateQuote(values, rules) : null),
     [isQuoteReady, rules, values],
@@ -38,15 +57,24 @@ export default function QuoteCalculator({ venue, rules, availability }) {
   const whatsappUrl = quote ? buildWhatsappUrl({ venue, quoteValues: values, quote }) : "#";
 
   useEffect(() => {
-    if (values.date && !selectedDateAvailability.selectable) {
-      setDateWarning(`${selectedDateAvailability.reason}. Elegí otra fecha disponible.`);
-      setValues((current) => ({ ...current, date: "" }));
+    if (values.startDate && !selectedStartAvailability.selectable) {
+      setDateWarning(`${selectedStartAvailability.reason}. Elegi otra fecha disponible.`);
+      setValues((current) => ({ ...current, startDate: "", endDate: "" }));
+      return;
     }
-  }, [selectedDateAvailability, values.date]);
+
+    if (unavailableRangeDates.length) {
+      setDateWarning("El rango seleccionado incluye fechas no disponibles. Elegi otras fechas.");
+    }
+  }, [selectedStartAvailability, unavailableRangeDates.length, values.startDate]);
 
   const updateValue = (key, value) => {
-    if (key === "date") setDateWarning("");
-    setValues((current) => ({ ...current, [key]: value }));
+    setDateWarning("");
+    setValues((current) => {
+      if (key === "bookingMode") return applyBookingMode(current, value);
+      if (key === "startDate") return applyBookingMode(current, current.bookingMode, value);
+      return { ...current, [key]: value };
+    });
   };
 
   return (
@@ -54,23 +82,83 @@ export default function QuoteCalculator({ venue, rules, availability }) {
       <div className="section-shell quote-layout">
         <div className="quote-copy">
           <p className="eyebrow">Cotizador</p>
-          <h2>Estimá tu evento antes de consultar.</h2>
+          <h2>Estima tu evento antes de consultar.</h2>
           <p>
-            La fecha usa la misma disponibilidad que el calendario público. No se
-            puede cotizar una fecha reservada, pre-reservada, bloqueada o pasada.
+            Elegi turno dia, turno noche o varios dias. El rango usa la misma
+            disponibilidad que el calendario publico.
           </p>
         </div>
 
         <div className="quote-panel">
-          <DateAvailabilityPicker
-            availability={availability}
-            value={values.date}
-            onChange={(date) => updateValue("date", date)}
-          />
+          <label className="booking-mode-field">
+            <span>Tipo de reserva</span>
+            <select
+              value={values.bookingMode}
+              onChange={(event) => updateValue("bookingMode", event.target.value)}
+            >
+              {Object.entries(bookingModeLabels).map(([value, label]) => (
+                <option key={value} value={value}>
+                  {label}
+                </option>
+              ))}
+            </select>
+          </label>
+
+          <div className="booking-range-grid">
+            <DateAvailabilityPicker
+              availability={availability}
+              value={values.startDate}
+              onChange={(date) => updateValue("startDate", date)}
+              label="Fecha de ingreso"
+            />
+            {values.bookingMode === "multi_day" ? (
+              <DateAvailabilityPicker
+                availability={availability}
+                value={values.endDate}
+                onChange={(date) => updateValue("endDate", date)}
+                label="Fecha de egreso"
+              />
+            ) : (
+              <label className="readonly-date-field">
+                <span>Fecha de egreso</span>
+                <input value={values.endDate || "Se completa al elegir ingreso"} readOnly />
+              </label>
+            )}
+          </div>
 
           {dateWarning ? <p className="quote-alert">{dateWarning}</p> : null}
 
           <div className="form-grid">
+            <label>
+              <span>Hora de ingreso</span>
+              <select
+                value={values.startTime}
+                onChange={(event) => updateValue("startTime", event.target.value)}
+                disabled={values.bookingMode !== "multi_day"}
+              >
+                {bookingTimes.map((time) => (
+                  <option key={time} value={time}>
+                    {time}
+                  </option>
+                ))}
+              </select>
+            </label>
+
+            <label>
+              <span>Hora de egreso</span>
+              <select
+                value={values.endTime}
+                onChange={(event) => updateValue("endTime", event.target.value)}
+                disabled={values.bookingMode !== "multi_day"}
+              >
+                {bookingTimes.map((time) => (
+                  <option key={time} value={time}>
+                    {time}
+                  </option>
+                ))}
+              </select>
+            </label>
+
             <label>
               <span>Tipo de evento</span>
               <select
@@ -94,30 +182,20 @@ export default function QuoteCalculator({ venue, rules, availability }) {
                 onChange={(event) => updateValue("guestCount", event.target.value)}
               />
             </label>
-
-            <label>
-              <span>Horario</span>
-              <select
-                value={values.timeSlot}
-                onChange={(event) => updateValue("timeSlot", event.target.value)}
-              >
-                {Object.entries(timeSlotLabels).map(([value, label]) => (
-                  <option key={value} value={value}>
-                    {label}
-                  </option>
-                ))}
-              </select>
-            </label>
           </div>
 
           {quote ? (
             <div className="quote-result">
               <div>
+                <span>Rango elegido</span>
+                <strong>{quote.daysCount} dia{quote.daysCount === 1 ? "" : "s"}</strong>
+              </div>
+              <div>
                 <span>Precio estimado</span>
                 <strong>{formatGuaranies(quote.totalPrice)}</strong>
               </div>
               <div>
-                <span>Seña sugerida</span>
+                <span>Sena sugerida</span>
                 <strong>{formatGuaranies(quote.depositAmount)}</strong>
               </div>
               <div>
@@ -127,7 +205,7 @@ export default function QuoteCalculator({ venue, rules, availability }) {
             </div>
           ) : (
             <div className="quote-empty-state">
-              Elegí una fecha disponible para estimar tu evento.
+              Elegi una fecha disponible para estimar tu evento.
             </div>
           )}
 

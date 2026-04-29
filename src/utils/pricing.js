@@ -1,3 +1,5 @@
+import { getDatesInRange } from "./booking.js";
+
 export const eventTypeLabels = {
   cumpleanos: "Cumpleaños",
   casamiento: "Casamiento",
@@ -35,14 +37,22 @@ function getBasePrice(dateValue, rules) {
 }
 
 export function calculateQuote(values, rules) {
-  const basePrice = getBasePrice(values.date, rules);
+  const isRangeQuote = Boolean(values.startDate || values.endDate || values.bookingMode);
+  const startDate = values.startDate || values.date;
+  const endDate = values.endDate || startDate;
+  const rangeDates = getDatesInRange(startDate, endDate);
+  const pricedDates =
+    isRangeQuote && values.bookingMode === "multi_day" ? rangeDates : [startDate].filter(Boolean);
+  const basePrice =
+    pricedDates.reduce((total, date) => total + getBasePrice(date, rules), 0) ||
+    getBasePrice(startDate, rules);
   const eventTypeAmount = rules.eventTypeRules[values.eventType] || 0;
   const guestRule = [...rules.guestCountRules]
     .sort((a, b) => b.min - a.min)
     .find((rule) => Number(values.guestCount || 0) >= rule.min);
   const guestAmount = guestRule?.amount || 0;
-  const timeSlotMultiplier = values.timeSlot === "medio_dia" ? 0.72 : 1;
-  const weekendExtra = values.timeSlot === "fin_de_semana" ? 900000 : 0;
+  const timeSlotMultiplier = !isRangeQuote && values.timeSlot === "medio_dia" ? 0.72 : 1;
+  const weekendExtra = !isRangeQuote && values.timeSlot === "fin_de_semana" ? 900000 : 0;
   const subtotal =
     (basePrice + eventTypeAmount + guestAmount + weekendExtra) * timeSlotMultiplier;
   const totalPrice = Math.round(subtotal / 10000) * 10000;
@@ -58,6 +68,7 @@ export function calculateQuote(values, rules) {
     eventTypeAmount,
     guestAmount,
     weekendExtra,
+    daysCount: rangeDates.length || 1,
     totalPrice,
     depositAmount,
     balanceAmount,

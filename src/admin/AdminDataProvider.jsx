@@ -1,39 +1,32 @@
 import { createContext, useContext, useMemo, useState } from "react";
 import { adminReservationsMock } from "../data/adminData.js";
+import {
+  buildAvailabilityFromReservations,
+  normalizeBooking,
+} from "../utils/booking.js";
 
 const AdminDataContext = createContext(null);
 
 export function buildAdminAvailability(reservations, excludedReservationId = "") {
-  return reservations.reduce(
-    (availability, reservation) => {
-      if (reservation.id === excludedReservationId) return availability;
-      if (reservation.status === "bloqueada") {
-        availability.blocked.push(reservation.eventDate);
-        return availability;
-      }
-      if (reservation.status === "pre-reserva") {
-        availability.preReserved.push(reservation.eventDate);
-        return availability;
-      }
-      if (reservation.status === "confirmada" || reservation.status === "seña pendiente") {
-        availability.reserved.push(reservation.eventDate);
-      }
-      return availability;
-    },
-    { reserved: [], preReserved: [], blocked: [] },
-  );
+  return buildAvailabilityFromReservations(reservations, excludedReservationId);
 }
 
 export function AdminDataProvider({ children }) {
   const [reservations, setReservations] = useState(adminReservationsMock);
 
   const addReservation = (reservation) => {
+    const booking = normalizeBooking(reservation);
     const newReservation = {
       id: reservation.id || `res-${Date.now()}`,
       customerName: reservation.customerName || "Nuevo cliente",
       customerPhone: reservation.customerPhone || "",
-      eventDate: reservation.eventDate,
-      timeSlot: reservation.timeSlot || "Día completo",
+      startDate: booking.startDate,
+      startTime: booking.startTime,
+      endDate: booking.endDate,
+      endTime: booking.endTime,
+      bookingMode: booking.bookingMode,
+      eventDate: booking.startDate,
+      timeSlot: booking.timeSlot,
       eventType: reservation.eventType || "Consulta",
       guestCount: Number(reservation.guestCount || 0),
       totalPrice: Number(reservation.totalPrice || 0),
@@ -49,9 +42,21 @@ export function AdminDataProvider({ children }) {
 
   const updateReservation = (id, changes) => {
     setReservations((current) =>
-      current.map((reservation) =>
-        reservation.id === id ? { ...reservation, ...changes } : reservation,
-      ),
+      current.map((reservation) => {
+        if (reservation.id !== id) return reservation;
+        const updated = normalizeBooking({ ...reservation, ...changes });
+        return {
+          ...reservation,
+          ...changes,
+          startDate: updated.startDate,
+          startTime: updated.startTime,
+          endDate: updated.endDate,
+          endTime: updated.endTime,
+          bookingMode: updated.bookingMode,
+          eventDate: updated.startDate,
+          timeSlot: updated.timeSlot,
+        };
+      }),
     );
   };
 

@@ -1,15 +1,31 @@
 import { formatDateLong } from "./date.js";
+import {
+  bookingModeLabels,
+  formatDateTimeShort,
+} from "./booking.js";
 import { eventTypeLabels, formatGuaranies, timeSlotLabels } from "./pricing.js";
 
 export function buildWhatsappUrl({ venue, quoteValues, quote }) {
-  const lines = [
-    `Hola, quiero consultar disponibilidad para ${venue.name}.`,
-    "",
-    `Fecha: ${formatDateLong(quoteValues.date)}`,
+  const isRangeQuote = quoteValues.startDate || quoteValues.endDate || quoteValues.bookingMode;
+  const lines = [`Hola, quiero consultar disponibilidad para ${venue.name}.`, ""];
+
+  if (isRangeQuote) {
+    lines.push(
+      `Tipo de reserva: ${bookingModeLabels[quoteValues.bookingMode]}`,
+      `Ingreso: ${formatDateTimeShort(quoteValues.startDate, quoteValues.startTime)}`,
+      `Egreso: ${formatDateTimeShort(quoteValues.endDate, quoteValues.endTime)}`,
+    );
+  } else {
+    lines.push(
+      `Fecha: ${formatDateLong(quoteValues.date)}`,
+      `Horario: ${timeSlotLabels[quoteValues.timeSlot]}`,
+    );
+  }
+
+  lines.push(
     `Evento: ${eventTypeLabels[quoteValues.eventType]}`,
     `Cantidad de personas: ${quoteValues.guestCount}`,
-    `Horario: ${timeSlotLabels[quoteValues.timeSlot]}`,
-  ];
+  );
 
   if (quoteValues.extras?.length) {
     lines.push(`Extras: ${quoteValues.extras.join(", ")}`);

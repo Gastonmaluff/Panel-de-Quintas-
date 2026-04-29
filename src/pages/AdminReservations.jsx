@@ -1,14 +1,16 @@
 import { useMemo, useState } from "react";
 import { buildAdminAvailability, useAdminData } from "../admin/AdminDataProvider.jsx";
-import DateAvailabilityPicker from "../components/calendar/DateAvailabilityPicker.jsx";
+import BookingFields from "../components/admin/BookingFields.jsx";
 import { adminReservationStatuses } from "../data/adminData.js";
 import { venues } from "../data/venues.js";
-import { isDateSelectable } from "../utils/availability.js";
+import { isRangeAvailable } from "../utils/availability.js";
+import { bookingModeLabels, normalizeBooking } from "../utils/booking.js";
 import { formatGuaranies } from "../utils/pricing.js";
 
 function buildClientWhatsappUrl(venue, reservation) {
+  const booking = normalizeBooking(reservation);
   const phone = reservation.customerPhone.replace(/\D/g, "");
-  const message = `Hola ${reservation.customerName}, te escribo por tu reserva en ${venue.name} para el ${reservation.eventDate}.`;
+  const message = `Hola ${reservation.customerName}, te escribo por tu reserva en ${venue.name} para el ${booking.startDate}.`;
   return `https://wa.me/${phone || venue.whatsappNumber}?text=${encodeURIComponent(message)}`;
 }
 
@@ -34,8 +36,11 @@ function createReservationDraft() {
     id: `res-${Date.now()}`,
     customerName: "Nuevo cliente",
     customerPhone: "",
-    eventDate: "",
-    timeSlot: "Día completo",
+    startDate: "",
+    startTime: "07:00",
+    endDate: "",
+    endTime: "19:00",
+    bookingMode: "day",
     eventType: "Consulta",
     guestCount: 0,
     totalPrice: 0,
@@ -60,8 +65,13 @@ export default function AdminReservations() {
     [editingReservation, reservations],
   );
   const canSaveEditedReservation =
-    !!editingReservation?.eventDate &&
-    isDateSelectable(editingReservation.eventDate, editingAvailability);
+    !!editingReservation?.startDate &&
+    !!editingReservation?.endDate &&
+    isRangeAvailable(
+      editingReservation.startDate,
+      editingReservation.endDate,
+      editingAvailability,
+    );
 
   const openNewReservation = () => {
     setEditingReservation(createReservationDraft());
@@ -116,8 +126,8 @@ export default function AdminReservations() {
             <tr>
               <th>Cliente</th>
               <th>Teléfono</th>
-              <th>Fecha</th>
-              <th>Horario</th>
+              <th>Ingreso</th>
+              <th>Egreso</th>
               <th>Evento</th>
               <th>Personas</th>
               <th className="money-column money-column--total">Total</th>
@@ -130,12 +140,22 @@ export default function AdminReservations() {
           <tbody>
             {reservations.map((reservation) => (
               <tr key={reservation.id}>
+                {(() => {
+                  const booking = normalizeBooking(reservation);
+                  return (
+                    <>
                 <td>
                   <strong>{reservation.customerName}</strong>
                 </td>
                 <td className="admin-reservations-table__phone">{reservation.customerPhone || "Sin teléfono"}</td>
-                <td>{formatTableDate(reservation.eventDate)}</td>
-                <td>{reservation.timeSlot}</td>
+                <td>
+                  <strong>{formatTableDate(booking.startDate)}</strong>
+                  <small>{booking.startTime}</small>
+                </td>
+                <td>
+                  <strong>{formatTableDate(booking.endDate)}</strong>
+                  <small>{booking.endTime}</small>
+                </td>
                 <td className="admin-reservations-table__event">{reservation.eventType}</td>
                 <td>{reservation.guestCount || "No aplica"}</td>
                 <td className="money-column money-column--total">{formatGuaranies(reservation.totalPrice)}</td>
@@ -145,6 +165,7 @@ export default function AdminReservations() {
                   <span className={`admin-status-pill admin-status-pill--${getStatusClass(reservation.status)}`}>
                     {reservation.status}
                   </span>
+                  <small>{bookingModeLabels[booking.bookingMode]}</small>
                 </td>
                 <td className="admin-actions-cell">
                   <button
@@ -158,7 +179,7 @@ export default function AdminReservations() {
                   </button>
                   {openMenuId === reservation.id ? (
                     <div className="admin-actions-menu">
-                      <button type="button" onClick={() => setEditingReservation(reservation)}>
+                      <button type="button" onClick={() => setEditingReservation(normalizeBooking(reservation))}>
                         Editar reserva
                       </button>
                       <a href={buildClientWhatsappUrl(venue, reservation)} target="_blank" rel="noreferrer">
@@ -194,6 +215,9 @@ export default function AdminReservations() {
                     </div>
                   ) : null}
                 </td>
+                    </>
+                  );
+                })()}
               </tr>
             ))}
           </tbody>
@@ -238,30 +262,13 @@ export default function AdminReservations() {
                   }
                 />
               </label>
-              <div className="reservation-date-control">
-                <DateAvailabilityPicker
-                  availability={editingAvailability}
-                  value={editingReservation.eventDate}
-                  onChange={(date) =>
-                    setEditingReservation((current) => ({
-                      ...current,
-                      eventDate: date,
-                    }))
-                  }
-                />
-              </div>
-              <label>
-                Horario
-                <input
-                  value={editingReservation.timeSlot}
-                  onChange={(event) =>
-                    setEditingReservation((current) => ({
-                      ...current,
-                      timeSlot: event.target.value,
-                    }))
-                  }
-                />
-              </label>
+              <BookingFields
+                availability={editingAvailability}
+                value={editingReservation}
+                onChange={(booking) =>
+                  setEditingReservation((current) => ({ ...current, ...booking }))
+                }
+              />
               <label>
                 Tipo de evento
                 <input

@@ -1,4 +1,9 @@
 import { toISODate } from "./date.js";
+import {
+  getDatesInRange,
+  getUnavailableDatesInRange as getUnavailableRangeDates,
+  isRangeAvailable as getRangeAvailability,
+} from "./booking.js";
 
 export const availabilityLabels = {
   available: "Disponible",
@@ -76,6 +81,16 @@ export function isDateSelectable(dateValue, availabilityData) {
 
 export function getUnavailableReason(dateValue, availabilityData) {
   return getDateAvailability(dateValue, availabilityData).reason;
+}
+
+export { getDatesInRange };
+
+export function getUnavailableDatesInRange(startDate, endDate, availabilityData) {
+  return getUnavailableRangeDates(startDate, endDate, normalizeAvailabilityData(availabilityData));
+}
+
+export function isRangeAvailable(startDate, endDate, availabilityData) {
+  return getRangeAvailability(startDate, endDate, normalizeAvailabilityData(availabilityData));
 }
 
 export function getFirstAvailabilityMonth(availabilityData) {

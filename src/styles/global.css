@@ -3007,6 +3007,46 @@ textarea:focus {
   grid-template-columns: minmax(120px, 1fr) minmax(120px, 0.7fr) minmax(160px, 1.2fr) auto auto;
 }
 
+.booking-mode-field,
+.readonly-date-field,
+.booking-fields {
+  display: grid;
+  gap: 8px;
+}
+
+.booking-range-grid,
+.booking-fields {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 14px;
+}
+
+.booking-fields {
+  grid-column: 1 / -1;
+}
+
+.booking-fields > label,
+.booking-mode-field,
+.readonly-date-field {
+  color: var(--color-muted);
+  font-size: 0.72rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.readonly-date-field input {
+  color: var(--color-forest);
+}
+
+.admin-reservations-table td small {
+  display: block;
+  margin-top: 4px;
+  color: #748174;
+  font-size: 0.72rem;
+  line-height: 1.25;
+}
+
 @media (max-width: 1100px) {
   .admin-grid,
   .pricing-admin-grid,
@@ -3252,5 +3292,10 @@ textarea:focus {
   .admin-event-list__amount a {
     grid-column: 1;
     grid-row: auto;
+  }
+
+  .booking-range-grid,
+  .booking-fields {
+    grid-template-columns: 1fr;
   }
 }
