@@ -542,6 +542,151 @@ img {
   background: var(--color-forest);
 }
 
+.rooms-section {
+  display: grid;
+  grid-template-columns: minmax(260px, 0.52fr) minmax(320px, 1fr);
+  gap: clamp(32px, 6vw, 86px);
+  padding: 112px 0;
+}
+
+.rooms-section__intro {
+  align-self: start;
+  position: sticky;
+  top: 102px;
+}
+
+.rooms-section__intro h2 {
+  margin: 0;
+  color: var(--color-forest);
+  font-size: clamp(2.25rem, 5.4vw, 4.8rem);
+  font-weight: 300;
+  letter-spacing: 0;
+  line-height: 1.03;
+}
+
+.rooms-section__intro p {
+  color: var(--color-muted);
+  font-size: clamp(1rem, 1.6vw, 1.12rem);
+  line-height: 1.8;
+}
+
+.rooms-section__intro span {
+  display: block;
+  width: min(420px, 100%);
+  margin-top: 30px;
+  border-top: 1px solid var(--color-line);
+  color: var(--color-sage);
+  font-size: 0.88rem;
+  line-height: 1.7;
+  padding-top: 22px;
+}
+
+.rooms-panel {
+  overflow: hidden;
+  border: 1px solid var(--color-line);
+  background: rgba(255, 255, 255, 0.72);
+  box-shadow: var(--shadow-soft);
+  padding: clamp(16px, 2.8vw, 28px);
+}
+
+.rooms-tabs {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+  margin-bottom: 18px;
+  padding: 5px;
+  border: 1px solid rgba(6, 27, 14, 0.1);
+  background: rgba(240, 236, 229, 0.62);
+}
+
+.rooms-tabs button {
+  min-height: 42px;
+  border: 0;
+  border-radius: 2px;
+  background: transparent;
+  color: var(--color-muted);
+  font-size: 0.74rem;
+  font-weight: 800;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  transition:
+    background 180ms ease,
+    color 180ms ease,
+    box-shadow 180ms ease;
+}
+
+.rooms-tabs button.is-active {
+  background: white;
+  color: var(--color-forest);
+  box-shadow: 0 12px 30px rgba(20, 32, 25, 0.08);
+}
+
+.rooms-panel__image {
+  overflow: hidden;
+  border: 1px solid rgba(6, 27, 14, 0.1);
+  background: var(--color-paper-deep);
+  aspect-ratio: 16 / 10;
+}
+
+.rooms-panel__image img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.rooms-panel__content {
+  display: grid;
+  gap: clamp(22px, 3vw, 34px);
+  padding-top: clamp(22px, 3vw, 34px);
+}
+
+.rooms-panel__content h3 {
+  margin: 0 0 12px;
+  color: var(--color-forest);
+  font-size: clamp(1.7rem, 3vw, 2.55rem);
+  font-weight: 350;
+  letter-spacing: 0;
+  line-height: 1.08;
+}
+
+.rooms-panel__content p:not(.eyebrow) {
+  width: min(640px, 100%);
+  margin: 0;
+  color: var(--color-muted);
+  line-height: 1.75;
+}
+
+.rooms-features {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+  margin: 0;
+}
+
+.rooms-features div {
+  min-height: 96px;
+  border: 1px solid rgba(6, 27, 14, 0.1);
+  background: rgba(251, 250, 247, 0.76);
+  padding: 18px;
+}
+
+.rooms-features dt {
+  margin-bottom: 9px;
+  color: var(--color-sage);
+  font-size: 0.7rem;
+  font-weight: 800;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.rooms-features dd {
+  margin: 0;
+  color: var(--color-forest);
+  font-size: 0.98rem;
+  font-weight: 650;
+  line-height: 1.35;
+}
+
 @media (prefers-reduced-motion: reduce) {
   .amenities-carousel__track,
   .amenity-card__image img {
@@ -3517,11 +3662,13 @@ textarea:focus {
   }
 
   .availability-section,
+  .rooms-section,
   .quote-layout {
     grid-template-columns: 1fr;
   }
 
   .availability-section__intro,
+  .rooms-section__intro,
   .quote-copy {
     position: static;
   }
@@ -3572,7 +3719,8 @@ textarea:focus {
   }
 
   .gallery-section,
-  .availability-section {
+  .availability-section,
+  .rooms-section {
     padding-bottom: 76px;
   }
 
@@ -3674,6 +3822,43 @@ textarea:focus {
 
   .calendar-panel {
     padding: 14px;
+  }
+
+  .rooms-section {
+    gap: 28px;
+    padding-top: 78px;
+  }
+
+  .rooms-section__intro span {
+    margin-top: 22px;
+  }
+
+  .rooms-panel {
+    padding: 14px;
+  }
+
+  .rooms-tabs {
+    gap: 6px;
+  }
+
+  .rooms-tabs button {
+    min-height: 40px;
+    font-size: 0.66rem;
+    letter-spacing: 0.08em;
+  }
+
+  .rooms-panel__image {
+    aspect-ratio: 4 / 3;
+  }
+
+  .rooms-features {
+    grid-template-columns: 1fr;
+    gap: 10px;
+  }
+
+  .rooms-features div {
+    min-height: auto;
+    padding: 15px;
   }
 
   .calendar-day {

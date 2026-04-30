@@ -38,6 +38,49 @@ export const publicContentMock = {
     order: index + 1,
     active: true,
   })),
+  roomsSection: {
+    eyebrow: "Hospedaje",
+    title: "Nuestras habitaciones",
+    description:
+      "Espacios pensados para un descanso cómodo y tranquilo, con equipamiento esencial, buena distribución y una experiencia acogedora para quienes desean disfrutar la quinta también de noche.",
+    visible: true,
+  },
+  rooms: [
+    {
+      id: "room-1",
+      name: "Habitación 1",
+      subtitle: "Descanso principal",
+      description:
+        "Una habitación cómoda y luminosa, ideal para estadías tranquilas, con distribución funcional y ambiente relajado.",
+      image:
+        "https://images.unsplash.com/photo-1616594039964-ae9021a400a0?auto=format&fit=crop&w=1200&q=84",
+      alt: "Habitación principal luminosa con cama amplia",
+      features: [
+        { label: "Capacidad", value: "2 personas" },
+        { label: "Camas", value: "1 cama King" },
+        { label: "Vista", value: "Vista al río" },
+        { label: "Comodidad", value: "Aire acondicionado" },
+        { label: "Baño", value: "Baño privado" },
+      ],
+    },
+    {
+      id: "room-2",
+      name: "Habitación 2",
+      subtitle: "Habitación complementaria",
+      description:
+        "Una opción práctica y acogedora, ideal para acompañantes o grupos pequeños que quieran hospedarse con comodidad.",
+      image:
+        "https://images.unsplash.com/photo-1595526114035-0d45ed16cfbf?auto=format&fit=crop&w=1200&q=84",
+      alt: "Habitación complementaria cálida preparada para huéspedes",
+      features: [
+        { label: "Capacidad", value: "5 personas" },
+        { label: "Camas", value: "2 camas de 2 pisos y una cama interior" },
+        { label: "Vista", value: "Vista al río" },
+        { label: "Comodidad", value: "Aire acondicionado" },
+        { label: "Baño", value: "Baño compartido o privado" },
+      ],
+    },
+  ],
   cta: {
     title: "¿Listo para reservar tu fecha?",
     description: "Consultá disponibilidad y recibí una respuesta directa por WhatsApp.",

@@ -3,6 +3,7 @@ import AnimatedBrandHeader from "../components/landing/AnimatedBrandHeader.jsx";
 import HeroIntro from "../components/landing/HeroIntro.jsx";
 import GallerySection from "../components/landing/GallerySection.jsx";
 import AmenitiesSection from "../components/landing/AmenitiesSection.jsx";
+import RoomsSection from "../components/landing/RoomsSection.jsx";
 import AvailabilityCalendar from "../components/calendar/AvailabilityCalendar.jsx";
 import QuoteCalculator from "../components/quote/QuoteCalculator.jsx";
 import FinalCta from "../components/landing/FinalCta.jsx";
@@ -46,6 +47,7 @@ export default function PublicVenuePage({ venue }) {
           amenities={publicContent.amenities}
           section={publicContent.amenitiesSection}
         />
+        <RoomsSection section={publicContent.roomsSection} rooms={publicContent.rooms} />
         <AvailabilityCalendar availability={availabilityMock} />
         <QuoteCalculator venue={publicVenue} rules={pricingRules} availability={availabilityMock} />
         <FinalCta venue={publicVenue} content={publicContent.cta} />

@@ -78,6 +78,19 @@ export function normalizePublicContent(contentData = {}) {
         active: item.active ?? item.visible ?? true,
       }),
     ),
+    roomsSection: {
+      ...defaults.roomsSection,
+      ...contentData.roomsSection,
+    },
+    rooms: (Array.isArray(contentData.rooms) ? contentData.rooms : defaults.rooms).map((item, index) => ({
+      id: item.id || `room-${index + 1}`,
+      name: item.name || `Habitación ${index + 1}`,
+      subtitle: item.subtitle || "",
+      description: item.description || "",
+      image: imageFrom(item),
+      alt: item.alt || item.name || `Habitación ${index + 1}`,
+      features: Array.isArray(item.features) ? item.features : [],
+    })),
     cta: {
       ...defaults.cta,
       ...contentData.cta,
@@ -145,6 +158,21 @@ function serializeContent(content, venue) {
         order: Number(item.order || index + 1),
         visible: item.active ?? true,
       })),
+    roomsSection: {
+      visible: content.roomsSection?.visible ?? true,
+      eyebrow: content.roomsSection?.eyebrow || "",
+      title: content.roomsSection?.title || "",
+      description: content.roomsSection?.description || "",
+    },
+    rooms: (content.rooms || []).map((item, index) => ({
+      id: item.id || `room-${index + 1}`,
+      name: item.name || "",
+      subtitle: item.subtitle || "",
+      description: item.description || "",
+      imageUrl: item.image || "",
+      alt: item.alt || item.name || "",
+      features: item.features || [],
+    })),
     cta: {
       visible: content.cta.visible,
       title: content.cta.title,
