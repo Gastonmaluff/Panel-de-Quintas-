@@ -75,6 +75,10 @@ function getPublicContentPath(venueId) {
   return `venues/${venueId}/${PUBLIC_CONTENT_PATH.join("/")}`;
 }
 
+function getLegacyContentPath(venueId) {
+  return `venues/${venueId}/${LEGACY_CONTENT_PATH.join("/")}`;
+}
+
 function normalizeVenue(venueData = {}, contentData = {}) {
   const baseVenue = venues.find((venue) => venue.id === DEFAULT_VENUE_ID) || venues[0];
   const branding = contentData.branding || {};
@@ -266,8 +270,10 @@ export async function getPublicContent(venueId = DEFAULT_VENUE_ID) {
 export async function savePublicContent(venueId = DEFAULT_VENUE_ID, venue, content) {
   const venueRef = doc(db, "venues", venueId);
   const contentRef = doc(db, "venues", venueId, ...PUBLIC_CONTENT_PATH);
+  const legacyContentRef = doc(db, "venues", venueId, ...LEGACY_CONTENT_PATH);
   const venuePath = getVenuePath(venueId);
   const contentPath = getPublicContentPath(venueId);
+  const legacyContentPath = getLegacyContentPath(venueId);
   const venuePayload = {
     name: venue.name,
     slug: venue.slug || venueId,
@@ -284,24 +290,6 @@ export async function savePublicContent(venueId = DEFAULT_VENUE_ID, venue, conte
   };
 
   console.log("Saving Firestore document...");
-  console.log("Firestore path:", venuePath);
-  console.log("Payload:", venuePayload);
-
-  try {
-    await setDoc(venueRef, venuePayload, { merge: true });
-  } catch (error) {
-    console.error("Error writing Firestore document:", error);
-    console.error("Error code:", error?.code);
-    console.error("Error message:", error?.message);
-    console.error("Firestore path:", venuePath);
-    console.error("Payload:", venuePayload);
-    if (error?.code === "permission-denied") {
-      console.error("Firebase rules are blocking this write.");
-    }
-    throw error;
-  }
-
-  console.log("Saving Firestore document...");
   console.log("Firestore path:", contentPath);
   console.log("Payload:", contentPayload);
 
@@ -313,10 +301,44 @@ export async function savePublicContent(venueId = DEFAULT_VENUE_ID, venue, conte
     console.error("Error message:", error?.message);
     console.error("Firestore path:", contentPath);
     console.error("Payload:", contentPayload);
-    if (error?.code === "permission-denied") {
-      console.error("Firebase rules are blocking this write.");
+
+    if (error?.code !== "permission-denied") {
+      throw error;
     }
-    throw error;
+
+    console.error("Firebase rules are blocking this write. Trying legacy content path...");
+    console.log("Saving Firestore document...");
+    console.log("Firestore path:", legacyContentPath);
+    console.log("Payload:", contentPayload);
+
+    try {
+      await setDoc(legacyContentRef, contentPayload, { merge: true });
+    } catch (legacyError) {
+      console.error("Error writing Firestore document:", legacyError);
+      console.error("Error code:", legacyError?.code);
+      console.error("Error message:", legacyError?.message);
+      console.error("Firestore path:", legacyContentPath);
+      console.error("Payload:", contentPayload);
+      if (legacyError?.code === "permission-denied") {
+        console.error("Firebase rules are blocking this write.");
+      }
+      throw legacyError;
+    }
+  }
+
+  console.log("Saving Firestore document...");
+  console.log("Firestore path:", venuePath);
+  console.log("Payload:", venuePayload);
+
+  try {
+    await setDoc(venueRef, venuePayload, { merge: true });
+  } catch (error) {
+    console.error("Error writing Firestore document:", error);
+    console.error("Error code:", error?.code);
+    console.error("Error message:", error?.message);
+    console.error("Firestore path:", venuePath);
+    console.error("Payload:", venuePayload);
+    console.warn("El contenido público ya fue guardado, pero no se pudo sincronizar el documento general de la quinta.");
   }
 }
 
