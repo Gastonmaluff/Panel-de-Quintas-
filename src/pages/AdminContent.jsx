@@ -1,5 +1,6 @@
 import { useEffect, useId, useState } from "react";
 import { Trash2 } from "lucide-react";
+import { auth } from "../config/firebase.js";
 import { publicContentMock } from "../data/adminData.js";
 import { venueId, venues } from "../data/venues.js";
 import {
@@ -250,12 +251,19 @@ export default function AdminContent() {
     const contentDraft = JSON.parse(JSON.stringify(content));
     const entries = Object.entries(pendingImages);
 
+    console.log("Uploading pending images...");
+    console.log("Pending image count:", entries.length);
+
     for (const [path, { file, storageSection }] of entries) {
       try {
         const imageUrl = await uploadVenueImage(venueId, storageSection, file);
         setUploadedImage(contentDraft, path, imageUrl);
       } catch (error) {
-        console.error(`Error uploading ${path}:`, error);
+        console.error("Error uploading image:", error);
+        console.error("Error code:", error?.code);
+        console.error("Error message:", error?.message);
+        console.error("Image upload path:", path);
+        console.error("File info:", file?.name, file?.type, file?.size);
         throw error;
       }
     }
@@ -270,10 +278,19 @@ export default function AdminContent() {
   };
 
   const handleSave = async () => {
+    console.log("Starting savePublicContent...");
+
     const validationMessage = validateContent();
     if (validationMessage) {
       setSaveState("error");
       setFeedback(validationMessage);
+      return;
+    }
+
+    if (!auth.currentUser) {
+      console.error("No hay sesión activa para guardar cambios.");
+      setSaveState("error");
+      setFeedback("No hay sesión activa para guardar cambios.");
       return;
     }
 
@@ -282,19 +299,26 @@ export default function AdminContent() {
 
     try {
       const contentToSave = await uploadPendingImages();
+      console.log("Saving Firestore document...");
       await savePublicContent(venueId, venue, contentToSave);
       setContent(contentToSave);
       setPendingImages({});
       setIsDirty(false);
       setSaveState("success");
       setFeedback("Cambios guardados");
+      console.log("Public content saved successfully.");
       window.setTimeout(() => {
         setSaveState((current) => (current === "success" ? "idle" : current));
       }, 2800);
     } catch (error) {
       console.error("Error saving public content:", error);
+      console.error("Error code:", error?.code);
+      console.error("Error message:", error?.message);
+      if (error?.code === "permission-denied") {
+        console.error("Firebase rules are blocking this write.");
+      }
       setSaveState("error");
-      setFeedback("No se pudieron guardar los cambios. Intentá de nuevo.");
+      setFeedback("No se pudieron guardar los cambios. Revisá la conexión o permisos de Firebase.");
     }
   };
 

@@ -5,7 +5,8 @@ import { publicContentMock } from "../data/adminData.js";
 import { venues } from "../data/venues.js";
 
 export const DEFAULT_VENUE_ID = "paraiso-escondido";
-const CONTENT_DOC_PATH = ["sections", "publicContent"];
+const PUBLIC_CONTENT_PATH = ["publicContent", "main"];
+const LEGACY_CONTENT_PATH = ["sections", "publicContent"];
 
 function clone(value) {
   return JSON.parse(JSON.stringify(value));
@@ -13,15 +14,65 @@ function clone(value) {
 
 function sanitizeFileName(fileName) {
   return fileName
+    .toLowerCase()
     .normalize("NFD")
     .replace(/[\u0300-\u036f]/g, "")
-    .replace(/[^a-zA-Z0-9.-]/g, "-")
+    .replace(/[^a-z0-9.]+/g, "-")
     .replace(/-+/g, "-")
-    .toLowerCase();
+    .replace(/^-|-$/g, "");
 }
 
 function imageFrom(item, fallback = "") {
   return item?.imageUrl || item?.image || fallback;
+}
+
+function isFileOrBlob(value) {
+  const isFile = typeof File !== "undefined" && value instanceof File;
+  const isBlob = typeof Blob !== "undefined" && value instanceof Blob;
+  return isFile || isBlob;
+}
+
+function cleanImageUrl(value, fieldName) {
+  if (!value) return "";
+  if (typeof value !== "string") return "";
+
+  if (value.startsWith("blob:")) {
+    throw new Error(`La imagen "${fieldName}" sigue siendo una vista previa local y no se subió a Storage.`);
+  }
+
+  return value;
+}
+
+function cleanForFirestore(value) {
+  if (value === undefined) return undefined;
+  if (value === null) return null;
+  if (isFileOrBlob(value)) return undefined;
+
+  if (Array.isArray(value)) {
+    return value
+      .map((item) => cleanForFirestore(item))
+      .filter((item) => item !== undefined);
+  }
+
+  if (typeof value === "object") {
+    return Object.entries(value).reduce((result, [key, item]) => {
+      const cleaned = cleanForFirestore(item);
+      if (cleaned !== undefined) {
+        result[key] = cleaned;
+      }
+      return result;
+    }, {});
+  }
+
+  return value;
+}
+
+function getVenuePath(venueId) {
+  return `venues/${venueId}`;
+}
+
+function getPublicContentPath(venueId) {
+  return `venues/${venueId}/${PUBLIC_CONTENT_PATH.join("/")}`;
 }
 
 function normalizeVenue(venueData = {}, contentData = {}) {
@@ -122,7 +173,7 @@ function serializeContent(content, venue) {
       visible: content.hero.visible,
       title: content.hero.title,
       subtitle: content.hero.subtitle,
-      imageUrl: content.hero.image || "",
+      imageUrl: cleanImageUrl(content.hero.image, "hero"),
       ctaText: content.hero.ctaText,
     },
     experience: {
@@ -130,13 +181,13 @@ function serializeContent(content, venue) {
       eyebrow: content.experience.eyebrow,
       title: content.experience.title,
       description: content.experience.description,
-      imageUrl: content.experience.image || "",
+      imageUrl: cleanImageUrl(content.experience.image, "experience"),
     },
     gallery: [...content.gallery]
       .sort((a, b) => Number(a.order || 0) - Number(b.order || 0))
       .map((item, index) => ({
         id: item.id,
-        imageUrl: item.image || "",
+        imageUrl: cleanImageUrl(item.image, `gallery:${item.id}`),
         alt: item.alt || "",
         order: Number(item.order || index + 1),
         visible: item.visible ?? true,
@@ -153,7 +204,7 @@ function serializeContent(content, venue) {
         id: item.id,
         title: item.title || "",
         description: item.description || "",
-        imageUrl: item.image || "",
+        imageUrl: cleanImageUrl(item.image, `amenities:${item.id}`),
         alt: item.alt || item.title || "",
         order: Number(item.order || index + 1),
         visible: item.active ?? true,
@@ -169,7 +220,7 @@ function serializeContent(content, venue) {
       name: item.name || "",
       subtitle: item.subtitle || "",
       description: item.description || "",
-      imageUrl: item.image || "",
+      imageUrl: cleanImageUrl(item.image, `rooms:${item.id || index + 1}`),
       alt: item.alt || item.name || "",
       features: item.features || [],
     })),
@@ -177,7 +228,7 @@ function serializeContent(content, venue) {
       visible: content.cta.visible,
       title: content.cta.title,
       description: content.cta.description,
-      imageUrl: content.cta.image || "",
+      imageUrl: cleanImageUrl(content.cta.image, "cta"),
       buttonText: content.cta.buttonText,
     },
     footer: {
@@ -188,56 +239,115 @@ function serializeContent(content, venue) {
       instagram: content.footer.socialLinks?.[0]?.url || "",
       facebook: content.footer.socialLinks?.[1]?.url || "",
     },
-    updatedAt: serverTimestamp(),
   };
 }
 
 export async function getPublicContent(venueId = DEFAULT_VENUE_ID) {
   const venueRef = doc(db, "venues", venueId);
-  const contentRef = doc(db, "venues", venueId, ...CONTENT_DOC_PATH);
+  const contentRef = doc(db, "venues", venueId, ...PUBLIC_CONTENT_PATH);
+  const legacyContentRef = doc(db, "venues", venueId, ...LEGACY_CONTENT_PATH);
 
-  const [venueSnapshot, contentSnapshot] = await Promise.all([getDoc(venueRef), getDoc(contentRef)]);
+  const [venueSnapshot, contentSnapshot, legacyContentSnapshot] = await Promise.all([
+    getDoc(venueRef),
+    getDoc(contentRef),
+    getDoc(legacyContentRef),
+  ]);
   const venueData = venueSnapshot.exists() ? venueSnapshot.data() : {};
-  const contentData = contentSnapshot.exists() ? contentSnapshot.data() : {};
+  const activeContentSnapshot = contentSnapshot.exists() ? contentSnapshot : legacyContentSnapshot;
+  const contentData = activeContentSnapshot.exists() ? activeContentSnapshot.data() : {};
 
   return {
     venue: normalizeVenue(venueData, contentData),
     content: normalizePublicContent(contentData),
-    exists: contentSnapshot.exists(),
+    exists: activeContentSnapshot.exists(),
   };
 }
 
 export async function savePublicContent(venueId = DEFAULT_VENUE_ID, venue, content) {
   const venueRef = doc(db, "venues", venueId);
-  const contentRef = doc(db, "venues", venueId, ...CONTENT_DOC_PATH);
+  const contentRef = doc(db, "venues", venueId, ...PUBLIC_CONTENT_PATH);
+  const venuePath = getVenuePath(venueId);
+  const contentPath = getPublicContentPath(venueId);
+  const venuePayload = {
+    name: venue.name,
+    slug: venue.slug || venueId,
+    subtitle: venue.subtitle,
+    whatsappNumber: venue.whatsappNumber,
+    whatsapp: venue.whatsappNumber,
+    location: venue.location,
+    active: true,
+    updatedAt: serverTimestamp(),
+  };
+  const contentPayload = {
+    ...cleanForFirestore(serializeContent(content, venue)),
+    updatedAt: serverTimestamp(),
+  };
 
-  await Promise.all([
-    setDoc(
-      venueRef,
-      {
-        name: venue.name,
-        slug: venue.slug || venueId,
-        subtitle: venue.subtitle,
-        whatsappNumber: venue.whatsappNumber,
-        whatsapp: venue.whatsappNumber,
-        location: venue.location,
-        active: true,
-        updatedAt: serverTimestamp(),
-      },
-      { merge: true },
-    ),
-    setDoc(contentRef, serializeContent(content, venue), { merge: true }),
-  ]);
+  console.log("Saving Firestore document...");
+  console.log("Firestore path:", venuePath);
+  console.log("Payload:", venuePayload);
+
+  try {
+    await setDoc(venueRef, venuePayload, { merge: true });
+  } catch (error) {
+    console.error("Error writing Firestore document:", error);
+    console.error("Error code:", error?.code);
+    console.error("Error message:", error?.message);
+    console.error("Firestore path:", venuePath);
+    console.error("Payload:", venuePayload);
+    if (error?.code === "permission-denied") {
+      console.error("Firebase rules are blocking this write.");
+    }
+    throw error;
+  }
+
+  console.log("Saving Firestore document...");
+  console.log("Firestore path:", contentPath);
+  console.log("Payload:", contentPayload);
+
+  try {
+    await setDoc(contentRef, contentPayload, { merge: true });
+  } catch (error) {
+    console.error("Error writing Firestore document:", error);
+    console.error("Error code:", error?.code);
+    console.error("Error message:", error?.message);
+    console.error("Firestore path:", contentPath);
+    console.error("Payload:", contentPayload);
+    if (error?.code === "permission-denied") {
+      console.error("Firebase rules are blocking this write.");
+    }
+    throw error;
+  }
 }
 
 export async function uploadVenueImage(venueId = DEFAULT_VENUE_ID, section, file) {
+  if (!isFileOrBlob(file)) {
+    throw new Error("La imagen seleccionada no es un archivo válido.");
+  }
+
   const safeName = sanitizeFileName(file.name || "imagen.png");
-  const filePath = `venues/${venueId}/content/${section}/${Date.now()}-${safeName}`;
+  const filePath = `venues/${venueId}/content/${section}/${Date.now()}-${safeName || "imagen.png"}`;
   const fileRef = ref(storage, filePath);
 
-  await uploadBytes(fileRef, file, {
-    contentType: file.type || "image/png",
-  });
+  console.log("Uploading image to Firebase Storage...");
+  console.log("Image upload path:", filePath);
+  console.log("File info:", file?.name, file?.type, file?.size);
 
-  return getDownloadURL(fileRef);
+  try {
+    await uploadBytes(fileRef, file, {
+      contentType: file.type || "image/png",
+    });
+
+    return await getDownloadURL(fileRef);
+  } catch (error) {
+    console.error("Error uploading image:", error);
+    console.error("Error code:", error?.code);
+    console.error("Error message:", error?.message);
+    console.error("Image upload path:", filePath);
+    console.error("File info:", file?.name, file?.type, file?.size);
+    if (error?.code === "storage/unauthorized") {
+      console.error("Firebase Storage rules are blocking this upload.");
+    }
+    throw error;
+  }
 }
