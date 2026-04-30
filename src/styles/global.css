@@ -1628,6 +1628,29 @@ textarea:focus {
   white-space: nowrap;
 }
 
+.admin-save-status {
+  display: inline-flex;
+  width: fit-content;
+  margin-top: 0.55rem;
+  padding: 0.35rem 0.65rem;
+  border-radius: 999px;
+  background: rgba(88, 111, 96, 0.1);
+  color: var(--color-muted);
+  font-size: 0.78rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+}
+
+.admin-save-status--success {
+  background: rgba(51, 181, 121, 0.14);
+  color: #0c6b45;
+}
+
+.admin-save-status--error {
+  background: rgba(177, 83, 66, 0.12);
+  color: #8e3326;
+}
+
 .admin-amenity-editor {
   grid-template-columns: repeat(3, minmax(0, 1fr));
 }

@@ -1,7 +1,12 @@
-import { useId, useState } from "react";
+import { useEffect, useId, useState } from "react";
 import { Trash2 } from "lucide-react";
 import { publicContentMock } from "../data/adminData.js";
-import { venues } from "../data/venues.js";
+import { venueId, venues } from "../data/venues.js";
+import {
+  getPublicContent,
+  savePublicContent,
+  uploadVenueImage,
+} from "../services/publicContent.js";
 
 function TextField({ label, value, onChange, type = "text" }) {
   return (
@@ -40,7 +45,8 @@ function ImagePicker({ label, value, onChange, buttonText = "Cambiar imagen" }) 
   const handleFileChange = (event) => {
     const file = event.target.files?.[0];
     if (!file) return;
-    onChange(URL.createObjectURL(file));
+    onChange(URL.createObjectURL(file), file);
+    event.target.value = "";
   };
 
   return (
@@ -69,12 +75,55 @@ function CollapsibleCard({ title, children }) {
 export default function AdminContent() {
   const [venue, setVenue] = useState(venues[0]);
   const [content, setContent] = useState(publicContentMock);
+  const [pendingImages, setPendingImages] = useState({});
+  const [isLoading, setIsLoading] = useState(true);
+  const [isDirty, setIsDirty] = useState(false);
+  const [saveState, setSaveState] = useState("idle");
+  const [feedback, setFeedback] = useState("");
+
+  useEffect(() => {
+    let isMounted = true;
+
+    async function loadContent() {
+      setIsLoading(true);
+      try {
+        const result = await getPublicContent(venueId);
+        if (!isMounted) return;
+        setVenue(result.venue);
+        setContent(result.content);
+        setPendingImages({});
+        setIsDirty(false);
+        setFeedback(result.exists ? "" : "Usando contenido inicial. Guardá los cambios para publicarlo.");
+      } catch (error) {
+        console.error("Error loading public content:", error);
+        if (!isMounted) return;
+        setFeedback("No se pudo cargar el contenido guardado. Se muestra una versión inicial.");
+      } finally {
+        if (isMounted) setIsLoading(false);
+      }
+    }
+
+    loadContent();
+
+    return () => {
+      isMounted = false;
+    };
+  }, []);
+
+  const markDirty = () => {
+    setIsDirty(true);
+    if (saveState !== "saving") {
+      setSaveState("idle");
+    }
+  };
 
   const updateVenue = (key, value) => {
+    markDirty();
     setVenue((current) => ({ ...current, [key]: value }));
   };
 
   const updateSection = (section, key, value) => {
+    markDirty();
     setContent((current) => ({
       ...current,
       [section]: {
@@ -85,6 +134,7 @@ export default function AdminContent() {
   };
 
   const updateSocialLink = (index, value) => {
+    markDirty();
     setContent((current) => {
       const socialLinks = [...current.footer.socialLinks];
       socialLinks[index] = {
@@ -103,6 +153,7 @@ export default function AdminContent() {
   };
 
   const updateArrayItem = (section, id, key, value) => {
+    markDirty();
     setContent((current) => ({
       ...current,
       [section]: current[section].map((item) =>
@@ -112,6 +163,12 @@ export default function AdminContent() {
   };
 
   const removeArrayItem = (section, id) => {
+    markDirty();
+    setPendingImages((current) => {
+      const next = { ...current };
+      delete next[`${section}:${id}.image`];
+      return next;
+    });
     setContent((current) => ({
       ...current,
       [section]: current[section].filter((item) => item.id !== id),
@@ -119,6 +176,7 @@ export default function AdminContent() {
   };
 
   const addGalleryImage = () => {
+    markDirty();
     setContent((current) => ({
       ...current,
       gallery: [
@@ -135,6 +193,7 @@ export default function AdminContent() {
   };
 
   const addAmenity = () => {
+    markDirty();
     setContent((current) => ({
       ...current,
       amenities: [
@@ -152,14 +211,116 @@ export default function AdminContent() {
     }));
   };
 
+  const updateSectionImage = (section, value, file) => {
+    updateSection(section, "image", value);
+    if (!file) return;
+    setPendingImages((current) => ({
+      ...current,
+      [`${section}.image`]: { file, storageSection: section },
+    }));
+  };
+
+  const updateArrayImage = (section, id, value, file) => {
+    updateArrayItem(section, id, "image", value);
+    if (!file) return;
+    setPendingImages((current) => ({
+      ...current,
+      [`${section}:${id}.image`]: { file, storageSection: section },
+    }));
+  };
+
+  const setUploadedImage = (draft, path, imageUrl) => {
+    if (path.includes(":")) {
+      const [collection, rest] = path.split(":");
+      const [id] = rest.split(".");
+      draft[collection] = draft[collection].map((item) =>
+        item.id === id ? { ...item, image: imageUrl } : item,
+      );
+      return;
+    }
+
+    const [section] = path.split(".");
+    draft[section] = {
+      ...draft[section],
+      image: imageUrl,
+    };
+  };
+
+  const uploadPendingImages = async () => {
+    const contentDraft = JSON.parse(JSON.stringify(content));
+    const entries = Object.entries(pendingImages);
+
+    for (const [path, { file, storageSection }] of entries) {
+      try {
+        const imageUrl = await uploadVenueImage(venueId, storageSection, file);
+        setUploadedImage(contentDraft, path, imageUrl);
+      } catch (error) {
+        console.error(`Error uploading ${path}:`, error);
+        throw error;
+      }
+    }
+
+    return contentDraft;
+  };
+
+  const validateContent = () => {
+    if (!venue.name.trim()) return "El nombre de la quinta no puede quedar vacío.";
+    if (!venue.whatsappNumber.trim()) return "Agregá un número de WhatsApp para las consultas.";
+    return "";
+  };
+
+  const handleSave = async () => {
+    const validationMessage = validateContent();
+    if (validationMessage) {
+      setSaveState("error");
+      setFeedback(validationMessage);
+      return;
+    }
+
+    setSaveState("saving");
+    setFeedback("");
+
+    try {
+      const contentToSave = await uploadPendingImages();
+      await savePublicContent(venueId, venue, contentToSave);
+      setContent(contentToSave);
+      setPendingImages({});
+      setIsDirty(false);
+      setSaveState("success");
+      setFeedback("Cambios guardados");
+      window.setTimeout(() => {
+        setSaveState((current) => (current === "success" ? "idle" : current));
+      }, 2800);
+    } catch (error) {
+      console.error("Error saving public content:", error);
+      setSaveState("error");
+      setFeedback("No se pudieron guardar los cambios. Intentá de nuevo.");
+    }
+  };
+
+  const saveButtonText = {
+    idle: "Guardar cambios",
+    saving: "Guardando...",
+    success: "Cambios guardados",
+    error: "Error al guardar",
+  }[saveState];
+
   return (
     <section className="admin-section">
       <div className="admin-section-heading">
         <div>
           <h2>Contenido de la página pública</h2>
-          <p>Actualizá textos, imágenes y secciones visibles para tus visitantes.</p>
+          <p>
+            {isLoading
+              ? "Cargando contenido guardado..."
+              : "Actualizá textos, imágenes y secciones visibles para tus visitantes."}
+          </p>
+          {!isLoading && isDirty && <span className="admin-save-status">Cambios sin guardar</span>}
+          {feedback && <span className={`admin-save-status admin-save-status--${saveState}`}>{feedback}</span>}
         </div>
-        <button type="button">Guardar cambios</button>
+        <button type="button" onClick={handleSave} disabled={isLoading || saveState === "saving"}>
+          {saveButtonText}
+        </button>
       </div>
 
       <div className="admin-editor-grid">
@@ -182,7 +343,7 @@ export default function AdminContent() {
             />
             <TextField label="Frase principal" value={content.hero.title} onChange={(value) => updateSection("hero", "title", value)} />
             <TextAreaField label="Descripción corta" value={content.hero.subtitle} onChange={(value) => updateSection("hero", "subtitle", value)} />
-            <ImagePicker label="Imagen principal" value={content.hero.image} onChange={(value) => updateSection("hero", "image", value)} />
+            <ImagePicker label="Imagen principal" value={content.hero.image} onChange={(value, file) => updateSectionImage("hero", value, file)} />
             <TextField label="Texto del botón" value={content.hero.ctaText} onChange={(value) => updateSection("hero", "ctaText", value)} />
           </div>
         </article>
@@ -197,7 +358,7 @@ export default function AdminContent() {
             <TextField label="Etiqueta superior" value={content.experience.eyebrow} onChange={(value) => updateSection("experience", "eyebrow", value)} />
             <TextField label="Título" value={content.experience.title} onChange={(value) => updateSection("experience", "title", value)} />
             <TextAreaField label="Descripción" value={content.experience.description} onChange={(value) => updateSection("experience", "description", value)} />
-            <ImagePicker label="Imagen de la sección" value={content.experience.image} onChange={(value) => updateSection("experience", "image", value)} />
+            <ImagePicker label="Imagen de la sección" value={content.experience.image} onChange={(value, file) => updateSectionImage("experience", value, file)} />
           </div>
         </article>
 
@@ -211,7 +372,7 @@ export default function AdminContent() {
           <div className="admin-repeat-list">
             {content.gallery.map((item) => (
               <div className="admin-repeat-item admin-gallery-item" key={item.id}>
-                <ImagePicker label="Foto" value={item.image} onChange={(value) => updateArrayItem("gallery", item.id, "image", value)} />
+                <ImagePicker label="Foto" value={item.image} onChange={(value, file) => updateArrayImage("gallery", item.id, value, file)} />
                 <TextField label="Texto alternativo" value={item.alt} onChange={(value) => updateArrayItem("gallery", item.id, "alt", value)} />
                 <TextField label="Orden" type="number" value={item.order} onChange={(value) => updateArrayItem("gallery", item.id, "order", Number(value))} />
                 <VisibilityToggle
@@ -250,7 +411,7 @@ export default function AdminContent() {
           <div className="admin-amenity-editor">
             {content.amenities.map((amenity) => (
               <article key={amenity.id}>
-                <ImagePicker label="Imagen del servicio" value={amenity.image} onChange={(value) => updateArrayItem("amenities", amenity.id, "image", value)} />
+                <ImagePicker label="Imagen del servicio" value={amenity.image} onChange={(value, file) => updateArrayImage("amenities", amenity.id, value, file)} />
                 <TextField label="Título" value={amenity.title} onChange={(value) => updateArrayItem("amenities", amenity.id, "title", value)} />
                 <TextAreaField label="Descripción" value={amenity.description} onChange={(value) => updateArrayItem("amenities", amenity.id, "description", value)} />
                 <TextField label="Texto alternativo" value={amenity.alt} onChange={(value) => updateArrayItem("amenities", amenity.id, "alt", value)} />
@@ -276,7 +437,7 @@ export default function AdminContent() {
             />
             <TextField label="Título" value={content.cta.title} onChange={(value) => updateSection("cta", "title", value)} />
             <TextAreaField label="Descripción" value={content.cta.description} onChange={(value) => updateSection("cta", "description", value)} />
-            <ImagePicker label="Imagen de fondo" value={content.cta.image} onChange={(value) => updateSection("cta", "image", value)} />
+            <ImagePicker label="Imagen de fondo" value={content.cta.image} onChange={(value, file) => updateSectionImage("cta", value, file)} />
             <TextField label="Texto del botón" value={content.cta.buttonText} onChange={(value) => updateSection("cta", "buttonText", value)} />
           </div>
         </CollapsibleCard>

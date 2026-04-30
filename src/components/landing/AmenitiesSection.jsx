@@ -59,15 +59,23 @@ function AmenityCard({ amenity }) {
   );
 }
 
-export default function AmenitiesSection({ amenities }) {
+export default function AmenitiesSection({ amenities = [], section }) {
   const isHoveringRef = useRef(false);
   const pauseUntilRef = useRef(0);
   const [cardsPerSlide, setCardsPerSlide] = useState(getCardsPerSlide);
   const [activeSlide, setActiveSlide] = useState(0);
 
-  const normalizedAmenities = useMemo(
-    () => amenities.map((amenity, index) => normalizeAmenity(amenity, index)),
+  const visibleAmenities = useMemo(
+    () =>
+      amenities
+        .filter((amenity) => amenity.active ?? amenity.visible ?? true)
+        .sort((a, b) => Number(a.order || 0) - Number(b.order || 0)),
     [amenities],
+  );
+
+  const normalizedAmenities = useMemo(
+    () => visibleAmenities.map((amenity, index) => normalizeAmenity(amenity, index)),
+    [visibleAmenities],
   );
 
   const slides = useMemo(
@@ -118,15 +126,17 @@ export default function AmenitiesSection({ amenities }) {
     pauseUntilRef.current = Date.now() + 1200;
   };
 
+  if (section?.visible === false || !normalizedAmenities.length) return null;
+
   return (
     <section className="amenities-band" id="servicios">
       <div className="section-shell">
         <div className="section-heading section-heading--center">
-          <p className="eyebrow">Servicios incluidos</p>
-          <h2>Todo lo esencial, resuelto con sobriedad.</h2>
+          <p className="eyebrow">{section?.eyebrow || "Servicios incluidos"}</p>
+          <h2>{section?.title || "Todo lo esencial, resuelto con sobriedad."}</h2>
           <p>
-            Espacios y comodidades pensados para que el evento fluya sin perder
-            esa sensación de quinta privada.
+            {section?.description ||
+              "Espacios y comodidades pensados para que el evento fluya sin perder esa sensación de quinta privada."}
           </p>
         </div>
 
