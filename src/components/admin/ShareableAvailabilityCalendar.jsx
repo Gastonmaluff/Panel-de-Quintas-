@@ -28,14 +28,14 @@ function getMonthTitle(year, month) {
   }).format(date);
 }
 
-export default function ShareableAvailabilityCalendar({ availability, month }) {
+export default function ShareableAvailabilityCalendar({ availability, month, exportKey = "" }) {
   const cells = getMonthMatrix(month.year, month.month);
   const monthTitle = getMonthTitle(month.year, month.month);
 
   return (
-    <article className="shareable-calendar" aria-label="Imagen de disponibilidad">
+    <article className="shareable-calendar" aria-label="Imagen de disponibilidad" data-export-key={exportKey}>
       <header className="shareable-calendar__header">
-        <img src={logoStacked} alt="El Paraíso Escondido" />
+        <img src={logoStacked} alt="El Paraíso Escondido" loading="eager" decoding="sync" />
         <p>Disponibilidad</p>
         <h2>{monthTitle}</h2>
       </header>

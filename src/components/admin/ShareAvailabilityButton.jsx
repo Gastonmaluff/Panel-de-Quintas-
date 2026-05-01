@@ -32,7 +32,16 @@ function downloadBlob(blob, fileName) {
 async function waitForImages(container) {
   const images = Array.from(container.querySelectorAll("img"));
   await Promise.all(
-    images.map((image) => {
+    images.map(async (image) => {
+      if (image.decode) {
+        try {
+          await image.decode();
+          return;
+        } catch {
+          // Continue with load/error handlers below.
+        }
+      }
+
       if (image.complete && image.naturalWidth > 0) return Promise.resolve();
 
       return new Promise((resolve) => {
@@ -46,11 +55,12 @@ async function waitForImages(container) {
 export default function ShareAvailabilityButton() {
   const { availability } = useAdminData();
   const buttonRef = useRef(null);
-  const exportRefs = useRef({});
+  const exportRef = useRef(null);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [menuPosition, setMenuPosition] = useState({ top: 0, right: 0 });
   const [generatingAction, setGeneratingAction] = useState("");
   const [message, setMessage] = useState("");
+  const [exportMonthKey, setExportMonthKey] = useState("current");
   const months = useMemo(
     () => ({
       current: getMonthOffset(0),
@@ -75,7 +85,11 @@ export default function ShareAvailabilityButton() {
   };
 
   const createPngBlob = async (monthKey) => {
-    const node = exportRefs.current[monthKey];
+    setExportMonthKey(monthKey);
+    await new Promise((resolve) => window.requestAnimationFrame(resolve));
+    await new Promise((resolve) => window.requestAnimationFrame(resolve));
+
+    const node = exportRef.current;
     if (!node) throw new Error("Missing export node");
 
     await waitForImages(node);
@@ -185,11 +199,13 @@ export default function ShareAvailabilityButton() {
       {typeof document !== "undefined" ? createPortal(menu, document.body) : null}
 
       <div className="share-availability__stage" aria-hidden="true">
-        {Object.entries(months).map(([key, month]) => (
-          <div key={key} ref={(node) => { exportRefs.current[key] = node; }}>
-            <ShareableAvailabilityCalendar availability={availability} month={month} />
-          </div>
-        ))}
+        <div ref={exportRef}>
+          <ShareableAvailabilityCalendar
+            availability={availability}
+            month={months[exportMonthKey]}
+            exportKey={exportMonthKey}
+          />
+        </div>
       </div>
     </div>
   );

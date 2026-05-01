@@ -1695,6 +1695,8 @@ textarea:focus {
 
 .admin-repeat-list,
 .admin-amenity-editor,
+.admin-room-editor,
+.admin-room-features,
 .admin-extra-list {
   display: grid;
   gap: 14px;
@@ -1806,6 +1808,38 @@ textarea:focus {
   border: 1px solid var(--color-line);
   background: #fbfaf7;
   padding: 14px;
+}
+
+.admin-room-editor {
+  margin-top: 18px;
+}
+
+.admin-room-editor > article {
+  display: grid;
+  grid-template-columns: minmax(220px, 0.42fr) minmax(260px, 0.58fr);
+  gap: 18px;
+  border: 1px solid var(--color-line);
+  background: #fbfaf7;
+  padding: 16px;
+}
+
+.admin-room-features {
+  grid-column: 1 / -1;
+  border-top: 1px solid var(--color-line);
+  padding-top: 14px;
+}
+
+.admin-room-features h4 {
+  margin: 0;
+  color: var(--color-forest);
+  font-size: 1rem;
+}
+
+.admin-room-feature-row {
+  display: grid;
+  grid-template-columns: minmax(140px, 0.35fr) minmax(220px, 1fr) auto;
+  gap: 12px;
+  align-items: end;
 }
 
 .admin-toggle {
@@ -3656,6 +3690,7 @@ textarea:focus {
   .admin-dashboard-columns,
   .admin-editor-grid,
   .admin-amenity-editor,
+  .admin-room-editor > article,
   .admin-event-type-list > div,
   .admin-detail-grid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -3733,6 +3768,8 @@ textarea:focus {
   .admin-dashboard-columns,
     .admin-editor-grid,
     .admin-amenity-editor,
+    .admin-room-editor > article,
+    .admin-room-feature-row,
     .admin-event-list article,
     .admin-event-type-list > div,
     .pricing-rule-row,
@@ -3743,6 +3780,10 @@ textarea:focus {
     .admin-repeat-item,
     .admin-extra-list div {
     grid-template-columns: 1fr;
+  }
+
+  .admin-room-features {
+    grid-column: auto;
   }
 
   .gallery-grid img {

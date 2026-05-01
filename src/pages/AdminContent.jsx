@@ -221,6 +221,53 @@ export default function AdminContent() {
     }));
   };
 
+  const updateRoomFeature = (roomId, featureIndex, key, value) => {
+    markDirty();
+    setContent((current) => ({
+      ...current,
+      rooms: current.rooms.map((room) =>
+        room.id === roomId
+          ? {
+              ...room,
+              features: room.features.map((feature, index) =>
+                index === featureIndex ? { ...feature, [key]: value } : feature,
+              ),
+            }
+          : room,
+      ),
+    }));
+  };
+
+  const addRoomFeature = (roomId) => {
+    markDirty();
+    setContent((current) => ({
+      ...current,
+      rooms: current.rooms.map((room) =>
+        room.id === roomId
+          ? {
+              ...room,
+              features: [...room.features, { label: "Detalle", value: "" }],
+            }
+          : room,
+      ),
+    }));
+  };
+
+  const removeRoomFeature = (roomId, featureIndex) => {
+    markDirty();
+    setContent((current) => ({
+      ...current,
+      rooms: current.rooms.map((room) =>
+        room.id === roomId
+          ? {
+              ...room,
+              features: room.features.filter((_, index) => index !== featureIndex),
+            }
+          : room,
+      ),
+    }));
+  };
+
   const updateArrayImage = (section, id, value, file) => {
     updateArrayItem(section, id, "image", value);
     if (!file) return;
@@ -448,6 +495,57 @@ export default function AdminContent() {
                 <button type="button" className="admin-danger-button" onClick={() => removeArrayItem("amenities", amenity.id)}>
                   Eliminar servicio
                 </button>
+              </article>
+            ))}
+          </div>
+        </article>
+
+        <article className="admin-editor-card admin-editor-card--wide">
+          <h3>Hospedaje y habitaciones</h3>
+          <div className="config-form">
+            <TextField label="Etiqueta" value={content.roomsSection.eyebrow} onChange={(value) => updateSection("roomsSection", "eyebrow", value)} />
+            <TextField label="Título" value={content.roomsSection.title} onChange={(value) => updateSection("roomsSection", "title", value)} />
+            <TextAreaField label="Descripción" value={content.roomsSection.description} onChange={(value) => updateSection("roomsSection", "description", value)} />
+            <VisibilityToggle
+              checked={content.roomsSection.visible}
+              onChange={(value) => updateSection("roomsSection", "visible", value)}
+            />
+          </div>
+
+          <div className="admin-room-editor">
+            {content.rooms.map((room) => (
+              <article key={room.id}>
+                <ImagePicker label="Imagen de la habitación" value={room.image} onChange={(value, file) => updateArrayImage("rooms", room.id, value, file)} />
+                <div className="config-form config-form--stacked">
+                  <TextField label="Nombre" value={room.name} onChange={(value) => updateArrayItem("rooms", room.id, "name", value)} />
+                  <TextField label="Subtítulo" value={room.subtitle} onChange={(value) => updateArrayItem("rooms", room.id, "subtitle", value)} />
+                  <TextAreaField label="Descripción" value={room.description} onChange={(value) => updateArrayItem("rooms", room.id, "description", value)} />
+                  <TextField label="Texto alternativo" value={room.alt} onChange={(value) => updateArrayItem("rooms", room.id, "alt", value)} />
+                </div>
+
+                <div className="admin-room-features">
+                  <div className="admin-editor-card__heading">
+                    <h4>Características</h4>
+                    <button type="button" onClick={() => addRoomFeature(room.id)}>
+                      Agregar detalle
+                    </button>
+                  </div>
+                  {room.features.map((feature, index) => (
+                    <div className="admin-room-feature-row" key={`${room.id}-${feature.label}-${index}`}>
+                      <TextField label="Dato" value={feature.label} onChange={(value) => updateRoomFeature(room.id, index, "label", value)} />
+                      <TextField label="Valor" value={feature.value} onChange={(value) => updateRoomFeature(room.id, index, "value", value)} />
+                      <button
+                        type="button"
+                        className="admin-danger-button admin-icon-danger-button"
+                        onClick={() => removeRoomFeature(room.id, index)}
+                        aria-label="Eliminar característica"
+                        title="Eliminar característica"
+                      >
+                        <Trash2 size={16} strokeWidth={1.8} aria-hidden="true" />
+                      </button>
+                    </div>
+                  ))}
+                </div>
               </article>
             ))}
           </div>
