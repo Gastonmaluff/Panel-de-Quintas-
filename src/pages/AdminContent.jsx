@@ -414,7 +414,6 @@ export default function AdminContent() {
             />
             <TextField label="Frase principal" value={content.hero.title} onChange={(value) => updateSection("hero", "title", value)} />
             <TextAreaField label="Descripción corta" value={content.hero.subtitle} onChange={(value) => updateSection("hero", "subtitle", value)} />
-            <ImagePicker label="Imagen principal" value={content.hero.image} onChange={(value, file) => updateSectionImage("hero", value, file)} />
             <TextField label="Texto del botón" value={content.hero.ctaText} onChange={(value) => updateSection("hero", "ctaText", value)} />
           </div>
         </article>
@@ -429,7 +428,6 @@ export default function AdminContent() {
             <TextField label="Etiqueta superior" value={content.experience.eyebrow} onChange={(value) => updateSection("experience", "eyebrow", value)} />
             <TextField label="Título" value={content.experience.title} onChange={(value) => updateSection("experience", "title", value)} />
             <TextAreaField label="Descripción" value={content.experience.description} onChange={(value) => updateSection("experience", "description", value)} />
-            <ImagePicker label="Imagen de la sección" value={content.experience.image} onChange={(value, file) => updateSectionImage("experience", value, file)} />
           </div>
         </article>
 

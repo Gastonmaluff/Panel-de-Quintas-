@@ -177,7 +177,6 @@ function serializeContent(content, venue) {
       visible: content.hero.visible,
       title: content.hero.title,
       subtitle: content.hero.subtitle,
-      imageUrl: cleanImageUrl(content.hero.image, "hero"),
       ctaText: content.hero.ctaText,
     },
     experience: {
@@ -185,7 +184,6 @@ function serializeContent(content, venue) {
       eyebrow: content.experience.eyebrow,
       title: content.experience.title,
       description: content.experience.description,
-      imageUrl: cleanImageUrl(content.experience.image, "experience"),
     },
     gallery: [...content.gallery]
       .sort((a, b) => Number(a.order || 0) - Number(b.order || 0))
