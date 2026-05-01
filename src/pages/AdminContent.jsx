@@ -64,10 +64,22 @@ function ImagePicker({ label, value, onChange, buttonText = "Cambiar imagen" }) 
   );
 }
 
-function CollapsibleCard({ title, children }) {
+function CollapsibleCard({ title, summary, children, defaultOpen = false, dirty = false }) {
+  const [isOpen, setIsOpen] = useState(defaultOpen);
+
   return (
-    <details className="admin-editor-card admin-collapsible-card">
-      <summary>{title}</summary>
+    <details
+      className="admin-editor-card admin-collapsible-card"
+      open={isOpen}
+      onToggle={(event) => setIsOpen(event.currentTarget.open)}
+    >
+      <summary>
+        <span>
+          <strong>{title}</strong>
+          {summary && <small>{summary}</small>}
+        </span>
+        {dirty && <em>Cambios sin guardar</em>}
+      </summary>
       <div className="admin-collapsible-card__content">{children}</div>
     </details>
   );
@@ -395,18 +407,21 @@ export default function AdminContent() {
       </div>
 
       <div className="admin-editor-grid">
-        <article className="admin-editor-card">
-          <h3>Marca y datos generales</h3>
+        <CollapsibleCard
+          title="Marca y datos generales"
+          summary="Editá nombre, subtítulo, WhatsApp y ubicación."
+          defaultOpen
+          dirty={isDirty}
+        >
           <div className="config-form config-form--stacked">
             <TextField label="Nombre de la quinta" value={venue.name} onChange={(value) => updateVenue("name", value)} />
             <TextField label="Subtítulo" value={venue.subtitle} onChange={(value) => updateVenue("subtitle", value)} />
             <TextField label="WhatsApp" value={venue.whatsappNumber} onChange={(value) => updateVenue("whatsappNumber", value)} />
             <TextField label="Ubicación" value={venue.location} onChange={(value) => updateVenue("location", value)} />
           </div>
-        </article>
+        </CollapsibleCard>
 
-        <article className="admin-editor-card">
-          <h3>Portada</h3>
+        <CollapsibleCard title="Portada" summary="Editá el texto principal que aparece al inicio.">
           <div className="config-form config-form--stacked">
             <VisibilityToggle
               checked={content.hero.visible}
@@ -416,10 +431,9 @@ export default function AdminContent() {
             <TextAreaField label="Descripción corta" value={content.hero.subtitle} onChange={(value) => updateSection("hero", "subtitle", value)} />
             <TextField label="Texto del botón" value={content.hero.ctaText} onChange={(value) => updateSection("hero", "ctaText", value)} />
           </div>
-        </article>
+        </CollapsibleCard>
 
-        <article className="admin-editor-card">
-          <h3>La experiencia</h3>
+        <CollapsibleCard title="La experiencia" summary="Actualizá el bloque editorial de presentación.">
           <div className="config-form config-form--stacked">
             <VisibilityToggle
               checked={content.experience.visible}
@@ -429,11 +443,11 @@ export default function AdminContent() {
             <TextField label="Título" value={content.experience.title} onChange={(value) => updateSection("experience", "title", value)} />
             <TextAreaField label="Descripción" value={content.experience.description} onChange={(value) => updateSection("experience", "description", value)} />
           </div>
-        </article>
+        </CollapsibleCard>
 
-        <article className="admin-editor-card">
+        <CollapsibleCard title="Galería" summary="Administrá las fotos visibles para tus visitantes.">
           <div className="admin-editor-card__heading">
-            <h3>Galería</h3>
+            <h3>Fotos de la galería</h3>
             <button type="button" onClick={addGalleryImage}>
               Agregar imagen
             </button>
@@ -461,10 +475,12 @@ export default function AdminContent() {
               </div>
             ))}
           </div>
-        </article>
+        </CollapsibleCard>
 
-        <article className="admin-editor-card admin-editor-card--wide">
-          <h3>Servicios incluidos</h3>
+        <CollapsibleCard
+          title="Servicios incluidos"
+          summary="Editá las comodidades y servicios incluidos."
+        >
           <div className="config-form">
             <TextField label="Etiqueta" value={content.amenitiesSection.eyebrow} onChange={(value) => updateSection("amenitiesSection", "eyebrow", value)} />
             <TextField label="Título" value={content.amenitiesSection.title} onChange={(value) => updateSection("amenitiesSection", "title", value)} />
@@ -496,10 +512,12 @@ export default function AdminContent() {
               </article>
             ))}
           </div>
-        </article>
+        </CollapsibleCard>
 
-        <article className="admin-editor-card admin-editor-card--wide">
-          <h3>Hospedaje y habitaciones</h3>
+        <CollapsibleCard
+          title="Hospedaje y habitaciones"
+          summary="Mostrá la capacidad de alojamiento disponible."
+        >
           <div className="config-form">
             <TextField label="Etiqueta" value={content.roomsSection.eyebrow} onChange={(value) => updateSection("roomsSection", "eyebrow", value)} />
             <TextField label="Título" value={content.roomsSection.title} onChange={(value) => updateSection("roomsSection", "title", value)} />
@@ -547,9 +565,9 @@ export default function AdminContent() {
               </article>
             ))}
           </div>
-        </article>
+        </CollapsibleCard>
 
-        <CollapsibleCard title="Llamado final">
+        <CollapsibleCard title="Llamado final" summary="Editá el cierre visual y su llamado a consultar.">
           <div className="config-form config-form--stacked">
             <VisibilityToggle
               checked={content.cta.visible}
@@ -562,7 +580,7 @@ export default function AdminContent() {
           </div>
         </CollapsibleCard>
 
-        <CollapsibleCard title="Pie de página">
+        <CollapsibleCard title="Pie de página" summary="Actualizá texto legal, ubicación y redes.">
           <div className="config-form config-form--stacked">
             <TextField label="Texto legal" value={content.footer.text} onChange={(value) => updateSection("footer", "text", value)} />
             <TextField label="Ubicación" value={content.footer.location} onChange={(value) => updateSection("footer", "location", value)} />

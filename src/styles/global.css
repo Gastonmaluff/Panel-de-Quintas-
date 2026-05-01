@@ -73,6 +73,57 @@ img {
   overflow-x: hidden;
 }
 
+.public-page-loader {
+  display: grid;
+  min-height: 100dvh;
+  align-content: center;
+  justify-items: center;
+  gap: 22px;
+  padding: 32px;
+  background:
+    radial-gradient(circle at 50% 10%, rgba(95, 129, 114, 0.1), transparent 32%),
+    var(--color-paper);
+  color: var(--color-forest);
+  text-align: center;
+}
+
+.public-page-loader__logo {
+  width: min(260px, 70vw);
+}
+
+.public-page-loader p {
+  margin: 0;
+  color: var(--color-sage);
+  font-size: 0.78rem;
+  font-weight: 800;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+}
+
+.public-page-loader__skeleton {
+  display: grid;
+  width: min(680px, 84vw);
+  gap: 10px;
+  margin-top: 18px;
+}
+
+.public-page-loader__skeleton span {
+  height: 10px;
+  overflow: hidden;
+  border-radius: 999px;
+  background: rgba(6, 27, 14, 0.08);
+}
+
+.public-page-loader__skeleton span:nth-child(2) {
+  width: 74%;
+  justify-self: center;
+}
+
+.public-page-loader__skeleton span:nth-child(3) {
+  width: 46%;
+  justify-self: center;
+}
+
 .section-shell {
   width: min(100% - 36px, var(--max-width));
   margin-inline: auto;
@@ -1868,19 +1919,25 @@ textarea:focus {
 
 .admin-collapsible-card {
   align-content: start;
+  padding: 0;
 }
 
 .admin-collapsible-card summary {
+  display: flex;
+  min-height: 86px;
+  align-items: center;
+  justify-content: space-between;
+  gap: 18px;
   cursor: pointer;
   color: var(--color-forest);
-  font-size: 1.35rem;
-  font-weight: 500;
+  padding: 24px;
 }
 
 .admin-collapsible-card__content {
   display: grid;
   gap: 16px;
-  margin-top: 18px;
+  border-top: 1px solid rgba(6, 27, 14, 0.08);
+  padding: 24px;
 }
 
 .reservation-grid {
@@ -3098,22 +3155,54 @@ textarea:focus {
   list-style: none;
   border-radius: 18px;
   background: #f7faf7;
-  padding: 18px 20px;
+  padding: 18px 56px 18px 20px;
 }
 
 .admin-collapsible-card summary::-webkit-details-marker {
   display: none;
 }
 
+.admin-collapsible-card summary span {
+  display: grid;
+  gap: 6px;
+}
+
+.admin-collapsible-card summary strong {
+  font-size: 1.35rem;
+  font-weight: 650;
+}
+
+.admin-collapsible-card summary small {
+  color: var(--color-muted);
+  font-size: 0.9rem;
+  font-weight: 500;
+  line-height: 1.55;
+}
+
+.admin-collapsible-card summary em {
+  border: 1px solid rgba(95, 129, 114, 0.16);
+  border-radius: 999px;
+  background: rgba(95, 129, 114, 0.1);
+  color: var(--color-sage);
+  font-size: 0.72rem;
+  font-style: normal;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  padding: 0.35rem 0.6rem;
+  text-transform: uppercase;
+}
+
 .admin-collapsible-card summary::after {
   position: absolute;
   right: 18px;
+  top: 50%;
+  transform: translateY(-50%);
   color: var(--color-sage);
   content: "+";
 }
 
 .admin-collapsible-card[open] summary::after {
-  content: "–";
+  content: "-";
 }
 
 .admin-reservations-table-wrap {
