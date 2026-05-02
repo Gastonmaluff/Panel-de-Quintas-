@@ -90,7 +90,7 @@ export default function AdminDashboard() {
 
   const metrics = [
     { label: "Reservas del mes", value: currentMonthReservations.length, icon: CalendarCheck },
-    { label: "Ingresos estimados", value: formatGuaranies(estimatedIncome), icon: TrendingUp },
+    { label: "Ingresos estimados", value: formatGuaranies(estimatedIncome), icon: TrendingUp, compactValue: true },
     { label: "Señas pendientes", value: pendingDeposits, icon: PiggyBank },
     { label: "Fechas ocupadas", value: occupiedDateSet.size, icon: CalendarDays },
     { label: "Consultas pendientes", value: pendingQueries, icon: MessageCircle },
@@ -105,8 +105,8 @@ export default function AdminDashboard() {
       </div>
 
       <div className="admin-grid">
-        {metrics.map(({ label, value, icon: Icon }) => (
-          <article className="admin-card" key={label}>
+        {metrics.map(({ label, value, icon: Icon, compactValue }) => (
+          <article className={`admin-card${compactValue ? " admin-card--compact-value" : ""}`} key={label}>
             <i>
               <Icon size={18} strokeWidth={1.8} aria-hidden="true" />
             </i>

@@ -2945,6 +2945,12 @@ textarea:focus {
   padding: 24px;
 }
 
+.admin-card > * {
+  position: relative;
+  z-index: 1;
+  min-width: 0;
+}
+
 .admin-card::after {
   position: absolute;
   right: -26px;
@@ -2975,10 +2981,20 @@ textarea:focus {
 }
 
 .admin-card strong {
+  display: block;
+  max-width: 100%;
+  overflow: hidden;
   color: var(--color-forest);
   font-size: clamp(1.8rem, 3vw, 2.5rem);
   font-weight: 760;
   letter-spacing: 0;
+  line-height: 1.08;
+  white-space: nowrap;
+}
+
+.admin-card--compact-value strong {
+  font-size: clamp(1.35rem, 1.85vw, 1.85rem);
+  letter-spacing: -0.01em;
 }
 
 .admin-card--occupancy {
