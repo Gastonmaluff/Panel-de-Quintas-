@@ -8,14 +8,15 @@ const logoSources = {
   mark: logoMark,
 };
 
-export default function BrandLogo({ variant = "stacked", className = "" }) {
+export default function BrandLogo({ variant = "stacked", className = "", alt = "El Paraíso Escondido", ariaHidden = false }) {
   const source = logoSources[variant] || logoSources.stacked;
 
   return (
     <img
       className={`brand-logo brand-logo--${variant} ${className}`.trim()}
       src={source}
-      alt="El Paraíso Escondido"
+      alt={alt}
+      aria-hidden={ariaHidden ? "true" : undefined}
       draggable="false"
     />
   );
