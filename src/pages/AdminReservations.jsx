@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { Fragment, useMemo, useState } from "react";
 import { MoreVertical } from "lucide-react";
 import { buildAdminAvailability, useAdminData } from "../admin/AdminDataProvider.jsx";
 import { venues } from "../data/venues.js";
@@ -99,17 +99,93 @@ function PaymentHistory({ reservation }) {
             <span>{payment.method} · {formatDate(payment.paymentDate)}</span>
           </div>
           <em>{payment.type}</em>
-          <small>{payment.receiptName || "Sin comprobante"}</small>
+          {payment.receiptUrl ? (
+            <a href={payment.receiptUrl} target="_blank" rel="noreferrer">
+              Ver comprobante
+            </a>
+          ) : (
+            <small>{payment.receiptName || "Sin comprobante"}</small>
+          )}
         </article>
       ))}
     </div>
   );
 }
 
+function ReservationDetailPanel({
+  reservation,
+  venue,
+  onClose,
+  onEdit,
+  onAddPayment,
+  onPayBalance,
+  onDelete,
+}) {
+  return (
+    <article className="admin-reservation-detail-card">
+      <header className="admin-reservation-detail-card__header">
+        <div>
+          <p className="eyebrow">Detalle de reserva</p>
+          <h3>{reservation.clientName}</h3>
+          <span>{reservation.clientPhone || "Sin teléfono"}</span>
+        </div>
+        <span className="admin-status-pill">{reservation.paymentStatus}</span>
+      </header>
+
+      <div className="admin-reservation-detail-grid">
+        <section>
+          <h4>Reserva</h4>
+          <dl>
+            <div><dt>Ingreso</dt><dd>{formatDate(reservation.startDate)} · {reservation.startTime}</dd></div>
+            <div><dt>Egreso</dt><dd>{formatDate(reservation.endDate)} · {reservation.endTime}</dd></div>
+            <div><dt>Evento</dt><dd>{reservation.eventType || "No aplica"}</dd></div>
+            <div><dt>Personas</dt><dd>{reservation.guests || "No aplica"}</dd></div>
+          </dl>
+        </section>
+
+        <section>
+          <h4>Finanzas</h4>
+          <dl>
+            <div><dt>Total</dt><dd>{formatGuaranies(reservation.totalAmount)}</dd></div>
+            <div><dt>Pagado</dt><dd>{formatGuaranies(reservation.totalPaid)}</dd></div>
+            <div><dt>Saldo</dt><dd>{formatGuaranies(reservation.balance)}</dd></div>
+            <div><dt>Estado</dt><dd>{reservation.paymentStatus}</dd></div>
+          </dl>
+        </section>
+
+        <section>
+          <h4>Notas internas</h4>
+          <p>{reservation.notes || "Sin notas internas."}</p>
+        </section>
+      </div>
+
+      <section className="admin-reservation-detail-payments">
+        <h4>Pagos</h4>
+        <PaymentHistory reservation={reservation} />
+      </section>
+
+      <footer className="admin-reservation-detail-actions">
+        <a href={buildClientWhatsappUrl(venue, reservation)} target="_blank" rel="noreferrer">
+          WhatsApp
+        </a>
+        <button type="button" onClick={() => onAddPayment(reservation)}>Agregar pago</button>
+        <button type="button" onClick={() => onPayBalance(reservation)} disabled={reservation.balance <= 0}>
+          Pagar saldo
+        </button>
+        <button type="button" onClick={() => onEdit(reservation)}>Editar reserva</button>
+        <button type="button" className="is-danger" onClick={() => onDelete(reservation.id)}>
+          Eliminar reserva
+        </button>
+        <button type="button" onClick={onClose}>Cerrar detalle</button>
+      </footer>
+    </article>
+  );
+}
+
 export default function AdminReservations() {
   const venue = venues[0];
   const { reservations, addReservation, updateReservation, removeReservation, addPayment } = useAdminData();
-  const [openMenuId, setOpenMenuId] = useState(null);
+  const [expandedReservationId, setExpandedReservationId] = useState(null);
   const [editingReservation, setEditingReservation] = useState(null);
   const [paymentTarget, setPaymentTarget] = useState(null);
   const [paymentDraft, setPaymentDraft] = useState(null);
@@ -144,7 +220,6 @@ export default function AdminReservations() {
       receiptName: reservation.payments[0]?.receiptName || "",
       receiptPreview: reservation.payments[0]?.receiptUrl || "",
     });
-    setOpenMenuId(null);
   };
 
   const saveEditedReservation = () => {
@@ -184,7 +259,6 @@ export default function AdminReservations() {
   const openPaymentModal = (reservation, fullBalance = false) => {
     setPaymentTarget(reservation);
     setPaymentDraft(createPaymentDraft(fullBalance ? reservation.balance : 0));
-    setOpenMenuId(null);
   };
 
   const savePayment = () => {
@@ -220,65 +294,67 @@ export default function AdminReservations() {
             <tr>
               <th>Cliente</th>
               <th>Teléfono</th>
-              <th>Fecha ingreso</th>
-              <th>Hora ingreso</th>
-              <th>Fecha egreso</th>
-              <th>Hora egreso</th>
+              <th>Ingreso</th>
+              <th>Egreso</th>
               <th>Evento</th>
-              <th>Personas</th>
               <th className="money-column">Total</th>
-              <th className="money-column">Pagado</th>
               <th className="money-column">Saldo</th>
-              <th>Estado pago</th>
-              <th>Comprobante</th>
-              <th>Acciones</th>
+              <th>Estado</th>
+              <th>Más</th>
             </tr>
           </thead>
           <tbody>
             {reservations.map((reservation) => (
-              <tr key={reservation.id}>
-                <td><strong>{reservation.clientName}</strong></td>
-                <td>{reservation.clientPhone || "Sin teléfono"}</td>
-                <td>{formatDate(reservation.startDate)}</td>
-                <td>{reservation.startTime}</td>
-                <td>{formatDate(reservation.endDate)}</td>
-                <td>{reservation.endTime}</td>
-                <td>{reservation.eventType}</td>
-                <td>{reservation.guests || "No aplica"}</td>
-                <td className="money-column">{formatGuaranies(reservation.totalAmount)}</td>
-                <td className="money-column">{formatGuaranies(reservation.totalPaid)}</td>
-                <td className="money-column">{formatGuaranies(reservation.balance)}</td>
-                <td><span className="admin-status-pill">{reservation.paymentStatus}</span></td>
-                <td>{reservation.payments.find((payment) => payment.receiptName)?.receiptName || "Sin comprobante"}</td>
-                <td className="admin-actions-cell">
-                  <button
-                    type="button"
-                    className="admin-actions-button"
-                    aria-label={`Abrir acciones de ${reservation.clientName}`}
-                    onClick={() => setOpenMenuId((current) => (current === reservation.id ? null : reservation.id))}
-                  >
-                    <MoreVertical size={18} strokeWidth={2} aria-hidden="true" />
-                  </button>
-                  {openMenuId === reservation.id ? (
-                    <div className="admin-actions-menu">
-                      <button type="button" onClick={() => openEditReservation(reservation)}>Editar reserva</button>
-                      <button type="button" onClick={() => openPaymentModal(reservation)}>Agregar pago</button>
-                      <button type="button" onClick={() => openPaymentModal(reservation, true)} disabled={reservation.balance <= 0}>
-                        Pagar saldo
-                      </button>
-                      <a href={buildClientWhatsappUrl(venue, reservation)} target="_blank" rel="noreferrer">
-                        Escribir por WhatsApp
-                      </a>
-                      <button type="button" onClick={() => updateReservation(reservation.id, { status: "cancelada" })}>
-                        Cancelar reserva
-                      </button>
-                      <button type="button" className="is-danger" onClick={() => removeReservation(reservation.id)}>
-                        Eliminar reserva
-                      </button>
-                    </div>
-                  ) : null}
-                </td>
-              </tr>
+              <Fragment key={reservation.id}>
+                <tr>
+                  <td><strong>{reservation.clientName}</strong></td>
+                  <td>{reservation.clientPhone || "Sin teléfono"}</td>
+                  <td>
+                    <strong>{formatDate(reservation.startDate)}</strong>
+                    <small>{reservation.startTime}</small>
+                  </td>
+                  <td>
+                    <strong>{formatDate(reservation.endDate)}</strong>
+                    <small>{reservation.endTime}</small>
+                  </td>
+                  <td>
+                    <strong>{reservation.eventType || "No aplica"}</strong>
+                    <small>{reservation.guests || "No aplica"} personas</small>
+                  </td>
+                  <td className="money-column">{formatGuaranies(reservation.totalAmount)}</td>
+                  <td className="money-column">{formatGuaranies(reservation.balance)}</td>
+                  <td><span className="admin-status-pill">{reservation.paymentStatus}</span></td>
+                  <td className="admin-actions-cell">
+                    <button
+                      type="button"
+                      className="admin-actions-button"
+                      aria-label={`Ver detalle de ${reservation.clientName}`}
+                      aria-expanded={expandedReservationId === reservation.id}
+                      onClick={() => setExpandedReservationId((current) => (current === reservation.id ? null : reservation.id))}
+                    >
+                      <MoreVertical size={18} strokeWidth={2} aria-hidden="true" />
+                    </button>
+                  </td>
+                </tr>
+                {expandedReservationId === reservation.id ? (
+                  <tr className="admin-reservation-detail-row">
+                    <td colSpan={9}>
+                      <ReservationDetailPanel
+                        reservation={reservation}
+                        venue={venue}
+                        onClose={() => setExpandedReservationId(null)}
+                        onEdit={openEditReservation}
+                        onAddPayment={(currentReservation) => openPaymentModal(currentReservation)}
+                        onPayBalance={(currentReservation) => openPaymentModal(currentReservation, true)}
+                        onDelete={(reservationId) => {
+                          removeReservation(reservationId);
+                          setExpandedReservationId(null);
+                        }}
+                      />
+                    </td>
+                  </tr>
+                ) : null}
+              </Fragment>
             ))}
           </tbody>
         </table>
@@ -301,14 +377,34 @@ export default function AdminReservations() {
             </div>
             <div className="admin-reservation-mobile-card__money">
               <div><span>Total</span><strong>{formatGuaranies(reservation.totalAmount)}</strong></div>
-              <div><span>Pagado</span><strong>{formatGuaranies(reservation.totalPaid)}</strong></div>
               <div><span>Saldo</span><strong>{formatGuaranies(reservation.balance)}</strong></div>
             </div>
             <footer className="admin-reservation-mobile-card__actions">
               <a href={buildClientWhatsappUrl(venue, reservation)} target="_blank" rel="noreferrer">WhatsApp</a>
-              <button type="button" onClick={() => openPaymentModal(reservation)}>Agregar pago</button>
-              <button type="button" onClick={() => openEditReservation(reservation)}>Editar</button>
+              <button
+                type="button"
+                aria-expanded={expandedReservationId === reservation.id}
+                onClick={() => setExpandedReservationId((current) => (current === reservation.id ? null : reservation.id))}
+              >
+                Más
+              </button>
             </footer>
+            {expandedReservationId === reservation.id ? (
+              <div className="admin-reservation-mobile-card__detail">
+                <ReservationDetailPanel
+                  reservation={reservation}
+                  venue={venue}
+                  onClose={() => setExpandedReservationId(null)}
+                  onEdit={openEditReservation}
+                  onAddPayment={(currentReservation) => openPaymentModal(currentReservation)}
+                  onPayBalance={(currentReservation) => openPaymentModal(currentReservation, true)}
+                  onDelete={(reservationId) => {
+                    removeReservation(reservationId);
+                    setExpandedReservationId(null);
+                  }}
+                />
+              </div>
+            ) : null}
           </article>
         ))}
       </div>
