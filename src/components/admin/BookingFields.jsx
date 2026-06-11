@@ -55,11 +55,11 @@ export default function BookingFields({ availability, value, onChange, eventFiel
           availability={availability}
           value={booking.endDate}
           onChange={(date) => updateBooking("endDate", date)}
-          label="Fecha de egreso"
+          label="Fecha de salida"
         />
       ) : (
         <label>
-          Fecha de egreso
+          Fecha de salida
           <input value={booking.endDate || "Se completa al elegir ingreso"} readOnly />
         </label>
       )}
@@ -80,7 +80,7 @@ export default function BookingFields({ availability, value, onChange, eventFiel
       </label>
 
       <label>
-        Hora de egreso
+        Hora de salida
         <select
           value={booking.endTime}
           onChange={(event) => updateBooking("endTime", event.target.value)}

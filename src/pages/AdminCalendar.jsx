@@ -1,9 +1,24 @@
 import { useMemo, useState } from "react";
 import { Link } from "react-router-dom";
+import DateAvailabilityPicker from "../components/calendar/DateAvailabilityPicker.jsx";
 import { useAdminData } from "../admin/AdminDataProvider.jsx";
 import { getMonthMatrix } from "../utils/date.js";
-import { isRangeAvailable } from "../utils/availability.js";
+import {
+  DEFAULT_START_TIME,
+  findOverlappingReservation,
+  getDayAvailabilityStatus,
+  getDefaultEndTime,
+  getReservationValidationMessage,
+  getReservationsForDate,
+} from "../utils/booking.js";
 import { formatGuaranies } from "../utils/pricing.js";
+import {
+  cleanParaguayPhone,
+  formatAmountInput,
+  formatParaguayPhone,
+  parseAmountInput,
+  titleCaseName,
+} from "../utils/formatters.js";
 
 const weekdays = ["Lun", "Mar", "Mié", "Jue", "Vie", "Sáb", "Dom"];
 
@@ -19,45 +34,68 @@ function formatLongDate(dateValue) {
 function createReservationDraft(dateValue) {
   return {
     clientName: "",
+    clientCedula: "",
     clientPhone: "",
     startDate: dateValue,
-    startTime: "07:00",
+    startTime: DEFAULT_START_TIME,
     endDate: dateValue,
-    endTime: "19:00",
+    endTime: getDefaultEndTime(dateValue, dateValue),
     eventType: "Evento",
-    guests: 0,
-    totalAmount: 0,
-    initialPayment: 0,
+    guests: "",
+    totalAmount: "",
+    initialPayment: "",
     notes: "",
   };
 }
 
+function todayISO() {
+  return new Date().toISOString().slice(0, 10);
+}
+
+function AmountInput({ value, onChange }) {
+  return (
+    <input
+      inputMode="numeric"
+      placeholder="0"
+      value={formatAmountInput(value)}
+      onFocus={() => {
+        if (Number(value || 0) === 0) onChange("");
+      }}
+      onChange={(event) => onChange(parseAmountInput(event.target.value) || "")}
+    />
+  );
+}
+
+function updateDraftDate(current, key, value) {
+  const next = { ...current, [key]: value };
+  if (key === "startDate") next.endDate = current.endDate && current.endDate >= value ? current.endDate : value;
+  next.endTime = getDefaultEndTime(next.startDate, next.endDate);
+  return next;
+}
+
 export default function AdminCalendar() {
   const today = new Date();
-  const { reservations, availability, addReservation, getReservationDates } = useAdminData();
+  const { reservations, activeReservations, availability, addReservation } = useAdminData();
   const [visibleMonth, setVisibleMonth] = useState({ year: today.getFullYear(), month: today.getMonth() });
   const [selectedDay, setSelectedDay] = useState(null);
   const [reservationDraft, setReservationDraft] = useState(null);
+  const [isSaving, setIsSaving] = useState(false);
 
-  const reservationsByDate = useMemo(
-    () =>
-      reservations.reduce((accumulator, reservation) => {
-        if (reservation.status === "cancelada") return accumulator;
-        getReservationDates(reservation).forEach((date) => {
-          accumulator[date] = reservation;
-        });
-        return accumulator;
-      }, {}),
-    [reservations, getReservationDates],
-  );
   const cells = getMonthMatrix(visibleMonth.year, visibleMonth.month);
   const monthLabel = new Intl.DateTimeFormat("es-PY", { month: "long", year: "numeric" }).format(
     new Date(visibleMonth.year, visibleMonth.month, 1),
   );
-  const selectedReservation = selectedDay ? reservationsByDate[selectedDay.iso] : null;
+  const selectedReservations = useMemo(
+    () => (selectedDay ? getReservationsForDate(selectedDay.iso, activeReservations) : []),
+    [activeReservations, selectedDay],
+  );
+  const validationMessage = reservationDraft ? getReservationValidationMessage(reservationDraft) : "";
+  const overlappingReservation =
+    reservationDraft && !validationMessage
+      ? findOverlappingReservation(reservations, reservationDraft)
+      : null;
   const canSaveReservation =
-    reservationDraft?.clientName?.trim() &&
-    isRangeAvailable(reservationDraft.startDate, reservationDraft.endDate, availability);
+    Boolean(reservationDraft?.clientName?.trim()) && !validationMessage && !overlappingReservation;
 
   const moveMonth = (direction) => {
     setVisibleMonth((current) => {
@@ -71,16 +109,25 @@ export default function AdminCalendar() {
     setReservationDraft(null);
   };
 
-  const saveReservation = () => {
-    if (!canSaveReservation) return;
-    addReservation({
-      ...reservationDraft,
-      payments:
-        Number(reservationDraft.initialPayment || 0) > 0
-          ? [{ amount: Number(reservationDraft.initialPayment), method: "Transferencia", type: "seña" }]
-          : [],
-    });
-    closeModal();
+  const saveReservation = async () => {
+    if (!canSaveReservation || isSaving) return;
+    setIsSaving(true);
+    try {
+      await addReservation({
+        ...reservationDraft,
+        clientName: titleCaseName(reservationDraft.clientName),
+        clientPhone: cleanParaguayPhone(reservationDraft.clientPhone),
+        guests: Number(reservationDraft.guests || 0),
+        totalAmount: Number(reservationDraft.totalAmount || 0),
+        payments:
+          Number(reservationDraft.initialPayment || 0) > 0
+            ? [{ amount: Number(reservationDraft.initialPayment), method: "Transferencia", type: "seña" }]
+            : [],
+      });
+      closeModal();
+    } finally {
+      setIsSaving(false);
+    }
   };
 
   return (
@@ -88,7 +135,7 @@ export default function AdminCalendar() {
       <div className="admin-section-heading">
         <div>
           <h2>Calendario</h2>
-          <p>Ver disponibilidad, revisar detalles y crear reservas desde fechas libres.</p>
+          <p>Ver disponibilidad por fecha y horario, revisar detalles y crear reservas.</p>
         </div>
       </div>
 
@@ -105,23 +152,27 @@ export default function AdminCalendar() {
 
         <div className="admin-calendar-grid">
           {cells.map((cell) => {
-            const reservation = reservationsByDate[cell.iso];
-            const status = reservation ? "reservado" : "libre";
+            const status = getDayAvailabilityStatus(cell.iso, activeReservations);
+            const dayReservations = getReservationsForDate(cell.iso, activeReservations);
+            const isPast = status === "past";
 
             return (
               <button
                 className={`admin-calendar-day admin-calendar-day--${status} ${cell.isCurrentMonth ? "" : "is-muted"}`}
                 type="button"
                 key={cell.iso}
+                disabled={isPast || !cell.isCurrentMonth}
                 onClick={() => setSelectedDay({ ...cell, status })}
               >
                 <span className="admin-calendar-day__number">{cell.day}</span>
-                {reservation ? (
+                {dayReservations.length ? (
                   <>
-                    <span className="admin-calendar-day__status">Reservado</span>
-                    <strong>{reservation.clientName}</strong>
-                    <small>{reservation.eventType}</small>
+                    <span className="admin-calendar-day__status">{status === "partial" ? "Parcial" : "Reservado"}</span>
+                    <strong>{dayReservations[0].clientName}</strong>
+                    <small>{dayReservations[0].startTime} - {dayReservations[0].endTime}</small>
                   </>
+                ) : isPast ? (
+                  <strong className="admin-calendar-day__free">PASADO</strong>
                 ) : (
                   <strong className="admin-calendar-day__free">LIBRE</strong>
                 )}
@@ -131,8 +182,10 @@ export default function AdminCalendar() {
         </div>
 
         <div className="admin-calendar-legend">
-          <span><i className="admin-status-dot admin-status-dot--libre" />Disponible</span>
-          <span><i className="admin-status-dot admin-status-dot--reservado" />Reservado</span>
+          <span><i className="admin-status-dot admin-status-dot--available" />Disponible</span>
+          <span><i className="admin-status-dot admin-status-dot--reserved" />Reservado</span>
+          <span><i className="admin-status-dot admin-status-dot--partial" />Ocupación parcial</span>
+          <span><i className="admin-status-dot admin-status-dot--past" />Pasado</span>
         </div>
       </div>
 
@@ -152,59 +205,59 @@ export default function AdminCalendar() {
             <div className="admin-modal__header">
               <div>
                 <p className="eyebrow">{formatLongDate(selectedDay.iso)}</p>
-                <h3>{selectedReservation ? "Detalle de reserva" : "Fecha libre"}</h3>
+                <h3>{selectedReservations.length ? "Bloques del día" : "Fecha libre"}</h3>
               </div>
               <button type="button" onClick={closeModal}>Cerrar</button>
             </div>
 
-            {selectedReservation ? (
-              <div className="admin-reservation-panel">
-                <div className="admin-reservation-panel__hero">
-                  <div>
-                    <span className="admin-status-pill">{selectedReservation.paymentStatus}</span>
-                    <h4>{selectedReservation.clientName}</h4>
-                    <p>{selectedReservation.eventType} · {selectedReservation.guests || "No aplica"} personas</p>
-                  </div>
-                  <div>
-                    <small>Saldo</small>
-                    <strong>{formatGuaranies(selectedReservation.balance)}</strong>
-                  </div>
-                </div>
-                <div className="admin-detail-grid">
-                  <div className="admin-detail-item"><span>Teléfono</span><strong>{selectedReservation.clientPhone || "Sin teléfono"}</strong></div>
-                  <div className="admin-detail-item"><span>Ingreso</span><strong>{selectedReservation.startDate} · {selectedReservation.startTime}</strong></div>
-                  <div className="admin-detail-item"><span>Egreso</span><strong>{selectedReservation.endDate} · {selectedReservation.endTime}</strong></div>
-                  <div className="admin-detail-item"><span>Total</span><strong>{formatGuaranies(selectedReservation.totalAmount)}</strong></div>
-                  <div className="admin-detail-item"><span>Pagado</span><strong>{formatGuaranies(selectedReservation.totalPaid)}</strong></div>
-                  <div className="admin-detail-item"><span>Comprobantes</span><strong>{selectedReservation.payments.filter((payment) => payment.receiptName).length}</strong></div>
-                </div>
-              </div>
-            ) : reservationDraft ? (
+            {reservationDraft ? (
               <>
                 <div className="reservation-edit-form">
-                  <label>Cliente<input value={reservationDraft.clientName} onChange={(event) => setReservationDraft((current) => ({ ...current, clientName: event.target.value }))} /></label>
-                  <label>Teléfono<input value={reservationDraft.clientPhone} onChange={(event) => setReservationDraft((current) => ({ ...current, clientPhone: event.target.value }))} /></label>
-                  <label>Ingreso<input type="date" value={reservationDraft.startDate} onChange={(event) => setReservationDraft((current) => ({ ...current, startDate: event.target.value }))} /></label>
+                  <label>Cliente<input value={reservationDraft.clientName} onBlur={() => setReservationDraft((current) => ({ ...current, clientName: titleCaseName(current.clientName) }))} onChange={(event) => setReservationDraft((current) => ({ ...current, clientName: event.target.value }))} /></label>
+                  <label>Número de cédula<input value={reservationDraft.clientCedula} onChange={(event) => setReservationDraft((current) => ({ ...current, clientCedula: event.target.value.replace(/\D/g, "") }))} /></label>
+                  <label>Teléfono<input inputMode="numeric" value={formatParaguayPhone(reservationDraft.clientPhone)} onChange={(event) => setReservationDraft((current) => ({ ...current, clientPhone: formatParaguayPhone(event.target.value) }))} /></label>
+                  <DateAvailabilityPicker availability={availability} value={reservationDraft.startDate} onChange={(date) => setReservationDraft((current) => updateDraftDate(current, "startDate", date))} label="Fecha de ingreso" />
                   <label>Hora ingreso<input type="time" value={reservationDraft.startTime} onChange={(event) => setReservationDraft((current) => ({ ...current, startTime: event.target.value }))} /></label>
-                  <label>Egreso<input type="date" value={reservationDraft.endDate} onChange={(event) => setReservationDraft((current) => ({ ...current, endDate: event.target.value }))} /></label>
-                  <label>Hora egreso<input type="time" value={reservationDraft.endTime} onChange={(event) => setReservationDraft((current) => ({ ...current, endTime: event.target.value }))} /></label>
+                  <DateAvailabilityPicker availability={availability} value={reservationDraft.endDate} minDate={reservationDraft.startDate} onChange={(date) => setReservationDraft((current) => updateDraftDate(current, "endDate", date))} label="Fecha de salida" />
+                  <label>Hora salida<input type="time" value={reservationDraft.endTime} onChange={(event) => setReservationDraft((current) => ({ ...current, endTime: event.target.value }))} /></label>
                   <label>Evento<input value={reservationDraft.eventType} onChange={(event) => setReservationDraft((current) => ({ ...current, eventType: event.target.value }))} /></label>
-                  <label>Precio total<input type="number" value={reservationDraft.totalAmount} onChange={(event) => setReservationDraft((current) => ({ ...current, totalAmount: Number(event.target.value) }))} /></label>
-                  <label>Seña inicial<input type="number" value={reservationDraft.initialPayment} onChange={(event) => setReservationDraft((current) => ({ ...current, initialPayment: Number(event.target.value) }))} /></label>
+                  <label>Personas<input inputMode="numeric" value={reservationDraft.guests} onChange={(event) => setReservationDraft((current) => ({ ...current, guests: event.target.value.replace(/\D/g, "") }))} /></label>
+                  <label>Precio total<AmountInput value={reservationDraft.totalAmount} onChange={(totalAmount) => setReservationDraft((current) => ({ ...current, totalAmount }))} /></label>
+                  <label>Seña inicial<AmountInput value={reservationDraft.initialPayment} onChange={(initialPayment) => setReservationDraft((current) => ({ ...current, initialPayment }))} /></label>
                 </div>
-                {!canSaveReservation ? <p className="admin-form-warning">El rango elegido cruza una fecha ocupada o falta el cliente.</p> : null}
+                {!canSaveReservation ? (
+                  <p className="admin-form-warning">
+                    {!reservationDraft.clientName?.trim()
+                      ? "El nombre del cliente es obligatorio."
+                      : validationMessage || "Ya existe una reserva en ese rango de fecha y horario."}
+                  </p>
+                ) : null}
                 <div className="admin-modal__actions">
-                  <button type="button" onClick={saveReservation} disabled={!canSaveReservation}>Guardar reserva</button>
-                  <button type="button" onClick={() => setReservationDraft(null)}>Volver</button>
+                  <button type="button" onClick={saveReservation} disabled={!canSaveReservation || isSaving}>{isSaving ? "Guardando..." : "Guardar reserva"}</button>
+                  <button type="button" className="admin-secondary-button" onClick={() => setReservationDraft(null)}>Volver</button>
                 </div>
               </>
             ) : (
               <div className="admin-free-date-panel">
                 <strong>{formatLongDate(selectedDay.iso)}</strong>
-                <p>Esta fecha está disponible para crear una reserva.</p>
+                {selectedReservations.length ? (
+                  <div className="admin-day-blocks">
+                    {selectedReservations.map((reservation) => (
+                      <article key={reservation.id}>
+                        <strong>{reservation.clientName}</strong>
+                        <span>{reservation.startDate} {reservation.startTime} - {reservation.endDate} {reservation.endTime}</span>
+                        <small>Saldo: {formatGuaranies(reservation.balance)}</small>
+                      </article>
+                    ))}
+                  </div>
+                ) : (
+                  <p>Esta fecha está disponible para crear una reserva.</p>
+                )}
                 <div className="admin-modal__actions">
-                  <button type="button" onClick={() => setReservationDraft(createReservationDraft(selectedDay.iso))}>Crear reserva</button>
-                  <button type="button" onClick={closeModal}>Cancelar</button>
+                  <button type="button" onClick={() => setReservationDraft(createReservationDraft(selectedDay.iso))}>
+                    Crear reserva
+                  </button>
+                  <button type="button" className="admin-secondary-button" onClick={closeModal}>Cancelar</button>
                 </div>
               </div>
             )}

@@ -2,6 +2,7 @@ import { Link } from "react-router-dom";
 import { CalendarCheck, CalendarDays, Clock3, PiggyBank, WalletCards } from "lucide-react";
 import { useAdminData } from "../admin/AdminDataProvider.jsx";
 import { formatGuaranies } from "../utils/pricing.js";
+import { getDayAvailabilityStatus } from "../utils/booking.js";
 
 function formatShortDate(dateValue) {
   if (!dateValue) return "Sin fecha";
@@ -17,25 +18,27 @@ function isCurrentMonth(dateValue, currentMonth, currentYear) {
 }
 
 export default function AdminDashboard() {
-  const { reservations, getReservationDates } = useAdminData();
+  const { reservations, activeReservations, getReservationDates } = useAdminData();
   const today = new Date();
   const currentMonth = today.getMonth();
   const currentYear = today.getFullYear();
   const todayISO = today.toISOString().slice(0, 10);
-  const monthReservations = reservations.filter((reservation) =>
+  const monthReservations = activeReservations.filter((reservation) =>
     getReservationDates(reservation).some((date) => isCurrentMonth(date, currentMonth, currentYear)),
   );
-  const upcomingReservations = reservations
+  const upcomingReservations = activeReservations
     .filter((reservation) => reservation.startDate >= todayISO && reservation.status !== "cancelada")
     .sort((a, b) => a.startDate.localeCompare(b.startDate))
     .slice(0, 4);
   const occupiedDateSet = new Set();
-  monthReservations.forEach((reservation) => {
-    if (reservation.status === "cancelada") return;
-    getReservationDates(reservation).forEach((date) => {
-      if (isCurrentMonth(date, currentMonth, currentYear)) occupiedDateSet.add(date);
-    });
+  const daysInMonth = new Date(currentYear, currentMonth + 1, 0).getDate();
+  Array.from({ length: daysInMonth }, (_, index) => {
+    const date = new Date(currentYear, currentMonth, index + 1);
+    const iso = date.toISOString().slice(0, 10);
+    const status = getDayAvailabilityStatus(iso, activeReservations);
+    if (["reserved", "preReserved", "blocked"].includes(status)) occupiedDateSet.add(iso);
   });
+  const occupancyPercentage = Math.round((occupiedDateSet.size / daysInMonth) * 100);
   const paidThisMonth = monthReservations.reduce((total, reservation) => total + reservation.totalPaid, 0);
   const pendingBalance = reservations.reduce((total, reservation) => total + reservation.balance, 0);
   const pendingDeposits = reservations.filter((reservation) => reservation.paymentStatus === "Sin pago").length;
@@ -57,6 +60,12 @@ export default function AdminDashboard() {
       </div>
 
       <div className="admin-grid">
+        <article className="admin-card admin-card--occupancy">
+          <i><CalendarDays size={20} strokeWidth={1.8} aria-hidden="true" /></i>
+          <span>Ocupación mensual</span>
+          <strong>{occupancyPercentage}%</strong>
+          <small>{occupiedDateSet.size} de {daysInMonth} días ocupados en {new Intl.DateTimeFormat("es-PY", { month: "long" }).format(today)}</small>
+        </article>
         {metrics.map(({ label, value, icon: Icon, compactValue }) => (
           <article className={`admin-card${compactValue ? " admin-card--compact-value" : ""}`} key={label}>
             <i><Icon size={18} strokeWidth={1.8} aria-hidden="true" /></i>
@@ -87,7 +96,7 @@ export default function AdminDashboard() {
                 </div>
                 <p>{reservation.eventType} · {reservation.guests || "No aplica"} personas</p>
                 <small>Ingreso: {formatShortDate(reservation.startDate)}, {reservation.startTime}</small>
-                <small>Egreso: {formatShortDate(reservation.endDate)}, {reservation.endTime}</small>
+                <small>Salida: {formatShortDate(reservation.endDate)}, {reservation.endTime}</small>
                 <small>{reservation.clientPhone || "Sin teléfono cargado"}</small>
               </div>
               <div className="admin-event-list__amount">

@@ -1,17 +1,31 @@
 import { Fragment, useMemo, useState } from "react";
-import { Plus } from "lucide-react";
+import { CalendarPlus, Plus, X } from "lucide-react";
+import DateAvailabilityPicker from "../components/calendar/DateAvailabilityPicker.jsx";
 import { buildAdminAvailability, useAdminData } from "../admin/AdminDataProvider.jsx";
 import { venues } from "../data/venues.js";
-import { isRangeAvailable } from "../utils/availability.js";
+import {
+  DEFAULT_START_TIME,
+  findOverlappingReservation,
+  getDefaultEndTime,
+  getReservationValidationMessage,
+} from "../utils/booking.js";
 import { formatGuaranies } from "../utils/pricing.js";
+import {
+  cleanParaguayPhone,
+  formatAmountInput,
+  formatParaguayPhone,
+  parseAmountInput,
+  titleCaseName,
+  toWhatsappParaguay,
+} from "../utils/formatters.js";
 
 const paymentMethods = ["Transferencia", "Efectivo"];
 const eventTypes = ["Cumpleaños", "Casamiento", "Bautismo", "Reunión familiar", "Evento corporativo", "Pool day", "Otro"];
 
 function buildClientWhatsappUrl(venue, reservation) {
-  const phone = reservation.clientPhone.replace(/\D/g, "");
+  const phone = toWhatsappParaguay(reservation.clientPhone) || venue.whatsappNumber;
   const message = `Hola ${reservation.clientName}, te escribo por tu reserva en ${venue.name}.`;
-  return `https://wa.me/${phone || venue.whatsappNumber}?text=${encodeURIComponent(message)}`;
+  return `https://wa.me/${phone}?text=${encodeURIComponent(message)}`;
 }
 
 function formatDate(dateValue) {
@@ -23,37 +37,85 @@ function formatDate(dateValue) {
   }).format(new Date(`${dateValue}T12:00:00`));
 }
 
-function createReservationDraft() {
-  const today = new Date().toISOString().slice(0, 10);
+function createReservationDraft(dateValue = new Date().toISOString().slice(0, 10)) {
   return {
     id: "",
     clientName: "",
+    clientCedula: "",
     clientPhone: "",
-    startDate: today,
-    startTime: "07:00",
-    endDate: today,
-    endTime: "19:00",
+    startDate: dateValue,
+    startTime: DEFAULT_START_TIME,
+    endDate: dateValue,
+    endTime: getDefaultEndTime(dateValue, dateValue),
     eventType: "Cumpleaños",
-    guests: 0,
-    totalAmount: 0,
-    initialPayment: 0,
+    guests: "",
+    totalAmount: "",
+    initialPayment: "",
     initialPaymentMethod: "Transferencia",
     receiptName: "",
     receiptPreview: "",
+    receiptFile: null,
     notes: "",
   };
 }
 
-function createPaymentDraft(amount = 0) {
+function createPaymentDraft(amount = "") {
   return {
     paymentDate: new Date().toISOString().slice(0, 10),
     amount,
     method: "Transferencia",
     receiptName: "",
     receiptPreview: "",
+    receiptFile: null,
     notes: "",
-    type: amount > 0 ? "saldo" : "pago parcial",
+    type: Number(amount || 0) > 0 ? "saldo" : "pago parcial",
   };
+}
+
+function todayISO() {
+  return new Date().toISOString().slice(0, 10);
+}
+
+function updateReservationDate(current, key, value) {
+  const next = { ...current, [key]: value };
+
+  if (key === "startDate") {
+    next.endDate = current.endDate && current.endDate >= value ? current.endDate : value;
+  }
+
+  if (next.startDate && next.endDate) {
+    next.endTime = getDefaultEndTime(next.startDate, next.endDate);
+  }
+
+  return next;
+}
+
+function AmountInput({ value, onChange, placeholder = "0" }) {
+  return (
+    <input
+      inputMode="numeric"
+      placeholder={placeholder}
+      value={formatAmountInput(value)}
+      onFocus={() => {
+        if (Number(value || 0) === 0) onChange("");
+      }}
+      onChange={(event) => onChange(parseAmountInput(event.target.value) || "")}
+    />
+  );
+}
+
+function QuantityInput({ value, onChange, placeholder = "Cantidad" }) {
+  return (
+    <input
+      inputMode="numeric"
+      placeholder={placeholder}
+      value={value === 0 ? "" : value}
+      onFocus={() => {
+        if (Number(value || 0) === 0) onChange("");
+      }}
+      onChange={(event) => onChange(event.target.value.replace(/\D/g, ""))}
+    />
+  );
 }
 
 function ReceiptInput({ value, onChange }) {
@@ -62,6 +124,7 @@ function ReceiptInput({ value, onChange }) {
     if (!file) return;
 
     onChange({
+      receiptFile: file,
       receiptName: file.name,
       receiptPreview: file.type.startsWith("image/") ? URL.createObjectURL(file) : "",
     });
@@ -119,26 +182,26 @@ function ReservationDetailPanel({
   onEdit,
   onAddPayment,
   onPayBalance,
-  onDelete,
+  onCancel,
 }) {
   return (
-    <article className="admin-reservation-detail-card">
+    <article className="admin-reservation-detail-card admin-accordion-panel">
       <header className="admin-reservation-detail-card__header">
         <div>
           <p className="eyebrow">Detalle de reserva</p>
           <h3>{reservation.clientName}</h3>
-          <span>{reservation.clientPhone || "Sin teléfono"}</span>
+          <span>{formatParaguayPhone(reservation.clientPhone) || "Sin teléfono"}</span>
         </div>
         <span className="admin-status-pill">{reservation.paymentStatus}</span>
       </header>
 
       <div className="admin-reservation-detail-grid">
         <section>
-          <h4>Datos generales</h4>
+          <h4>Datos del cliente</h4>
           <dl>
-            <div><dt>Evento</dt><dd>{reservation.eventType || "No aplica"}</dd></div>
-            <div><dt>Personas</dt><dd>{reservation.guests || "No aplica"}</dd></div>
-            <div><dt>Telefono</dt><dd>{reservation.clientPhone || "Sin telefono"}</dd></div>
+            <div><dt>Cliente</dt><dd>{reservation.clientName}</dd></div>
+            <div><dt>Cédula</dt><dd>{reservation.clientCedula || "Sin cédula"}</dd></div>
+            <div><dt>Teléfono</dt><dd>{formatParaguayPhone(reservation.clientPhone) || "Sin teléfono"}</dd></div>
           </dl>
         </section>
 
@@ -146,7 +209,9 @@ function ReservationDetailPanel({
           <h4>Fechas y horarios</h4>
           <dl>
             <div><dt>Ingreso</dt><dd>{formatDate(reservation.startDate)} - {reservation.startTime}</dd></div>
-            <div><dt>Egreso</dt><dd>{formatDate(reservation.endDate)} - {reservation.endTime}</dd></div>
+            <div><dt>Salida</dt><dd>{formatDate(reservation.endDate)} - {reservation.endTime}</dd></div>
+            <div><dt>Evento</dt><dd>{reservation.eventType || "No aplica"}</dd></div>
+            <div><dt>Personas</dt><dd>{reservation.guests || "No aplica"}</dd></div>
           </dl>
         </section>
 
@@ -154,8 +219,8 @@ function ReservationDetailPanel({
           <h4>Finanzas</h4>
           <dl className="admin-reservation-finance-summary">
             <div><dt>Total</dt><dd>{formatGuaranies(reservation.totalAmount)}</dd></div>
-            <div><dt>Pagado hasta ahora</dt><dd>{formatGuaranies(reservation.totalPaid)}</dd></div>
-            <div><dt>Saldo pendiente</dt><dd>{formatGuaranies(reservation.balance)}</dd></div>
+            <div><dt>Pagado</dt><dd>{formatGuaranies(reservation.totalPaid)}</dd></div>
+            <div><dt>Saldo</dt><dd>{formatGuaranies(reservation.balance)}</dd></div>
             <div><dt>Estado</dt><dd>{reservation.paymentStatus}</dd></div>
           </dl>
         </section>
@@ -180,7 +245,7 @@ function ReservationDetailPanel({
           Pagar saldo
         </button>
         <button type="button" onClick={() => onEdit(reservation)}>Editar reserva</button>
-        <button type="button" className="is-danger" onClick={() => onDelete(reservation.id)}>
+        <button type="button" className="is-danger" onClick={() => onCancel(reservation)}>
           Eliminar reserva
         </button>
         <button type="button" onClick={onClose}>Cerrar detalle</button>
@@ -189,19 +254,71 @@ function ReservationDetailPanel({
   );
 }
 
+function CancelledReservations({ reservations }) {
+  return (
+    <details className="admin-editor-card admin-collapsible-card cancelled-reservations">
+      <summary>
+        <span>
+          <strong>Reservas canceladas</strong>
+          <small>{reservations.length} reservas liberadas del calendario.</small>
+        </span>
+      </summary>
+      <div className="admin-collapsible-card__content">
+        {reservations.length ? (
+          <div className="admin-cancelled-list">
+            {reservations.map((reservation) => (
+              <article key={reservation.id}>
+                <header>
+                  <strong>{reservation.clientName}</strong>
+                  <span>{formatGuaranies(reservation.balance)} saldo</span>
+                </header>
+                <dl>
+                  <div><dt>Teléfono</dt><dd>{formatParaguayPhone(reservation.clientPhone) || "Sin teléfono"}</dd></div>
+                  <div><dt>Cédula</dt><dd>{reservation.clientCedula || "Sin cédula"}</dd></div>
+                  <div><dt>Ingreso</dt><dd>{formatDate(reservation.startDate)} · {reservation.startTime}</dd></div>
+                  <div><dt>Salida</dt><dd>{formatDate(reservation.endDate)} · {reservation.endTime}</dd></div>
+                  <div><dt>Total</dt><dd>{formatGuaranies(reservation.totalAmount)}</dd></div>
+                  <div><dt>Pagado</dt><dd>{formatGuaranies(reservation.totalPaid)}</dd></div>
+                  <div><dt>Cancelación</dt><dd>{reservation.cancelledAt ? new Date(reservation.cancelledAt).toLocaleString("es-PY") : "Sin fecha"}</dd></div>
+                  <div><dt>Usuario</dt><dd>{reservation.cancelledBy || "Sin usuario"}</dd></div>
+                  <div><dt>Motivo</dt><dd>{reservation.cancellationReason || "Sin motivo"}</dd></div>
+                </dl>
+              </article>
+            ))}
+          </div>
+        ) : (
+          <p className="admin-empty-note">No hay reservas canceladas.</p>
+        )}
+      </div>
+    </details>
+  );
+}
+
 export default function AdminReservations() {
   const venue = venues[0];
-  const { reservations, addReservation, updateReservation, removeReservation, addPayment } = useAdminData();
+  const {
+    reservations,
+    activeReservations,
+    cancelledReservations,
+    addReservation,
+    updateReservation,
+    cancelReservation,
+    addPayment,
+    firebaseStatus,
+  } = useAdminData();
   const [expandedReservationId, setExpandedReservationId] = useState(null);
   const [editingReservation, setEditingReservation] = useState(null);
   const [paymentTarget, setPaymentTarget] = useState(null);
   const [paymentDraft, setPaymentDraft] = useState(null);
+  const [cancelTarget, setCancelTarget] = useState(null);
+  const [cancelReason, setCancelReason] = useState("");
+  const [isSaving, setIsSaving] = useState(false);
 
   const editingAvailability = useMemo(
     () =>
       editingReservation
         ? buildAdminAvailability(reservations, editingReservation.id)
-        : { reserved: [], preReserved: [], blocked: [] },
+        : buildAdminAvailability(reservations),
     [editingReservation, reservations],
   );
 
@@ -209,11 +326,18 @@ export default function AdminReservations() {
     Number(editingReservation?.totalAmount || 0) - Number(editingReservation?.initialPayment || 0),
     0,
   );
-  const canSaveEditedReservation =
-    Boolean(editingReservation?.clientName?.trim()) &&
-    Boolean(editingReservation?.startDate) &&
-    Boolean(editingReservation?.endDate) &&
-    isRangeAvailable(editingReservation.startDate, editingReservation.endDate, editingAvailability);
+  const validationMessage = editingReservation
+    ? getReservationValidationMessage(editingReservation)
+    : "";
+  const overlappingReservation =
+    editingReservation && !validationMessage
+      ? findOverlappingReservation(reservations, editingReservation, editingReservation.id)
+      : null;
+  const saveWarning =
+    !editingReservation?.clientName?.trim()
+      ? "El nombre del cliente es obligatorio."
+      : validationMessage || (overlappingReservation ? "Ya existe una reserva en ese rango de fecha y horario." : "");
+  const canSaveEditedReservation = Boolean(editingReservation && !saveWarning);
 
   const openNewReservation = () => {
     setEditingReservation(createReservationDraft());
@@ -222,65 +346,94 @@ export default function AdminReservations() {
   const openEditReservation = (reservation) => {
     setEditingReservation({
       ...reservation,
-      initialPayment: reservation.payments[0]?.amount || 0,
+      clientPhone: formatParaguayPhone(reservation.clientPhone),
+      initialPayment: reservation.payments[0]?.amount || "",
       initialPaymentMethod: reservation.payments[0]?.method || "Transferencia",
       receiptName: reservation.payments[0]?.receiptName || "",
       receiptPreview: reservation.payments[0]?.receiptUrl || "",
+      receiptFile: null,
     });
   };
 
-  const saveEditedReservation = () => {
-    if (!canSaveEditedReservation) return;
+  const saveEditedReservation = async () => {
+    if (!canSaveEditedReservation || isSaving) return;
+    setIsSaving(true);
 
-    const initialPayment = Number(editingReservation.initialPayment || 0);
-    const firstPayment =
-      initialPayment > 0
-        ? {
-            amount: initialPayment,
-            method: editingReservation.initialPaymentMethod || "Transferencia",
-            paymentDate: new Date().toISOString().slice(0, 10),
-            receiptName: editingReservation.receiptName || "",
-            receiptUrl: editingReservation.receiptPreview || "",
-            notes: "Seña inicial",
-            type: "seña",
-          }
-        : null;
-    const payload = {
-      ...editingReservation,
-      payments: editingReservation.id
-        ? editingReservation.payments
-        : firstPayment
-          ? [firstPayment]
-          : [],
-    };
+    try {
+      const initialPayment = Number(editingReservation.initialPayment || 0);
+      const firstPayment =
+        initialPayment > 0
+          ? {
+              amount: initialPayment,
+              method: editingReservation.initialPaymentMethod || "Transferencia",
+              paymentDate: todayISO(),
+              receiptName: editingReservation.receiptName || "",
+              receiptFile: editingReservation.receiptFile || null,
+              notes: "Seña inicial",
+              type: "seña",
+            }
+          : null;
+      const payload = {
+        ...editingReservation,
+        clientName: titleCaseName(editingReservation.clientName),
+        clientPhone: cleanParaguayPhone(editingReservation.clientPhone),
+        guests: Number(editingReservation.guests || 0),
+        totalAmount: Number(editingReservation.totalAmount || 0),
+        payments: editingReservation.id
+          ? editingReservation.payments
+          : firstPayment
+            ? [firstPayment]
+            : [],
+      };
 
-    if (editingReservation.id && reservations.some((reservation) => reservation.id === editingReservation.id)) {
-      updateReservation(editingReservation.id, payload);
-    } else {
-      addReservation(payload);
+      if (editingReservation.id && reservations.some((reservation) => reservation.id === editingReservation.id)) {
+        await updateReservation(editingReservation.id, payload);
+      } else {
+        await addReservation(payload);
+      }
+
+      setEditingReservation(null);
+    } finally {
+      setIsSaving(false);
     }
-
-    setEditingReservation(null);
   };
 
   const openPaymentModal = (reservation, fullBalance = false) => {
     setPaymentTarget(reservation);
-    setPaymentDraft(createPaymentDraft(fullBalance ? reservation.balance : 0));
+    setPaymentDraft(createPaymentDraft(fullBalance ? reservation.balance : ""));
   };
 
-  const savePayment = () => {
-    if (!paymentTarget || !paymentDraft?.amount) return;
-    addPayment(paymentTarget.id, {
-      amount: Number(paymentDraft.amount),
-      method: paymentDraft.method,
-      paymentDate: paymentDraft.paymentDate,
-      receiptName: paymentDraft.receiptName,
-      receiptUrl: paymentDraft.receiptPreview,
-      notes: paymentDraft.notes,
-      type: Number(paymentDraft.amount) >= paymentTarget.balance ? "saldo" : "pago parcial",
-    });
-    setPaymentTarget(null);
-    setPaymentDraft(null);
+  const savePayment = async () => {
+    if (!paymentTarget || !paymentDraft?.amount || isSaving) return;
+    setIsSaving(true);
+    try {
+      await addPayment(paymentTarget.id, {
+        amount: Number(paymentDraft.amount),
+        method: paymentDraft.method,
+        paymentDate: paymentDraft.paymentDate,
+        receiptName: paymentDraft.receiptName,
+        receiptFile: paymentDraft.receiptFile,
+        notes: paymentDraft.notes,
+        type: Number(paymentDraft.amount) >= paymentTarget.balance ? "saldo" : "pago parcial",
+      });
+      setPaymentTarget(null);
+      setPaymentDraft(null);
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
+  const confirmCancelReservation = async () => {
+    if (!cancelTarget || isSaving) return;
+    setIsSaving(true);
+    try {
+      await cancelReservation(cancelTarget.id, cancelReason);
+      setExpandedReservationId(null);
+      setCancelTarget(null);
+      setCancelReason("");
+    } finally {
+      setIsSaving(false);
+    }
   };
 
   return (
@@ -289,6 +442,9 @@ export default function AdminReservations() {
         <div>
           <h2>Reservas</h2>
           <p>Gestión operativa de fechas, pagos, saldos y comprobantes.</p>
+          {firebaseStatus.error ? (
+            <small className="admin-firebase-warning">Firebase: {firebaseStatus.error}</small>
+          ) : null}
         </div>
         <button type="button" onClick={openNewReservation}>
           Nueva reserva
@@ -302,7 +458,7 @@ export default function AdminReservations() {
               <th>Cliente</th>
               <th>Teléfono</th>
               <th>Ingreso</th>
-              <th>Egreso</th>
+              <th>Salida</th>
               <th className="money-column">Total</th>
               <th className="money-column">Saldo</th>
               <th>Estado</th>
@@ -310,11 +466,11 @@ export default function AdminReservations() {
             </tr>
           </thead>
           <tbody>
-            {reservations.map((reservation) => (
+            {activeReservations.map((reservation) => (
               <Fragment key={reservation.id}>
                 <tr>
-                  <td><strong>{reservation.clientName}</strong></td>
-                  <td>{reservation.clientPhone || "Sin teléfono"}</td>
+                  <td><strong>{reservation.clientName}</strong><small>{reservation.clientCedula || "Sin cédula"}</small></td>
+                  <td>{formatParaguayPhone(reservation.clientPhone) || "Sin teléfono"}</td>
                   <td>
                     <strong>{formatDate(reservation.startDate)}</strong>
                     <small>{reservation.startTime}</small>
@@ -348,10 +504,7 @@ export default function AdminReservations() {
                         onEdit={openEditReservation}
                         onAddPayment={(currentReservation) => openPaymentModal(currentReservation)}
                         onPayBalance={(currentReservation) => openPaymentModal(currentReservation, true)}
-                        onDelete={(reservationId) => {
-                          removeReservation(reservationId);
-                          setExpandedReservationId(null);
-                        }}
+                        onCancel={(currentReservation) => setCancelTarget(currentReservation)}
                       />
                     </td>
                   </tr>
@@ -363,18 +516,19 @@ export default function AdminReservations() {
       </div>
 
       <div className="admin-reservations-mobile-list">
-        {reservations.map((reservation) => (
+        {activeReservations.map((reservation) => (
           <article className="admin-reservation-mobile-card" key={reservation.id}>
             <header>
               <div>
                 <h3>{reservation.clientName}</h3>
+                <small>{reservation.clientCedula || "Sin cédula"}</small>
               </div>
               <span className="admin-status-pill">{reservation.paymentStatus}</span>
             </header>
-            <p className="admin-reservation-mobile-card__phone">{reservation.clientPhone || "Sin teléfono"}</p>
+            <p className="admin-reservation-mobile-card__phone">{formatParaguayPhone(reservation.clientPhone) || "Sin teléfono"}</p>
             <div className="admin-reservation-mobile-card__dates">
               <div><span>Ingreso</span><strong>{formatDate(reservation.startDate)} · {reservation.startTime}</strong></div>
-              <div><span>Egreso</span><strong>{formatDate(reservation.endDate)} · {reservation.endTime}</strong></div>
+              <div><span>Salida</span><strong>{formatDate(reservation.endDate)} · {reservation.endTime}</strong></div>
             </div>
             <div className="admin-reservation-mobile-card__money">
               <div><span>Total</span><strong>{formatGuaranies(reservation.totalAmount)}</strong></div>
@@ -393,7 +547,7 @@ export default function AdminReservations() {
               </button>
             </footer>
             {expandedReservationId === reservation.id ? (
-              <div className="admin-reservation-mobile-card__detail">
+              <div className="admin-reservation-mobile-card__detail admin-accordion-panel">
                 <ReservationDetailPanel
                   reservation={reservation}
                   venue={venue}
@@ -401,10 +555,7 @@ export default function AdminReservations() {
                   onEdit={openEditReservation}
                   onAddPayment={(currentReservation) => openPaymentModal(currentReservation)}
                   onPayBalance={(currentReservation) => openPaymentModal(currentReservation, true)}
-                  onDelete={(reservationId) => {
-                    removeReservation(reservationId);
-                    setExpandedReservationId(null);
-                  }}
+                  onCancel={(currentReservation) => setCancelTarget(currentReservation)}
                 />
               </div>
             ) : null}
@@ -412,56 +563,73 @@ export default function AdminReservations() {
         ))}
       </div>
 
+      <CancelledReservations reservations={cancelledReservations} />
+
       {editingReservation ? (
         <div className="admin-modal-backdrop" role="presentation">
-          <div className="admin-modal admin-modal--wide" role="dialog" aria-modal="true">
-            <div className="admin-modal__header">
-              <div>
-                <p className="eyebrow">Reserva</p>
-                <h3>{editingReservation.id ? "Editar reserva" : "Nueva reserva"}</h3>
+          <div className="admin-modal admin-modal--wide admin-modal--reservation" role="dialog" aria-modal="true">
+            <div className="admin-modal__header admin-modal__header--premium">
+              <div className="admin-modal-title">
+                <i><CalendarPlus size={18} strokeWidth={1.8} aria-hidden="true" /></i>
+                <span>
+                  <p className="eyebrow">Reserva</p>
+                  <h3>{editingReservation.id ? "Editar reserva" : "Nueva reserva"}</h3>
+                  <small>Registrar ingreso, salida y datos del cliente.</small>
+                </span>
               </div>
-              <button type="button" onClick={() => setEditingReservation(null)}>Cerrar</button>
+              <button type="button" className="admin-modal-close" onClick={() => setEditingReservation(null)} aria-label="Cerrar">
+                <X size={18} strokeWidth={1.8} aria-hidden="true" />
+              </button>
             </div>
 
             <div className="reservation-edit-form reservation-edit-form--operations">
-              <label>Nombre del cliente<input value={editingReservation.clientName} onChange={(event) => setEditingReservation((current) => ({ ...current, clientName: event.target.value }))} /></label>
-              <label>Teléfono<input value={editingReservation.clientPhone} onChange={(event) => setEditingReservation((current) => ({ ...current, clientPhone: event.target.value }))} /></label>
-              <label>Fecha de ingreso<input type="date" value={editingReservation.startDate} onChange={(event) => setEditingReservation((current) => ({ ...current, startDate: event.target.value }))} /></label>
-              <label>Hora de ingreso<input type="time" value={editingReservation.startTime} onChange={(event) => setEditingReservation((current) => ({ ...current, startTime: event.target.value }))} /></label>
-              <label>Fecha de egreso<input type="date" value={editingReservation.endDate} onChange={(event) => setEditingReservation((current) => ({ ...current, endDate: event.target.value }))} /></label>
-              <label>Hora de egreso<input type="time" value={editingReservation.endTime} onChange={(event) => setEditingReservation((current) => ({ ...current, endTime: event.target.value }))} /></label>
-              <label>Tipo de evento<select value={editingReservation.eventType} onChange={(event) => setEditingReservation((current) => ({ ...current, eventType: event.target.value }))}>{eventTypes.map((eventType) => <option key={eventType} value={eventType}>{eventType}</option>)}</select></label>
-              <label>Cantidad de personas<input type="number" value={editingReservation.guests} onChange={(event) => setEditingReservation((current) => ({ ...current, guests: Number(event.target.value) }))} /></label>
-              <label>Precio total acordado<input type="number" value={editingReservation.totalAmount} onChange={(event) => setEditingReservation((current) => ({ ...current, totalAmount: Number(event.target.value) }))} /></label>
-              {!editingReservation.id ? (
-                <>
-                  <label>Seña inicial<input type="number" value={editingReservation.initialPayment} onChange={(event) => setEditingReservation((current) => ({ ...current, initialPayment: Number(event.target.value) }))} /></label>
-                  <label>Método de pago de la seña<select value={editingReservation.initialPaymentMethod} onChange={(event) => setEditingReservation((current) => ({ ...current, initialPaymentMethod: event.target.value }))}>{paymentMethods.map((method) => <option key={method} value={method}>{method}</option>)}</select></label>
-                </>
-              ) : null}
-              <label>Saldo pendiente<input value={formatGuaranies(editingReservation.id ? editingReservation.balance : reservationBalance)} readOnly /></label>
-              <label className="reservation-edit-form__notes">Notas internas<textarea value={editingReservation.notes} onChange={(event) => setEditingReservation((current) => ({ ...current, notes: event.target.value }))} /></label>
-              {!editingReservation.id ? (
-                <div className="reservation-edit-form__notes">
-                  <ReceiptInput
-                    value={editingReservation}
-                    onChange={(receipt) => setEditingReservation((current) => ({ ...current, ...receipt }))}
-                  />
-                </div>
-              ) : (
-                <div className="reservation-edit-form__notes">
-                  <h4>Pagos registrados</h4>
-                  <PaymentHistory reservation={editingReservation} />
-                </div>
-              )}
+              <section className="reservation-form-section">
+                <h4>Cliente</h4>
+                <label>Nombre del cliente<input value={editingReservation.clientName} onBlur={() => setEditingReservation((current) => ({ ...current, clientName: titleCaseName(current.clientName) }))} onChange={(event) => setEditingReservation((current) => ({ ...current, clientName: event.target.value }))} /></label>
+                <label>Número de cédula<input value={editingReservation.clientCedula || ""} onChange={(event) => setEditingReservation((current) => ({ ...current, clientCedula: event.target.value.replace(/\D/g, "") }))} /></label>
+                <label>Teléfono<input inputMode="numeric" placeholder="0983 332 233" value={formatParaguayPhone(editingReservation.clientPhone)} onChange={(event) => setEditingReservation((current) => ({ ...current, clientPhone: formatParaguayPhone(event.target.value) }))} /></label>
+              </section>
+
+              <section className="reservation-form-section">
+                <h4>Fecha y horario</h4>
+                <DateAvailabilityPicker availability={editingAvailability} value={editingReservation.startDate} onChange={(date) => setEditingReservation((current) => updateReservationDate(current, "startDate", date))} label="Fecha de ingreso" />
+                <label>Hora de ingreso<input type="time" value={editingReservation.startTime} onChange={(event) => setEditingReservation((current) => ({ ...current, startTime: event.target.value }))} /></label>
+                <DateAvailabilityPicker availability={editingAvailability} value={editingReservation.endDate} minDate={editingReservation.startDate} onChange={(date) => setEditingReservation((current) => updateReservationDate(current, "endDate", date))} label="Fecha de salida" />
+                <label>Hora de salida<input type="time" value={editingReservation.endTime} onChange={(event) => setEditingReservation((current) => ({ ...current, endTime: event.target.value }))} /></label>
+              </section>
+
+              <section className="reservation-form-section">
+                <h4>Detalles de la reserva</h4>
+                <label>Tipo de evento<select value={editingReservation.eventType} onChange={(event) => setEditingReservation((current) => ({ ...current, eventType: event.target.value }))}>{eventTypes.map((eventType) => <option key={eventType} value={eventType}>{eventType}</option>)}</select></label>
+                <label>Cantidad de personas<QuantityInput value={editingReservation.guests} onChange={(guests) => setEditingReservation((current) => ({ ...current, guests }))} /></label>
+                <label className="reservation-edit-form__notes">Notas internas<textarea value={editingReservation.notes} onChange={(event) => setEditingReservation((current) => ({ ...current, notes: event.target.value }))} /></label>
+              </section>
+
+              <section className="reservation-form-section">
+                <h4>Pago inicial</h4>
+                <label>Precio total acordado<AmountInput value={editingReservation.totalAmount} onChange={(totalAmount) => setEditingReservation((current) => ({ ...current, totalAmount }))} placeholder="2.850.000" /></label>
+                {!editingReservation.id ? (
+                  <>
+                    <label>Seña inicial<AmountInput value={editingReservation.initialPayment} onChange={(initialPayment) => setEditingReservation((current) => ({ ...current, initialPayment }))} placeholder="850.000" /></label>
+                    <label>Método de pago de la seña<select value={editingReservation.initialPaymentMethod} onChange={(event) => setEditingReservation((current) => ({ ...current, initialPaymentMethod: event.target.value }))}>{paymentMethods.map((method) => <option key={method} value={method}>{method}</option>)}</select></label>
+                    <div className="reservation-edit-form__notes">
+                      <ReceiptInput value={editingReservation} onChange={(receipt) => setEditingReservation((current) => ({ ...current, ...receipt }))} />
+                    </div>
+                  </>
+                ) : (
+                  <div className="reservation-edit-form__notes">
+                    <h4>Pagos registrados</h4>
+                    <PaymentHistory reservation={editingReservation} />
+                  </div>
+                )}
+                <label>Saldo pendiente<input value={formatGuaranies(editingReservation.id ? editingReservation.balance : reservationBalance)} readOnly /></label>
+              </section>
             </div>
 
-            {!canSaveEditedReservation ? (
-              <p className="admin-form-warning">El rango elegido cruza una fecha ocupada o faltan datos obligatorios.</p>
-            ) : null}
+            {saveWarning ? <p className="admin-form-warning">{saveWarning}</p> : null}
             <div className="admin-modal__actions">
-              <button type="button" onClick={saveEditedReservation} disabled={!canSaveEditedReservation}>Guardar reserva</button>
-              <button type="button" onClick={() => setEditingReservation(null)}>Cancelar</button>
+              <button type="button" className="admin-secondary-button" onClick={() => setEditingReservation(null)}>Cancelar</button>
+              <button type="button" onClick={saveEditedReservation} disabled={!canSaveEditedReservation || isSaving}>{isSaving ? "Guardando..." : "Guardar reserva"}</button>
             </div>
           </div>
         </div>
@@ -479,7 +647,7 @@ export default function AdminReservations() {
             </div>
             <div className="reservation-edit-form">
               <label>Fecha de pago<input type="date" value={paymentDraft.paymentDate} onChange={(event) => setPaymentDraft((current) => ({ ...current, paymentDate: event.target.value }))} /></label>
-              <label>Monto<input type="number" value={paymentDraft.amount} onChange={(event) => setPaymentDraft((current) => ({ ...current, amount: Number(event.target.value) }))} /></label>
+              <label>Monto<AmountInput value={paymentDraft.amount} onChange={(amount) => setPaymentDraft((current) => ({ ...current, amount }))} /></label>
               <label>Método<select value={paymentDraft.method} onChange={(event) => setPaymentDraft((current) => ({ ...current, method: event.target.value }))}>{paymentMethods.map((method) => <option key={method} value={method}>{method}</option>)}</select></label>
               <label className="reservation-edit-form__notes">Observación<textarea value={paymentDraft.notes} onChange={(event) => setPaymentDraft((current) => ({ ...current, notes: event.target.value }))} /></label>
               <div className="reservation-edit-form__notes">
@@ -487,8 +655,35 @@ export default function AdminReservations() {
               </div>
             </div>
             <div className="admin-modal__actions">
-              <button type="button" onClick={savePayment} disabled={!paymentDraft.amount}>Guardar pago</button>
-              <button type="button" onClick={() => setPaymentTarget(null)}>Cancelar</button>
+              <button type="button" onClick={savePayment} disabled={!paymentDraft.amount || isSaving}>{isSaving ? "Guardando..." : "Guardar pago"}</button>
+              <button type="button" className="admin-secondary-button" onClick={() => setPaymentTarget(null)}>Cancelar</button>
+            </div>
+          </div>
+        </div>
+      ) : null}
+
+      {cancelTarget ? (
+        <div className="admin-modal-backdrop" role="presentation">
+          <div className="admin-modal admin-modal--confirm" role="dialog" aria-modal="true">
+            <div className="admin-modal__header">
+              <div>
+                <p className="eyebrow">Confirmación</p>
+                <h3>¿Seguro que desea cancelar esta reserva?</h3>
+              </div>
+              <button type="button" onClick={() => setCancelTarget(null)}>Cerrar</button>
+            </div>
+            <p className="admin-empty-note">
+              La reserva de {cancelTarget.clientName} pasará a Reservas canceladas y liberará disponibilidad.
+            </p>
+            <label className="admin-confirm-reason">
+              Motivo opcional
+              <textarea value={cancelReason} onChange={(event) => setCancelReason(event.target.value)} />
+            </label>
+            <div className="admin-modal__actions">
+              <button type="button" className="admin-secondary-button" onClick={() => setCancelTarget(null)}>Cancelar</button>
+              <button type="button" className="is-danger" onClick={confirmCancelReservation} disabled={isSaving}>
+                {isSaving ? "Cancelando..." : "Sí, cancelar reserva"}
+              </button>
             </div>
           </div>
         </div>

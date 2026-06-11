@@ -4869,3 +4869,529 @@ textarea:focus {
     grid-template-columns: 1fr;
   }
 }
+
+/* Internal app polish: mobile operations, transitions and premium interactions. */
+.admin-route-transition {
+  animation-duration: 230ms;
+  animation-timing-function: cubic-bezier(0.22, 1, 0.36, 1);
+  animation-fill-mode: both;
+}
+
+.admin-route-transition--forward {
+  animation-name: admin-slide-in-right;
+}
+
+.admin-route-transition--back {
+  animation-name: admin-slide-in-left;
+}
+
+@keyframes admin-slide-in-right {
+  from {
+    opacity: 0;
+    transform: translateX(22px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+@keyframes admin-slide-in-left {
+  from {
+    opacity: 0;
+    transform: translateX(-22px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+.admin-modal-backdrop {
+  animation: admin-fade-in 180ms ease both;
+}
+
+.admin-modal {
+  animation: admin-modal-in 220ms cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+@keyframes admin-fade-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes admin-modal-in {
+  from {
+    opacity: 0;
+    transform: translateY(10px) scale(0.985);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+button,
+.admin-card,
+.admin-reservation-mobile-card,
+.admin-expense-card,
+.admin-finance-card-list article,
+.admin-client-card {
+  transition:
+    background 180ms ease,
+    border-color 180ms ease,
+    box-shadow 180ms ease,
+    color 180ms ease,
+    transform 180ms ease;
+}
+
+button:active,
+.admin-section-heading button:active,
+.admin-modal__actions button:active {
+  transform: scale(0.98);
+}
+
+.admin-card:hover,
+.admin-reservation-mobile-card:hover,
+.admin-expense-card:hover,
+.admin-finance-card-list article:hover,
+.admin-client-card:hover {
+  box-shadow: 0 18px 46px rgba(20, 32, 25, 0.09);
+}
+
+.admin-card--occupancy {
+  grid-column: span 2;
+  border-color: rgba(6, 27, 14, 0.12);
+  background:
+    linear-gradient(135deg, rgba(6, 27, 14, 0.96), rgba(36, 79, 54, 0.92)),
+    var(--color-forest);
+  color: white;
+}
+
+.admin-card--occupancy span,
+.admin-card--occupancy small {
+  color: rgba(255, 255, 255, 0.78);
+}
+
+.admin-card--occupancy strong {
+  color: white;
+  font-size: clamp(2.4rem, 6vw, 4.4rem);
+}
+
+.admin-card--occupancy i {
+  background: rgba(255, 255, 255, 0.12);
+  color: white;
+}
+
+.admin-modal--reservation {
+  overflow: hidden;
+}
+
+.admin-modal__header--premium {
+  align-items: center;
+  border-bottom: 1px solid rgba(6, 27, 14, 0.08);
+  padding-bottom: 18px;
+}
+
+.admin-modal-title {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.admin-modal-title i {
+  display: grid;
+  width: 42px;
+  height: 42px;
+  place-items: center;
+  border-radius: 14px;
+  background: rgba(42, 125, 91, 0.12);
+  color: var(--color-forest);
+}
+
+.admin-modal-title h3,
+.admin-modal-title p,
+.admin-modal-title small {
+  margin: 0;
+}
+
+.admin-modal-title small {
+  display: block;
+  margin-top: 3px;
+  color: var(--color-muted);
+}
+
+.admin-modal-close,
+.admin-secondary-button {
+  border: 1px solid rgba(6, 27, 14, 0.12) !important;
+  background: white !important;
+  color: var(--color-forest) !important;
+  box-shadow: none !important;
+}
+
+.admin-modal-close {
+  width: 42px;
+  min-width: 42px;
+  min-height: 42px;
+  border-radius: 999px !important;
+  padding: 0 !important;
+}
+
+.reservation-edit-form--operations {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 16px;
+}
+
+.reservation-form-section {
+  display: grid;
+  align-content: start;
+  gap: 12px;
+  border: 1px solid rgba(6, 27, 14, 0.08);
+  border-radius: 18px;
+  background: rgba(251, 252, 250, 0.86);
+  padding: 16px;
+}
+
+.reservation-form-section h4 {
+  margin: 0;
+  color: var(--color-forest);
+  font-size: 0.92rem;
+}
+
+.admin-accordion-panel,
+.admin-reservation-detail-row td > .admin-reservation-detail-card,
+.admin-reservation-mobile-card__detail {
+  animation: admin-accordion-in 240ms ease-out both;
+  transform-origin: top;
+}
+
+@keyframes admin-accordion-in {
+  from {
+    opacity: 0;
+    transform: scaleY(0.98) translateY(-6px);
+  }
+  to {
+    opacity: 1;
+    transform: scaleY(1) translateY(0);
+  }
+}
+
+.admin-calendar-day--available,
+.admin-calendar-day--libre {
+  background: #e6f4e9;
+}
+
+.admin-calendar-day--reserved,
+.admin-calendar-day--preReserved {
+  background: #f5ddd7;
+}
+
+.admin-calendar-day--partial {
+  background: #f2ead0;
+}
+
+.admin-calendar-day--blocked,
+.admin-calendar-day--past {
+  background: #eceae5;
+  color: rgba(20, 32, 25, 0.48);
+}
+
+.admin-calendar-day:disabled {
+  cursor: not-allowed;
+  opacity: 0.58;
+}
+
+.admin-status-dot--available,
+.admin-status-dot--libre {
+  background: #9dca9f;
+}
+
+.admin-status-dot--reserved,
+.admin-status-dot--reservado {
+  background: #d88273;
+}
+
+.admin-status-dot--partial {
+  background: #d3b85b;
+}
+
+.admin-status-dot--past {
+  background: #bab7ae;
+}
+
+.date-picker-day--partial {
+  background: #f2ead0;
+  border-color: #dfcb92;
+}
+
+.legend-dot--partial {
+  background: #d3b85b;
+}
+
+.shareable-calendar__day--partial {
+  background: #f2ead0;
+}
+
+.shareable-calendar__dot--partial {
+  background: #d3b85b;
+}
+
+.admin-day-blocks,
+.admin-cancelled-list,
+.admin-expense-card-list,
+.admin-finance-card-list,
+.admin-client-card-list {
+  display: grid;
+  gap: 12px;
+}
+
+.admin-expense-card-list,
+.admin-finance-card-list,
+.admin-client-card-list {
+  display: none;
+}
+
+.admin-day-blocks article,
+.admin-cancelled-list article,
+.admin-expense-card,
+.admin-finance-card-list article,
+.admin-client-card {
+  border: 1px solid rgba(6, 27, 14, 0.09);
+  border-radius: 18px;
+  background: white;
+  padding: 14px;
+}
+
+.admin-day-blocks article,
+.admin-expense-card,
+.admin-finance-card-list article,
+.admin-client-card {
+  box-shadow: 0 12px 32px rgba(20, 32, 25, 0.055);
+}
+
+.admin-cancelled-list article header,
+.admin-expense-card header,
+.admin-finance-card-list article header,
+.admin-client-card header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.admin-cancelled-list dl,
+.admin-expense-card dl,
+.admin-finance-card-list dl,
+.admin-client-card dl {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px 12px;
+  margin: 12px 0 0;
+}
+
+.admin-cancelled-list dt,
+.admin-expense-card dt,
+.admin-finance-card-list dt,
+.admin-client-card dt {
+  color: var(--color-muted);
+  font-size: 0.68rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.admin-cancelled-list dd,
+.admin-expense-card dd,
+.admin-finance-card-list dd,
+.admin-client-card dd {
+  margin: 3px 0 0;
+  color: var(--color-forest);
+  font-weight: 700;
+}
+
+.admin-client-card a {
+  display: inline-flex;
+  min-height: 38px;
+  align-items: center;
+  border-radius: 999px;
+  background: var(--color-forest);
+  color: white;
+  font-size: 0.76rem;
+  font-weight: 800;
+  padding: 0 14px;
+}
+
+.admin-firebase-warning {
+  display: inline-block;
+  margin-top: 8px;
+  color: #8c604f;
+}
+
+.admin-confirm-reason {
+  display: grid;
+  gap: 8px;
+  color: var(--color-muted);
+  font-size: 0.76rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.admin-confirm-reason textarea {
+  min-height: 96px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .admin-route-transition,
+  .admin-modal-backdrop,
+  .admin-modal,
+  .admin-accordion-panel,
+  .admin-reservation-detail-row td > .admin-reservation-detail-card,
+  .admin-reservation-mobile-card__detail {
+    animation: none !important;
+    transition: none !important;
+  }
+}
+
+@media (max-width: 760px) {
+  .admin-main {
+    overflow-x: hidden;
+  }
+
+  .admin-system-header {
+    gap: 10px;
+  }
+
+  .admin-system-header__actions {
+    width: 100%;
+    justify-content: space-between;
+  }
+
+  .share-availability__trigger--icon {
+    min-width: 0;
+    width: auto;
+    min-height: 44px;
+    gap: 8px;
+    border-radius: 999px;
+    padding: 0 14px;
+  }
+
+  .share-availability__trigger--icon .sr-only {
+    position: static;
+    width: auto;
+    height: auto;
+    overflow: visible;
+    clip: auto;
+    white-space: normal;
+  }
+
+  .admin-card--occupancy {
+    grid-column: 1;
+  }
+
+  .admin-modal {
+    width: 100%;
+    max-height: 94dvh;
+    border-radius: 24px 24px 0 0;
+    animation-name: admin-bottom-sheet-in;
+  }
+
+  @keyframes admin-bottom-sheet-in {
+    from {
+      opacity: 0;
+      transform: translateY(28px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  .reservation-edit-form--operations,
+  .reservation-form-section,
+  .admin-cancelled-list dl,
+  .admin-expense-card dl,
+  .admin-finance-card-list dl,
+  .admin-client-card dl {
+    grid-template-columns: 1fr;
+  }
+
+  .admin-calendar-shell {
+    overflow-x: visible;
+    padding: 12px;
+  }
+
+  .admin-calendar-toolbar {
+    gap: 8px;
+    margin-bottom: 12px;
+  }
+
+  .admin-calendar-toolbar h3 {
+    font-size: 1rem;
+  }
+
+  .admin-calendar-weekdays,
+  .admin-calendar-grid {
+    min-width: 0;
+  }
+
+  .admin-calendar-weekdays span {
+    font-size: 0.62rem;
+    padding-bottom: 6px;
+  }
+
+  .admin-calendar-grid {
+    gap: 4px;
+  }
+
+  .admin-calendar-day {
+    min-height: clamp(48px, 11.8vw, 58px);
+    border-radius: 10px;
+    padding: 5px;
+  }
+
+  .admin-calendar-day__number {
+    font-size: 0.78rem;
+  }
+
+  .admin-calendar-day__status,
+  .admin-calendar-day small,
+  .admin-calendar-day > strong:not(.admin-calendar-day__free) {
+    display: none;
+  }
+
+  .admin-calendar-day__free {
+    font-size: 0.52rem !important;
+    letter-spacing: 0.04em;
+  }
+
+  .admin-calendar-legend {
+    gap: 8px 12px;
+    font-size: 0.72rem;
+  }
+
+  .admin-expense-card-list,
+  .admin-finance-card-list,
+  .admin-client-card-list {
+    display: grid;
+  }
+
+  .admin-section:not(.admin-reservations-section) > .admin-reservations-table-wrap,
+  .admin-finance-card-list + .admin-reservations-table-wrap,
+  .admin-clients-section .admin-reservations-table-wrap {
+    display: none;
+  }
+
+  .admin-expense-card header,
+  .admin-finance-card-list article header,
+  .admin-client-card header {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .admin-client-card header a {
+    justify-content: center;
+    width: 100%;
+  }
+}

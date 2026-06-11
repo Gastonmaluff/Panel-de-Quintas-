@@ -116,11 +116,11 @@ export default function QuoteCalculator({ venue, rules, availability }) {
                 availability={availability}
                 value={values.endDate}
                 onChange={(date) => updateValue("endDate", date)}
-                label="Fecha de egreso"
+                label="Fecha de salida"
               />
             ) : (
               <label className="readonly-date-field">
-                <span>Fecha de egreso</span>
+                <span>Fecha de salida</span>
                 <input value={values.endDate || "Se completa al elegir ingreso"} readOnly />
               </label>
             )}
@@ -145,7 +145,7 @@ export default function QuoteCalculator({ venue, rules, availability }) {
             </label>
 
             <label>
-              <span>Hora de egreso</span>
+              <span>Hora de salida</span>
               <select
                 value={values.endTime}
                 onChange={(event) => updateValue("endTime", event.target.value)}

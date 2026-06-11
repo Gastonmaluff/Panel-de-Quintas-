@@ -1,4 +1,5 @@
-import { NavLink, Outlet, useNavigate } from "react-router-dom";
+import { NavLink, Outlet, useLocation, useNavigate } from "react-router-dom";
+import { useEffect, useState } from "react";
 import {
   BarChart3,
   CalendarDays,
@@ -6,8 +7,9 @@ import {
   Users,
   WalletCards,
   ReceiptText,
+  Settings,
 } from "lucide-react";
-import { AdminDataProvider } from "../admin/AdminDataProvider.jsx";
+import { AdminDataProvider, useAdminData } from "../admin/AdminDataProvider.jsx";
 import { useAuth } from "../auth/AuthProvider.jsx";
 import ShareAvailabilityButton from "../components/admin/ShareAvailabilityButton.jsx";
 import BrandLogo from "../components/branding/BrandLogo.jsx";
@@ -19,16 +21,29 @@ const adminLinks = [
   { to: "/admin/gastos", label: "Gastos", icon: ReceiptText },
   { to: "/admin/finanzas", label: "Finanzas", icon: BarChart3 },
   { to: "/admin/clientes", label: "Clientes", icon: Users },
+  { to: "/admin/configuracion", label: "Configuración", icon: Settings },
 ];
 
 function AdminShell() {
   const navigate = useNavigate();
+  const location = useLocation();
   const { logout, user } = useAuth();
+  const { logActivity } = useAdminData();
+  const activeIndex = adminLinks.findIndex((link) =>
+    link.end ? location.pathname === link.to : location.pathname.startsWith(link.to),
+  );
+  const [lastIndex, setLastIndex] = useState(activeIndex);
+  const direction = activeIndex >= lastIndex ? "forward" : "back";
 
   const handleLogout = async () => {
+    await logActivity("Usuario cerró sesión", user?.email || "Sin usuario");
     await logout();
     navigate("/admin/login", { replace: true });
   };
+
+  useEffect(() => {
+    setLastIndex(activeIndex);
+  }, [activeIndex]);
 
   return (
     <div className="admin-app admin-app--topnav">
@@ -66,7 +81,9 @@ function AdminShell() {
 
       <main className="admin-main">
         <div className="admin-session-line">Sesion activa: {user?.email}</div>
-        <Outlet />
+        <div className={`admin-route-transition admin-route-transition--${direction}`} key={location.pathname}>
+          <Outlet />
+        </div>
       </main>
     </div>
   );

@@ -1,4 +1,5 @@
 import { getDatesInRange } from "./booking.js";
+import { formatGuaraniesDisplay } from "./formatters.js";
 
 export const eventTypeLabels = {
   cumpleanos: "Cumpleaños",
@@ -18,11 +19,7 @@ export const timeSlotLabels = {
 };
 
 export function formatGuaranies(value) {
-  return new Intl.NumberFormat("es-PY", {
-    style: "currency",
-    currency: "PYG",
-    maximumFractionDigits: 0,
-  }).format(value || 0);
+  return formatGuaraniesDisplay(value);
 }
 
 function getBasePrice(dateValue, rules) {

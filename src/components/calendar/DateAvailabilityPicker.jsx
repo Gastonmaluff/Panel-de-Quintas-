@@ -28,6 +28,7 @@ export default function DateAvailabilityPicker({
   value,
   onChange,
   label = "Fecha",
+  minDate = "",
 }) {
   const pickerRef = useRef(null);
   const [isOpen, setIsOpen] = useState(false);
@@ -102,7 +103,8 @@ export default function DateAvailabilityPicker({
           {cells.map((cell) => {
             const availabilityState = getDateAvailability(cell.iso, availability);
             const isSelected = value === cell.iso;
-            const isDisabled = !cell.isCurrentMonth || !availabilityState.selectable;
+            const isBeforeMinDate = Boolean(minDate && cell.iso < minDate);
+            const isDisabled = !cell.isCurrentMonth || isBeforeMinDate || !availabilityState.selectable;
 
             return (
               <button
@@ -112,10 +114,18 @@ export default function DateAvailabilityPicker({
                 } ${cell.isCurrentMonth ? "" : "date-picker-day--muted"}`}
                 key={cell.iso}
                 aria-disabled={isDisabled}
-                title={availabilityState.reason || availabilityState.label}
+                title={
+                  isBeforeMinDate
+                    ? "La fecha de salida no puede ser anterior a la fecha de ingreso."
+                    : availabilityState.reason || availabilityState.label
+                }
                 onClick={() => {
                   if (isDisabled) {
-                    setFeedback("Esa fecha no está disponible. Elegí otra fecha.");
+                    setFeedback(
+                      isBeforeMinDate
+                        ? "La fecha de salida no puede ser anterior a la fecha de ingreso."
+                        : "Esa fecha no está disponible. Elegí otra fecha.",
+                    );
                     return;
                   }
                   setFeedback("");

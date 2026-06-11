@@ -1,7 +1,8 @@
 import { useState } from "react";
 import { Navigate, useLocation } from "react-router-dom";
 import { signInWithEmailAndPassword } from "firebase/auth";
-import { auth } from "../config/firebase.js";
+import { doc, setDoc } from "firebase/firestore";
+import { auth, db } from "../config/firebase.js";
 import { useAuth } from "../auth/AuthProvider.jsx";
 
 export default function AdminLogin() {
@@ -22,7 +23,15 @@ export default function AdminLogin() {
     setIsSubmitting(true);
 
     try {
-      await signInWithEmailAndPassword(auth, credentials.email, credentials.password);
+      const result = await signInWithEmailAndPassword(auth, credentials.email, credentials.password);
+      const id = `log-${Date.now()}`;
+      await setDoc(doc(db, "activityLog", id), {
+        id,
+        date: new Date().toISOString(),
+        user: result.user.email || credentials.email,
+        action: "Usuario inició sesión",
+        detail: result.user.email || credentials.email,
+      });
     } catch {
       setError("No pudimos iniciar sesión. Revisá el email y la contraseña.");
     } finally {

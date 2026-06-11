@@ -53,6 +53,19 @@ export default function AdminFinance() {
       <details className="admin-editor-card admin-collapsible-card" open>
         <summary><span><strong>Ingresos</strong><small>Pagos recibidos por reservas.</small></span></summary>
         <div className="admin-collapsible-card__content">
+          <div className="admin-finance-card-list">
+            {finance.payments.map((payment) => (
+              <article key={payment.id}>
+                <header><strong>{payment.clientName}</strong><span>{formatGuaranies(payment.amount)}</span></header>
+                <p>{payment.eventType}</p>
+                <dl>
+                  <div><dt>Fecha</dt><dd>{payment.paymentDate}</dd></div>
+                  <div><dt>Método</dt><dd>{payment.method}</dd></div>
+                  <div><dt>Comprobante</dt><dd>{payment.receiptName || "Sin comprobante"}</dd></div>
+                </dl>
+              </article>
+            ))}
+          </div>
           <div className="admin-reservations-table-wrap">
             <table className="admin-reservations-table">
               <thead><tr><th>Fecha</th><th>Cliente</th><th>Reserva</th><th>Método</th><th className="money-column">Monto</th><th>Comprobante</th></tr></thead>
@@ -67,8 +80,21 @@ export default function AdminFinance() {
       </details>
 
       <details className="admin-editor-card admin-collapsible-card">
-        <summary><span><strong>Gastos</strong><small>Egresos registrados.</small></span></summary>
+        <summary><span><strong>Gastos</strong><small>Gastos registrados.</small></span></summary>
         <div className="admin-collapsible-card__content">
+          <div className="admin-finance-card-list">
+            {expenses.map((expense) => (
+              <article key={expense.id}>
+                <header><strong>{expense.category}</strong><span>{formatGuaranies(expense.amount)}</span></header>
+                <p>{expense.description}</p>
+                <dl>
+                  <div><dt>Fecha</dt><dd>{expense.date}</dd></div>
+                  <div><dt>Método</dt><dd>{expense.method}</dd></div>
+                  <div><dt>Comprobante</dt><dd>{expense.receiptName || "Sin comprobante"}</dd></div>
+                </dl>
+              </article>
+            ))}
+          </div>
           <div className="admin-reservations-table-wrap">
             <table className="admin-reservations-table">
               <thead><tr><th>Fecha</th><th>Categoría</th><th>Descripción</th><th>Método</th><th className="money-column">Monto</th><th>Comprobante</th></tr></thead>

@@ -13,7 +13,7 @@ export function buildWhatsappUrl({ venue, quoteValues, quote }) {
     lines.push(
       `Tipo de reserva: ${getBookingModeLabel(quoteValues.bookingMode)}`,
       `Ingreso: ${formatDateTimeShort(quoteValues.startDate, quoteValues.startTime)}`,
-      `Egreso: ${formatDateTimeShort(quoteValues.endDate, quoteValues.endTime)}`,
+      `Salida: ${formatDateTimeShort(quoteValues.endDate, quoteValues.endTime)}`,
     );
   } else {
     lines.push(
