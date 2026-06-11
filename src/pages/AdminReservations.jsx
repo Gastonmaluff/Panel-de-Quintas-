@@ -1,5 +1,5 @@
 import { Fragment, useMemo, useState } from "react";
-import { MoreVertical } from "lucide-react";
+import { Plus } from "lucide-react";
 import { buildAdminAvailability, useAdminData } from "../admin/AdminDataProvider.jsx";
 import { venues } from "../data/venues.js";
 import { isRangeAvailable } from "../utils/availability.js";
@@ -134,30 +134,37 @@ function ReservationDetailPanel({
 
       <div className="admin-reservation-detail-grid">
         <section>
-          <h4>Reserva</h4>
+          <h4>Datos generales</h4>
           <dl>
-            <div><dt>Ingreso</dt><dd>{formatDate(reservation.startDate)} · {reservation.startTime}</dd></div>
-            <div><dt>Egreso</dt><dd>{formatDate(reservation.endDate)} · {reservation.endTime}</dd></div>
             <div><dt>Evento</dt><dd>{reservation.eventType || "No aplica"}</dd></div>
             <div><dt>Personas</dt><dd>{reservation.guests || "No aplica"}</dd></div>
+            <div><dt>Telefono</dt><dd>{reservation.clientPhone || "Sin telefono"}</dd></div>
+          </dl>
+        </section>
+
+        <section>
+          <h4>Fechas y horarios</h4>
+          <dl>
+            <div><dt>Ingreso</dt><dd>{formatDate(reservation.startDate)} - {reservation.startTime}</dd></div>
+            <div><dt>Egreso</dt><dd>{formatDate(reservation.endDate)} - {reservation.endTime}</dd></div>
           </dl>
         </section>
 
         <section>
           <h4>Finanzas</h4>
-          <dl>
+          <dl className="admin-reservation-finance-summary">
             <div><dt>Total</dt><dd>{formatGuaranies(reservation.totalAmount)}</dd></div>
-            <div><dt>Pagado</dt><dd>{formatGuaranies(reservation.totalPaid)}</dd></div>
-            <div><dt>Saldo</dt><dd>{formatGuaranies(reservation.balance)}</dd></div>
+            <div><dt>Pagado hasta ahora</dt><dd>{formatGuaranies(reservation.totalPaid)}</dd></div>
+            <div><dt>Saldo pendiente</dt><dd>{formatGuaranies(reservation.balance)}</dd></div>
             <div><dt>Estado</dt><dd>{reservation.paymentStatus}</dd></div>
           </dl>
         </section>
-
-        <section>
-          <h4>Notas internas</h4>
-          <p>{reservation.notes || "Sin notas internas."}</p>
-        </section>
       </div>
+
+      <section className="admin-reservation-detail-notes">
+        <h4>Notas internas</h4>
+        <p>{reservation.notes || "Sin notas internas."}</p>
+      </section>
 
       <section className="admin-reservation-detail-payments">
         <h4>Pagos</h4>
@@ -296,7 +303,6 @@ export default function AdminReservations() {
               <th>Teléfono</th>
               <th>Ingreso</th>
               <th>Egreso</th>
-              <th>Evento</th>
               <th className="money-column">Total</th>
               <th className="money-column">Saldo</th>
               <th>Estado</th>
@@ -317,28 +323,24 @@ export default function AdminReservations() {
                     <strong>{formatDate(reservation.endDate)}</strong>
                     <small>{reservation.endTime}</small>
                   </td>
-                  <td>
-                    <strong>{reservation.eventType || "No aplica"}</strong>
-                    <small>{reservation.guests || "No aplica"} personas</small>
-                  </td>
                   <td className="money-column">{formatGuaranies(reservation.totalAmount)}</td>
                   <td className="money-column">{formatGuaranies(reservation.balance)}</td>
                   <td><span className="admin-status-pill">{reservation.paymentStatus}</span></td>
                   <td className="admin-actions-cell">
                     <button
                       type="button"
-                      className="admin-actions-button"
+                      className={`admin-detail-toggle ${expandedReservationId === reservation.id ? "is-open" : ""}`}
                       aria-label={`Ver detalle de ${reservation.clientName}`}
                       aria-expanded={expandedReservationId === reservation.id}
                       onClick={() => setExpandedReservationId((current) => (current === reservation.id ? null : reservation.id))}
                     >
-                      <MoreVertical size={18} strokeWidth={2} aria-hidden="true" />
+                      <Plus size={18} strokeWidth={2} aria-hidden="true" />
                     </button>
                   </td>
                 </tr>
                 {expandedReservationId === reservation.id ? (
                   <tr className="admin-reservation-detail-row">
-                    <td colSpan={9}>
+                    <td colSpan={8}>
                       <ReservationDetailPanel
                         reservation={reservation}
                         venue={venue}
@@ -366,7 +368,6 @@ export default function AdminReservations() {
             <header>
               <div>
                 <h3>{reservation.clientName}</h3>
-                <p>{reservation.eventType} · {reservation.guests || "No aplica"} personas</p>
               </div>
               <span className="admin-status-pill">{reservation.paymentStatus}</span>
             </header>
@@ -383,10 +384,12 @@ export default function AdminReservations() {
               <a href={buildClientWhatsappUrl(venue, reservation)} target="_blank" rel="noreferrer">WhatsApp</a>
               <button
                 type="button"
+                className={`admin-detail-toggle admin-detail-toggle--mobile ${expandedReservationId === reservation.id ? "is-open" : ""}`}
+                aria-label={`Ver detalle de ${reservation.clientName}`}
                 aria-expanded={expandedReservationId === reservation.id}
                 onClick={() => setExpandedReservationId((current) => (current === reservation.id ? null : reservation.id))}
               >
-                Más
+                <Plus size={18} strokeWidth={2} aria-hidden="true" />
               </button>
             </footer>
             {expandedReservationId === reservation.id ? (

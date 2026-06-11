@@ -52,7 +52,7 @@ async function waitForImages(container) {
   );
 }
 
-export default function ShareAvailabilityButton() {
+export default function ShareAvailabilityButton({ iconOnly = false }) {
   const { availability } = useAdminData();
   const buttonRef = useRef(null);
   const exportRef = useRef(null);
@@ -190,9 +190,16 @@ export default function ShareAvailabilityButton() {
         onClick={openMenu}
         disabled={isGenerating}
         aria-expanded={isMenuOpen}
+        aria-label="Compartir disponibilidad"
+        title="Compartir disponibilidad"
+        className={iconOnly ? "share-availability__trigger share-availability__trigger--icon" : "share-availability__trigger"}
       >
         <Share2 size={16} strokeWidth={1.8} aria-hidden="true" />
-        {isGenerating ? "Generando..." : "Compartir disponibilidad"}
+        {iconOnly ? (
+          <span className="sr-only">{isGenerating ? "Generando..." : "Compartir disponibilidad"}</span>
+        ) : (
+          isGenerating ? "Generando..." : "Compartir disponibilidad"
+        )}
       </button>
 
       {message ? <small>{message}</small> : null}
