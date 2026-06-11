@@ -4,9 +4,10 @@ import AdminLayout from "./pages/AdminLayout.jsx";
 import AdminDashboard from "./pages/AdminDashboard.jsx";
 import AdminReservations from "./pages/AdminReservations.jsx";
 import AdminCalendar from "./pages/AdminCalendar.jsx";
-import AdminPricing from "./pages/AdminPricing.jsx";
 import AdminConfiguration from "./pages/AdminConfiguration.jsx";
-import AdminContent from "./pages/AdminContent.jsx";
+import AdminExpenses from "./pages/AdminExpenses.jsx";
+import AdminFinance from "./pages/AdminFinance.jsx";
+import AdminClients from "./pages/AdminClients.jsx";
 import AdminLogin from "./pages/AdminLogin.jsx";
 import ProtectedRoute from "./auth/ProtectedRoute.jsx";
 import { venues } from "./data/venues.js";
@@ -31,10 +32,13 @@ export default function App() {
         }
       >
         <Route index element={<AdminDashboard />} />
-        <Route path="contenido" element={<AdminContent />} />
+        <Route path="contenido" element={<Navigate to="/admin/configuracion" replace />} />
         <Route path="reservas" element={<AdminReservations />} />
         <Route path="calendario" element={<AdminCalendar />} />
-        <Route path="precios" element={<AdminPricing />} />
+        <Route path="gastos" element={<AdminExpenses />} />
+        <Route path="finanzas" element={<AdminFinance />} />
+        <Route path="clientes" element={<AdminClients />} />
+        <Route path="precios" element={<Navigate to="/admin/configuracion" replace />} />
         <Route path="configuracion" element={<AdminConfiguration />} />
       </Route>
       <Route path="*" element={<Navigate to="/" replace />} />

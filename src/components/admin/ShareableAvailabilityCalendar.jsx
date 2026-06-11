@@ -7,8 +7,8 @@ const weekdays = ["Lun", "Mar", "Mié", "Jue", "Vie", "Sáb", "Dom"];
 const statusText = {
   available: "Disponible",
   reserved: "Reservado",
-  preReserved: "Pre-reserva",
-  blocked: "No disponible",
+  preReserved: "Reservado",
+  blocked: "Reservado",
   past: "No disponible",
   invalid: "No disponible",
 };
@@ -16,8 +16,6 @@ const statusText = {
 const legendItems = [
   ["available", "Disponible"],
   ["reserved", "Reservado"],
-  ["preReserved", "Pre-reservado"],
-  ["blocked", "Bloqueado"],
 ];
 
 function getMonthTitle(year, month) {
@@ -49,7 +47,8 @@ export default function ShareableAvailabilityCalendar({ availability, month, exp
       <div className="shareable-calendar__grid">
         {cells.map((cell) => {
           const availabilityState = getDateAvailability(cell.iso, availability);
-          const status = cell.isCurrentMonth ? availabilityState.status : "outside";
+          const normalizedStatus = availabilityState.status === "available" ? "available" : "reserved";
+          const status = cell.isCurrentMonth ? normalizedStatus : "outside";
 
           return (
             <div

@@ -1,12 +1,12 @@
 import { NavLink, Outlet, useNavigate } from "react-router-dom";
 import {
+  BarChart3,
   CalendarDays,
-  FileText,
-  LayoutDashboard,
   LogOut,
   Settings,
-  Tag,
+  Users,
   WalletCards,
+  ReceiptText,
 } from "lucide-react";
 import { AdminDataProvider } from "../admin/AdminDataProvider.jsx";
 import { useAuth } from "../auth/AuthProvider.jsx";
@@ -15,11 +15,12 @@ import BrandLogo from "../components/branding/BrandLogo.jsx";
 import { venues } from "../data/venues.js";
 
 const adminLinks = [
-  { to: "/admin", label: "Dashboard", icon: LayoutDashboard, end: true },
-  { to: "/admin/contenido", label: "Contenido público", icon: FileText },
-  { to: "/admin/calendario", label: "Calendario", icon: CalendarDays },
+  { to: "/admin", label: "Control", icon: BarChart3, end: true },
   { to: "/admin/reservas", label: "Reservas", icon: WalletCards },
-  { to: "/admin/precios", label: "Precios", icon: Tag },
+  { to: "/admin/calendario", label: "Calendario", icon: CalendarDays },
+  { to: "/admin/gastos", label: "Gastos", icon: ReceiptText },
+  { to: "/admin/finanzas", label: "Finanzas", icon: BarChart3 },
+  { to: "/admin/clientes", label: "Clientes", icon: Users },
   { to: "/admin/configuracion", label: "Configuración", icon: Settings },
 ];
 
@@ -27,7 +28,6 @@ function AdminShell() {
   const navigate = useNavigate();
   const { logout, user } = useAuth();
   const venue = venues[0];
-  const publicPath = import.meta.env.BASE_URL;
 
   const handleLogout = async () => {
     await logout();
@@ -35,14 +35,17 @@ function AdminShell() {
   };
 
   return (
-    <div className="admin-app">
-      <aside className="admin-sidebar">
-        <a className="admin-brand" href={publicPath}>
+    <div className="admin-app admin-app--topnav">
+      <header className="admin-system-header">
+        <div className="admin-system-header__brand">
           <BrandLogo variant="mark" className="admin-brand__mark" />
-          <span>Panel de control</span>
-          <small>{venue.name}</small>
-        </a>
-        <nav>
+          <div>
+            <strong>Panel interno</strong>
+            <span>{venue.name}</span>
+          </div>
+        </div>
+
+        <nav className="admin-system-nav" aria-label="Administración principal">
           {adminLinks.map((link) => {
             const Icon = link.icon;
 
@@ -53,40 +56,24 @@ function AdminShell() {
                 to={link.to}
                 className={({ isActive }) => (isActive ? "is-active" : "")}
               >
-                <Icon size={18} strokeWidth={1.8} aria-hidden="true" />
+                <Icon size={17} strokeWidth={1.8} aria-hidden="true" />
                 {link.label}
               </NavLink>
             );
           })}
         </nav>
-        <div className="admin-sidebar__footer">
-          <a href={publicPath} target="_blank" rel="noreferrer">
-            Ver página pública
-          </a>
+
+        <div className="admin-system-header__actions">
+          <ShareAvailabilityButton />
           <button type="button" onClick={handleLogout}>
             <LogOut size={17} strokeWidth={1.8} aria-hidden="true" />
             Cerrar sesión
           </button>
         </div>
-      </aside>
+      </header>
 
       <main className="admin-main">
-        <header className="admin-topbar">
-          <div className="admin-topbar__brand">
-            <p className="eyebrow">Panel administrador</p>
-            <BrandLogo variant="horizontal" className="admin-topbar__logo" />
-            <span>Sesión activa: {user?.email}</span>
-          </div>
-          <div className="admin-topbar__actions">
-            <a href={publicPath} target="_blank" rel="noreferrer">
-              Ver página pública
-            </a>
-            <ShareAvailabilityButton />
-            <button type="button" onClick={handleLogout}>
-              Cerrar sesión
-            </button>
-          </div>
-        </header>
+        <div className="admin-session-line">Sesión activa: {user?.email}</div>
         <Outlet />
       </main>
     </div>

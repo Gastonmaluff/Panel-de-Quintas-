@@ -2614,6 +2614,14 @@ textarea:focus {
   background: #8fbf99;
 }
 
+.admin-status-dot--libre {
+  background: #b7d8bf;
+}
+
+.admin-status-dot--reservado {
+  background: #d98272;
+}
+
 .admin-status-dot--cotizacion-enviada,
 .admin-status-dot--consulta {
   background: #a7bfd2;
@@ -3110,6 +3118,298 @@ textarea:focus {
   grid-column: span 2;
   background: linear-gradient(145deg, #051d10, #062817);
   color: white;
+}
+
+.admin-app--topnav {
+  display: block;
+  min-height: 100vh;
+  background:
+    radial-gradient(circle at 82% 0%, rgba(95, 129, 114, 0.1), transparent 34%),
+    linear-gradient(180deg, #f8f9f7 0%, #f1f4f1 100%);
+}
+
+.admin-app--topnav .admin-main {
+  width: min(100% - 36px, 1500px);
+  margin-inline: auto;
+  padding: 24px 0 48px;
+}
+
+.admin-system-header {
+  position: sticky;
+  z-index: 80;
+  top: 0;
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 18px;
+  border-bottom: 1px solid rgba(17, 52, 32, 0.08);
+  background: rgba(255, 255, 255, 0.92);
+  padding: 14px clamp(18px, 3vw, 34px);
+  backdrop-filter: blur(18px);
+  box-shadow: 0 16px 50px rgba(24, 39, 30, 0.06);
+}
+
+.admin-system-header__brand {
+  display: flex;
+  min-width: 230px;
+  align-items: center;
+  gap: 12px;
+}
+
+.admin-system-header__brand .admin-brand__mark {
+  width: 42px;
+}
+
+.admin-system-header__brand div {
+  display: grid;
+  gap: 2px;
+}
+
+.admin-system-header__brand strong {
+  color: var(--color-forest);
+  font-size: 0.9rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.admin-system-header__brand span,
+.admin-session-line {
+  color: #6d7a70;
+  font-size: 0.9rem;
+}
+
+.admin-system-nav {
+  display: flex;
+  min-width: 0;
+  justify-content: center;
+  gap: 6px;
+}
+
+.admin-system-nav a {
+  display: inline-flex;
+  min-height: 42px;
+  align-items: center;
+  gap: 8px;
+  border: 1px solid transparent;
+  border-radius: 999px;
+  color: #5f6e66;
+  font-size: 0.86rem;
+  font-weight: 760;
+  padding: 0 13px;
+  text-decoration: none;
+  white-space: nowrap;
+}
+
+.admin-system-nav a.is-active,
+.admin-system-nav a:hover {
+  border-color: rgba(42, 125, 91, 0.16);
+  background: #eaf8f0;
+  color: var(--color-forest);
+}
+
+.admin-system-header__actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+}
+
+.admin-system-header__actions > button,
+.admin-system-header__actions .share-availability > button {
+  display: inline-flex;
+  min-height: 42px;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  border: 1px solid rgba(6, 27, 14, 0.12);
+  border-radius: 999px;
+  background: white;
+  color: var(--color-forest);
+  font-size: 0.82rem;
+  font-weight: 820;
+  letter-spacing: 0.08em;
+  padding: 0 16px;
+  text-transform: uppercase;
+}
+
+.admin-session-line {
+  margin-bottom: 18px;
+}
+
+.admin-reservations-table--operations {
+  min-width: 1360px;
+}
+
+.admin-upload-button,
+.admin-receipt-input label {
+  display: inline-flex;
+  min-height: 44px;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid rgba(6, 27, 14, 0.14);
+  border-radius: 14px;
+  background: #f8fbf9;
+  color: var(--color-forest);
+  cursor: pointer;
+  font-weight: 760;
+  padding: 0 16px;
+}
+
+.admin-upload-button input,
+.admin-receipt-input input {
+  display: none;
+}
+
+.admin-receipt-input {
+  display: grid;
+  gap: 10px;
+}
+
+.admin-receipt-input div {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.admin-receipt-input img {
+  width: 54px;
+  height: 54px;
+  border-radius: 12px;
+  object-fit: cover;
+}
+
+.admin-payment-list,
+.admin-activity-list {
+  display: grid;
+  gap: 10px;
+}
+
+.admin-payment-list article,
+.admin-activity-list article,
+.admin-permission-grid article {
+  border: 1px solid rgba(17, 52, 32, 0.08);
+  border-radius: 18px;
+  background: #f8fbf9;
+  padding: 14px;
+}
+
+.admin-payment-list article {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto auto;
+  align-items: center;
+  gap: 12px;
+}
+
+.admin-payment-list span,
+.admin-payment-list small,
+.admin-activity-list span,
+.admin-empty-note {
+  color: #718078;
+}
+
+.admin-payment-list em {
+  border-radius: 999px;
+  background: #eaf8f0;
+  color: var(--color-forest);
+  font-style: normal;
+  font-weight: 760;
+  padding: 6px 10px;
+}
+
+.admin-form-warning {
+  border-radius: 14px;
+  background: #f8e9e4;
+  color: #8a2e21;
+  font-weight: 700;
+  padding: 12px 14px;
+}
+
+.admin-permission-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 14px;
+}
+
+.admin-backup-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.admin-backup-actions button {
+  min-height: 42px;
+  border: 1px solid rgba(6, 27, 14, 0.12);
+  border-radius: 999px;
+  background: #f8fbf9;
+  color: var(--color-forest);
+  font-weight: 760;
+  padding: 0 16px;
+}
+
+.admin-search-field {
+  display: grid;
+  min-width: min(360px, 100%);
+  gap: 6px;
+  color: #6e7a72;
+  font-size: 0.78rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.admin-search-field input {
+  min-height: 44px;
+  border: 1px solid rgba(6, 27, 14, 0.12);
+  border-radius: 14px;
+  padding: 0 14px;
+}
+
+@media (max-width: 1180px) {
+  .admin-system-header {
+    grid-template-columns: 1fr;
+  }
+
+  .admin-system-nav {
+    justify-content: flex-start;
+    overflow-x: auto;
+    padding-bottom: 4px;
+  }
+
+  .admin-system-header__actions {
+    justify-content: flex-start;
+  }
+}
+
+@media (max-width: 760px) {
+  .admin-app--topnav .admin-main {
+    width: min(100% - 24px, 1500px);
+    padding-top: 18px;
+  }
+
+  .admin-system-header {
+    position: static;
+    padding: 14px;
+  }
+
+  .admin-system-nav a {
+    min-height: 40px;
+    font-size: 0.82rem;
+    padding: 0 12px;
+  }
+
+  .admin-system-header__actions {
+    display: grid;
+    grid-template-columns: 1fr;
+  }
+
+  .admin-system-header__actions > button,
+  .admin-system-header__actions .share-availability > button {
+    width: 100%;
+  }
+
+  .admin-payment-list article,
+  .admin-permission-grid {
+    grid-template-columns: 1fr;
+  }
 }
 
 .admin-card--occupancy::after {
@@ -3829,7 +4129,7 @@ textarea:focus {
 }
 
 .shareable-calendar__day--reserved {
-  background: #f4dbd2;
+  background: #f0cfc6;
 }
 
 .shareable-calendar__day--preReserved {
@@ -3878,7 +4178,7 @@ textarea:focus {
 }
 
 .shareable-calendar__dot--reserved {
-  background: #f4dbd2;
+  background: #f0cfc6;
 }
 
 .shareable-calendar__dot--preReserved {
@@ -4175,11 +4475,11 @@ textarea:focus {
     width: 100%;
   }
 
-  .admin-reservations-table-wrap {
+  .admin-reservations-section .admin-reservations-table-wrap {
     display: none;
   }
 
-  .admin-reservations-mobile-list {
+  .admin-reservations-section .admin-reservations-mobile-list {
     display: grid;
     gap: 14px;
   }
