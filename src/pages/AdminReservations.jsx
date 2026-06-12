@@ -1,4 +1,5 @@
 import { Fragment, useEffect, useMemo, useState } from "react";
+import { createPortal } from "react-dom";
 import { CalendarPlus, Plus, X } from "lucide-react";
 import DateAvailabilityPicker from "../components/calendar/DateAvailabilityPicker.jsx";
 import { buildAdminAvailability, useAdminData } from "../admin/AdminDataProvider.jsx";
@@ -21,6 +22,11 @@ import {
 
 const paymentMethods = ["Transferencia", "Efectivo"];
 const eventTypes = ["Cumpleaños", "Casamiento", "Bautismo", "Reunión familiar", "Evento corporativo", "Pool day", "Otro"];
+
+function ModalPortal({ children }) {
+  if (typeof document === "undefined") return null;
+  return createPortal(children, document.body);
+}
 
 function buildClientWhatsappUrl(venue, reservation) {
   const phone = toWhatsappParaguay(reservation.clientPhone) || venue.whatsappNumber;
@@ -581,6 +587,7 @@ export default function AdminReservations() {
       <CancelledReservations reservations={cancelledReservations} />
 
       {editingReservation ? (
+        <ModalPortal>
         <div className="admin-modal-backdrop" role="presentation">
           <div className="admin-modal admin-modal--wide admin-modal--reservation" role="dialog" aria-modal="true">
             <div className="admin-modal__header admin-modal__header--premium">
@@ -650,9 +657,11 @@ export default function AdminReservations() {
             </div>
           </div>
         </div>
+        </ModalPortal>
       ) : null}
 
       {paymentTarget && paymentDraft ? (
+        <ModalPortal>
         <div className="admin-modal-backdrop" role="presentation">
           <div className="admin-modal" role="dialog" aria-modal="true">
             <div className="admin-modal__header">
@@ -677,9 +686,11 @@ export default function AdminReservations() {
             </div>
           </div>
         </div>
+        </ModalPortal>
       ) : null}
 
       {cancelTarget ? (
+        <ModalPortal>
         <div className="admin-modal-backdrop" role="presentation">
           <div className="admin-modal admin-modal--confirm" role="dialog" aria-modal="true">
             <div className="admin-modal__header">
@@ -704,6 +715,7 @@ export default function AdminReservations() {
             </div>
           </div>
         </div>
+        </ModalPortal>
       ) : null}
     </section>
   );

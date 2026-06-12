@@ -5320,18 +5320,26 @@ button:active,
 
   .admin-modal-backdrop {
     align-items: end;
+    justify-items: center;
+    width: 100vw;
+    height: 100dvh;
+    min-height: 100dvh;
     overflow: hidden;
     padding: 0 0 calc(8px + env(safe-area-inset-bottom));
   }
 
   .admin-modal--reservation {
+    position: relative;
     width: 100%;
-    height: min(92dvh, calc(100dvh - 12px));
-    max-height: min(92dvh, calc(100dvh - 12px));
+    max-width: none;
+    height: 92dvh;
+    min-height: 88dvh;
+    max-height: 92dvh;
     border-width: 1px 0 0;
     border-radius: 28px 28px 0 0;
     gap: 0;
     padding: 0;
+    overflow: hidden;
   }
 
   .admin-modal--reservation .admin-modal__header {
@@ -5347,10 +5355,13 @@ button:active,
   .admin-modal--reservation .admin-modal__body {
     flex: 1 1 auto;
     min-height: 0;
+    max-height: none;
     overflow-x: hidden;
     overflow-y: auto;
     padding: 16px 16px calc(28px + env(safe-area-inset-bottom));
     scroll-padding-bottom: 120px;
+    overscroll-behavior: contain;
+    -webkit-overflow-scrolling: touch;
   }
 
   .admin-modal--reservation .admin-modal__actions {
