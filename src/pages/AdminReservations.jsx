@@ -588,7 +588,7 @@ export default function AdminReservations() {
 
       {editingReservation ? (
         <ModalPortal>
-        <div className="admin-modal-backdrop" role="presentation">
+        <div className="admin-modal-backdrop admin-modal-backdrop--reservation" role="presentation">
           <div className="admin-modal admin-modal--wide admin-modal--reservation" role="dialog" aria-modal="true">
             <div className="admin-modal__header admin-modal__header--premium">
               <div className="admin-modal-title">
