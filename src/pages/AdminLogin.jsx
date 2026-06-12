@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Navigate, useLocation } from "react-router-dom";
+import { Navigate } from "react-router-dom";
 import { signInWithEmailAndPassword } from "firebase/auth";
 import { doc, setDoc } from "firebase/firestore";
 import { auth, db } from "../config/firebase.js";
@@ -7,20 +7,14 @@ import { useAuth } from "../auth/AuthProvider.jsx";
 import { ROLES } from "../auth/permissions.js";
 
 export default function AdminLogin() {
-  const location = useLocation();
   const { isAuthenticated, isLoading, role } = useAuth();
   const [credentials, setCredentials] = useState({ email: "", password: "" });
   const [error, setError] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const requestedFrom = location.state?.from?.pathname || "";
   const defaultRoute = role === ROLES.manager ? "/encargado/reservas" : "/admin";
-  const from =
-    role === ROLES.manager && requestedFrom.startsWith("/admin")
-      ? "/encargado/reservas"
-      : requestedFrom || defaultRoute;
 
   if (!isLoading && isAuthenticated) {
-    return <Navigate to={from} replace />;
+    return <Navigate to={defaultRoute} replace />;
   }
 
   const handleSubmit = async (event) => {

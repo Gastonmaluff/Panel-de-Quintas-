@@ -33,6 +33,7 @@ export default function App() {
         }
       >
         <Route index element={<AdminDashboard />} />
+        <Route path="control" element={<Navigate to="/admin" replace />} />
         <Route path="contenido" element={<Navigate to="/admin/configuracion" replace />} />
         <Route path="reservas" element={<AdminReservations />} />
         <Route path="calendario" element={<AdminCalendar />} />
