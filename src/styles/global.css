@@ -3477,6 +3477,40 @@ textarea:focus {
   object-fit: cover;
 }
 
+.admin-receipt-link {
+  display: inline-flex;
+  min-height: 36px;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  border: 1px solid rgba(6, 27, 14, 0.12);
+  border-radius: 999px;
+  background: #f8fbf9;
+  color: var(--color-forest);
+  font-size: 0.76rem;
+  font-weight: 820;
+  letter-spacing: 0.02em;
+  padding: 0 12px;
+  text-decoration: none;
+  transition:
+    background 180ms ease,
+    border-color 180ms ease,
+    box-shadow 180ms ease,
+    transform 180ms ease;
+  white-space: nowrap;
+}
+
+.admin-receipt-link:hover {
+  border-color: rgba(42, 125, 91, 0.22);
+  background: #eaf8f0;
+  box-shadow: 0 10px 26px rgba(6, 27, 14, 0.08);
+  transform: translateY(-1px);
+}
+
+.admin-receipt-link:active {
+  transform: scale(0.98);
+}
+
 .admin-payment-list,
 .admin-activity-list {
   display: grid;
@@ -5820,6 +5854,11 @@ button:active,
   .admin-client-card header {
     align-items: stretch;
     flex-direction: column;
+  }
+
+  .admin-expense-card .admin-receipt-link {
+    width: 100%;
+    min-height: 42px;
   }
 
   .admin-client-card header a {

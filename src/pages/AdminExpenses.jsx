@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { createPortal } from "react-dom";
-import { ReceiptText, X } from "lucide-react";
+import { Eye, ReceiptText, X } from "lucide-react";
 import { useAdminData } from "../admin/AdminDataProvider.jsx";
 import { formatGuaranies } from "../utils/pricing.js";
 import { formatAmountInput, parseAmountInput } from "../utils/formatters.js";
@@ -24,6 +24,25 @@ function createExpenseDraft() {
 function ModalPortal({ children }) {
   if (typeof document === "undefined") return null;
   return createPortal(children, document.body);
+}
+
+function ExpenseReceiptAction({ expense }) {
+  if (!expense.receiptUrl) {
+    return <span className="admin-empty-note">Sin comprobante</span>;
+  }
+
+  return (
+    <a
+      className="admin-receipt-link"
+      href={expense.receiptUrl}
+      target="_blank"
+      rel="noreferrer"
+      title={expense.receiptName ? `Abrir ${expense.receiptName}` : "Ver comprobante"}
+    >
+      <Eye size={15} strokeWidth={1.9} aria-hidden="true" />
+      Ver comprobante
+    </a>
+  );
 }
 
 export default function AdminExpenses() {
@@ -106,7 +125,7 @@ export default function AdminExpenses() {
             <dl>
               <div><dt>Fecha</dt><dd>{expense.date}</dd></div>
               <div><dt>Método</dt><dd>{expense.method}</dd></div>
-              <div><dt>Comprobante</dt><dd>{expense.receiptName || "Sin comprobante"}</dd></div>
+              <div><dt>Comprobante</dt><dd><ExpenseReceiptAction expense={expense} /></dd></div>
             </dl>
           </article>
         ))}
@@ -132,7 +151,7 @@ export default function AdminExpenses() {
                 <td>{expense.description}</td>
                 <td>{expense.method}</td>
                 <td className="money-column">{formatGuaranies(expense.amount)}</td>
-                <td>{expense.receiptName || "Sin comprobante"}</td>
+                <td><ExpenseReceiptAction expense={expense} /></td>
               </tr>
             ))}
           </tbody>
