@@ -19,6 +19,7 @@ import {
   titleCaseName,
   toWhatsappParaguay,
 } from "../utils/formatters.js";
+import { useAuth } from "../auth/AuthProvider.jsx";
 
 const paymentMethods = ["Transferencia", "Efectivo"];
 const eventTypes = ["Cumpleaños", "Casamiento", "Bautismo", "Reunión familiar", "Evento corporativo", "Pool day", "Otro"];
@@ -189,6 +190,7 @@ function ReservationDetailPanel({
   onAddPayment,
   onPayBalance,
   onCancel,
+  canCancel = true,
 }) {
   return (
     <article className="admin-reservation-detail-card admin-accordion-panel">
@@ -251,9 +253,11 @@ function ReservationDetailPanel({
           Pagar saldo
         </button>
         <button type="button" onClick={() => onEdit(reservation)}>Editar reserva</button>
-        <button type="button" className="is-danger" onClick={() => onCancel(reservation)}>
-          Eliminar reserva
-        </button>
+        {canCancel ? (
+          <button type="button" className="is-danger" onClick={() => onCancel(reservation)}>
+            Eliminar reserva
+          </button>
+        ) : null}
         <button type="button" onClick={onClose}>Cerrar detalle</button>
       </footer>
     </article>
@@ -300,8 +304,9 @@ function CancelledReservations({ reservations }) {
   );
 }
 
-export default function AdminReservations() {
+export default function AdminReservations({ mode = "admin" }) {
   const venue = venues[0];
+  const { isAdmin } = useAuth();
   const {
     reservations,
     activeReservations,
@@ -320,6 +325,7 @@ export default function AdminReservations() {
   const [cancelReason, setCancelReason] = useState("");
   const [isSaving, setIsSaving] = useState(false);
   const isModalOpen = Boolean(editingReservation || paymentTarget || cancelTarget);
+  const canCancelReservations = mode !== "manager" && isAdmin;
 
   const editingAvailability = useMemo(
     () =>
@@ -541,6 +547,7 @@ export default function AdminReservations() {
                         onAddPayment={(currentReservation) => openPaymentModal(currentReservation)}
                         onPayBalance={(currentReservation) => openPaymentModal(currentReservation, true)}
                         onCancel={(currentReservation) => setCancelTarget(currentReservation)}
+                        canCancel={canCancelReservations}
                       />
                     </td>
                   </tr>
@@ -592,6 +599,7 @@ export default function AdminReservations() {
                   onAddPayment={(currentReservation) => openPaymentModal(currentReservation)}
                   onPayBalance={(currentReservation) => openPaymentModal(currentReservation, true)}
                   onCancel={(currentReservation) => setCancelTarget(currentReservation)}
+                  canCancel={canCancelReservations}
                 />
               </div>
             ) : null}
@@ -599,7 +607,7 @@ export default function AdminReservations() {
         ))}
       </div>
 
-      <CancelledReservations reservations={cancelledReservations} />
+      {canCancelReservations ? <CancelledReservations reservations={cancelledReservations} /> : null}
 
       {editingReservation ? (
         <ModalPortal>
@@ -731,7 +739,7 @@ export default function AdminReservations() {
         </ModalPortal>
       ) : null}
 
-      {cancelTarget ? (
+      {cancelTarget && canCancelReservations ? (
         <ModalPortal>
         <div className="admin-modal-backdrop" role="presentation">
           <div className="admin-modal admin-modal--confirm" role="dialog" aria-modal="true">

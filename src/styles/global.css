@@ -3333,12 +3333,29 @@ textarea:focus {
   display: flex;
   min-width: 0;
   align-items: center;
+  gap: 10px;
 }
 
 .admin-system-header__logo {
   width: clamp(138px, 13vw, 190px);
   max-height: 48px;
   object-fit: contain;
+}
+
+.admin-view-badge {
+  display: inline-flex;
+  min-height: 30px;
+  align-items: center;
+  border: 1px solid rgba(42, 125, 91, 0.18);
+  border-radius: 999px;
+  background: #edf8f2;
+  color: var(--color-forest);
+  font-size: 0.68rem;
+  font-weight: 850;
+  letter-spacing: 0.08em;
+  padding: 0 10px;
+  text-transform: uppercase;
+  white-space: nowrap;
 }
 
 .admin-session-line {
@@ -3528,6 +3545,87 @@ textarea:focus {
   padding: 0 16px;
 }
 
+.admin-user-role-form {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 14px;
+  border: 1px solid rgba(6, 27, 14, 0.08);
+  border-radius: 18px;
+  background: #fbfcfa;
+  padding: 16px;
+}
+
+.admin-user-role-form label {
+  display: grid;
+  gap: 7px;
+  color: var(--color-muted);
+  font-size: 0.72rem;
+  font-weight: 850;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.admin-user-role-form input,
+.admin-user-role-form select {
+  min-height: 44px;
+  border: 1px solid rgba(6, 27, 14, 0.12);
+  border-radius: 14px;
+  color: var(--color-forest);
+  font-size: 0.92rem;
+  padding: 0 14px;
+}
+
+.admin-user-role-form .reservation-switch-field,
+.admin-user-role-form button {
+  align-self: end;
+}
+
+.admin-user-role-list {
+  display: grid;
+  gap: 10px;
+}
+
+.admin-user-role-list article {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto auto;
+  align-items: center;
+  gap: 10px;
+  border: 1px solid rgba(6, 27, 14, 0.08);
+  border-radius: 16px;
+  background: white;
+  padding: 14px;
+}
+
+.admin-user-role-list article div {
+  display: grid;
+  gap: 3px;
+}
+
+.admin-user-role-list span,
+.admin-user-role-list p {
+  margin: 0;
+  color: var(--color-muted);
+  font-size: 0.82rem;
+}
+
+.admin-user-role-list em {
+  border-radius: 999px;
+  background: #eaf8f0;
+  color: var(--color-forest);
+  font-style: normal;
+  font-weight: 800;
+  padding: 7px 10px;
+}
+
+.admin-user-role-list small {
+  color: var(--color-muted);
+  font-weight: 750;
+}
+
+.admin-user-role-list p {
+  grid-column: 1 / -1;
+}
+
 .admin-search-field {
   display: grid;
   min-width: min(360px, 100%);
@@ -3576,10 +3674,17 @@ textarea:focus {
 
   .admin-system-header__brand {
     grid-column: 1;
+    flex-wrap: wrap;
   }
 
   .admin-system-header__logo {
     width: min(158px, 48vw);
+  }
+
+  .admin-view-badge {
+    min-height: 26px;
+    font-size: 0.58rem;
+    padding: 0 8px;
   }
 
   .admin-system-nav {
@@ -3607,7 +3712,9 @@ textarea:focus {
   }
 
   .admin-payment-list article,
-  .admin-permission-grid {
+  .admin-permission-grid,
+  .admin-user-role-form,
+  .admin-user-role-list article {
     grid-template-columns: 1fr;
   }
 }

@@ -4,14 +4,20 @@ import { signInWithEmailAndPassword } from "firebase/auth";
 import { doc, setDoc } from "firebase/firestore";
 import { auth, db } from "../config/firebase.js";
 import { useAuth } from "../auth/AuthProvider.jsx";
+import { ROLES } from "../auth/permissions.js";
 
 export default function AdminLogin() {
   const location = useLocation();
-  const { isAuthenticated, isLoading } = useAuth();
+  const { isAuthenticated, isLoading, role } = useAuth();
   const [credentials, setCredentials] = useState({ email: "", password: "" });
   const [error, setError] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const from = location.state?.from?.pathname || "/admin";
+  const requestedFrom = location.state?.from?.pathname || "";
+  const defaultRoute = role === ROLES.manager ? "/encargado/reservas" : "/admin";
+  const from =
+    role === ROLES.manager && requestedFrom.startsWith("/admin")
+      ? "/encargado/reservas"
+      : requestedFrom || defaultRoute;
 
   if (!isLoading && isAuthenticated) {
     return <Navigate to={from} replace />;

@@ -1,9 +1,9 @@
 import { Navigate, useLocation } from "react-router-dom";
 import { useAuth } from "./AuthProvider.jsx";
 
-export default function ProtectedRoute({ children }) {
+export default function ProtectedRoute({ children, allowedRoles, redirectTo }) {
   const location = useLocation();
-  const { isAuthenticated, isLoading } = useAuth();
+  const { isAuthenticated, isLoading, role } = useAuth();
 
   if (isLoading) {
     return (
@@ -19,6 +19,10 @@ export default function ProtectedRoute({ children }) {
 
   if (!isAuthenticated) {
     return <Navigate to="/admin/login" replace state={{ from: location }} />;
+  }
+
+  if (allowedRoles?.length && !allowedRoles.includes(role)) {
+    return <Navigate to={redirectTo || "/encargado/reservas"} replace />;
   }
 
   return children;

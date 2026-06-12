@@ -2,13 +2,53 @@ rules_version = '2';
 
 service firebase.storage {
   match /b/{bucket}/o {
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function ownerFallback() {
+      return isSignedIn() && (
+        request.auth.token.email == "Gaston@admin.com" ||
+        request.auth.token.email == "gaston@admin.com" ||
+        request.auth.token.email == "admin@paraisoescondido.com"
+      );
+    }
+
+    function uidProfilePath() {
+      return /databases/(default)/documents/users/$(request.auth.uid);
+    }
+
+    function emailProfilePath() {
+      return /databases/(default)/documents/users/$(request.auth.token.email);
+    }
+
+    function roleFromUid() {
+      return firestore.exists(uidProfilePath()) ? firestore.get(uidProfilePath()).data.role : "";
+    }
+
+    function roleFromEmail() {
+      return firestore.exists(emailProfilePath()) ? firestore.get(emailProfilePath()).data.role : "";
+    }
+
+    function userRole() {
+      return ownerFallback() ? "admin" : (roleFromUid() != "" ? roleFromUid() : roleFromEmail());
+    }
+
+    function isAdmin() {
+      return isSignedIn() && userRole() == "admin";
+    }
+
+    function isManager() {
+      return isSignedIn() && userRole() == "manager";
+    }
+
     match /receipts/{allPaths=**} {
-      allow read, write: if request.auth != null;
+      allow read, write: if isAdmin() || isManager();
     }
 
     match /venues/{venueId}/content/{allPaths=**} {
       allow read: if true;
-      allow write: if request.auth != null;
+      allow write: if isAdmin();
     }
   }
 }

@@ -1,5 +1,5 @@
 import { NavLink, Outlet, useLocation, useNavigate } from "react-router-dom";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import {
   BarChart3,
   CalendarDays,
@@ -11,6 +11,7 @@ import {
 } from "lucide-react";
 import { AdminDataProvider, useAdminData } from "../admin/AdminDataProvider.jsx";
 import { useAuth } from "../auth/AuthProvider.jsx";
+import { ROLE_LABELS } from "../auth/permissions.js";
 import ShareAvailabilityButton from "../components/admin/ShareAvailabilityButton.jsx";
 import BrandLogo from "../components/branding/BrandLogo.jsx";
 
@@ -24,19 +25,34 @@ const adminLinks = [
   { to: "/admin/configuracion", label: "Configuración", icon: Settings },
 ];
 
-function AdminShell() {
+const managerLinks = [
+  { to: "/encargado/reservas", label: "Reservas", icon: WalletCards },
+  { to: "/encargado/calendario", label: "Calendario", icon: CalendarDays },
+  { to: "/encargado/gastos", label: "Gastos", icon: ReceiptText },
+];
+
+function AdminShell({ mode = "admin" }) {
   const navigate = useNavigate();
   const location = useLocation();
-  const { logout, user } = useAuth();
+  const { logout, profile, role, user } = useAuth();
   const { logActivity } = useAdminData();
-  const activeIndex = adminLinks.findIndex((link) =>
-    link.end ? location.pathname === link.to : location.pathname.startsWith(link.to),
+  const isManagerView = mode === "manager";
+  const links = isManagerView ? managerLinks : adminLinks;
+  const activeIndex = useMemo(
+    () =>
+      links.findIndex((link) =>
+        link.end ? location.pathname === link.to : location.pathname.startsWith(link.to),
+      ),
+    [links, location.pathname],
   );
   const [lastIndex, setLastIndex] = useState(activeIndex);
   const direction = activeIndex >= lastIndex ? "forward" : "back";
 
   const handleLogout = async () => {
-    await logActivity("Usuario cerró sesión", user?.email || "Sin usuario");
+    await logActivity(
+      "Usuario cerró sesión",
+      `${profile?.name || user?.email || "Sin usuario"} · ${ROLE_LABELS[role] || role || "Sin rol"}`,
+    );
     await logout();
     navigate("/admin/login", { replace: true });
   };
@@ -46,14 +62,15 @@ function AdminShell() {
   }, [activeIndex]);
 
   return (
-    <div className="admin-app admin-app--topnav">
+    <div className={`admin-app admin-app--topnav${isManagerView ? " admin-app--manager" : ""}`}>
       <header className="admin-system-header">
         <div className="admin-system-header__brand">
           <BrandLogo variant="horizontal" className="admin-system-header__logo" />
+          {isManagerView ? <span className="admin-view-badge">Vista Encargado</span> : null}
         </div>
 
-        <nav className="admin-system-nav" aria-label="Administracion principal">
-          {adminLinks.map((link) => {
+        <nav className="admin-system-nav" aria-label={isManagerView ? "Vista Encargado" : "Administración principal"}>
+          {links.map((link) => {
             const Icon = link.icon;
 
             return (
@@ -80,7 +97,10 @@ function AdminShell() {
       </header>
 
       <main className="admin-main">
-        <div className="admin-session-line">Sesion activa: {user?.email}</div>
+        <div className="admin-session-line">
+          Sesion activa: {user?.email}
+          {isManagerView ? <span> · Encargado</span> : null}
+        </div>
         <div className={`admin-route-transition admin-route-transition--${direction}`} key={location.pathname}>
           <Outlet />
         </div>
@@ -89,10 +109,10 @@ function AdminShell() {
   );
 }
 
-export default function AdminLayout() {
+export default function AdminLayout({ mode = "admin" }) {
   return (
     <AdminDataProvider>
-      <AdminShell />
+      <AdminShell mode={mode} />
     </AdminDataProvider>
   );
 }

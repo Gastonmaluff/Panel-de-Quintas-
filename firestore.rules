@@ -6,38 +6,99 @@ service cloud.firestore {
       return request.auth != null;
     }
 
+    function ownerFallback() {
+      return isSignedIn() && (
+        request.auth.token.email == "Gaston@admin.com" ||
+        request.auth.token.email == "gaston@admin.com" ||
+        request.auth.token.email == "admin@paraisoescondido.com"
+      );
+    }
+
+    function uidProfilePath() {
+      return /databases/$(database)/documents/users/$(request.auth.uid);
+    }
+
+    function emailProfilePath() {
+      return /databases/$(database)/documents/users/$(request.auth.token.email);
+    }
+
+    function roleFromUid() {
+      return exists(uidProfilePath()) ? get(uidProfilePath()).data.role : "";
+    }
+
+    function roleFromEmail() {
+      return exists(emailProfilePath()) ? get(emailProfilePath()).data.role : "";
+    }
+
+    function userRole() {
+      return ownerFallback() ? "admin" : (roleFromUid() != "" ? roleFromUid() : roleFromEmail());
+    }
+
+    function isAdmin() {
+      return isSignedIn() && userRole() == "admin";
+    }
+
+    function isManager() {
+      return isSignedIn() && userRole() == "manager";
+    }
+
+    function managerReservationUpdate() {
+      return isManager() &&
+        !request.resource.data.diff(resource.data).affectedKeys().hasAny([
+          "status",
+          "cancelledAt",
+          "cancelledBy",
+          "cancellationReason"
+        ]);
+    }
+
     match /reservations/{reservationId} {
-      allow read, write: if isSignedIn();
+      allow read, create: if isAdmin() || isManager();
+      allow update: if isAdmin() || managerReservationUpdate();
+      allow delete: if isAdmin();
     }
 
     match /expenses/{expenseId} {
-      allow read, write: if isSignedIn();
+      allow read, create: if isAdmin() || isManager();
+      allow update: if isAdmin() ||
+        (isManager() && resource.data.createdByUid == request.auth.uid);
+      allow delete: if isAdmin();
     }
 
     match /clients/{clientId} {
-      allow read, write: if isSignedIn();
+      allow read: if isAdmin();
+      allow create, update: if isAdmin() || isManager();
+      allow delete: if isAdmin();
     }
 
     match /activityLog/{activityId} {
-      allow read, write: if isSignedIn();
+      allow read: if isAdmin();
+      allow create: if isSignedIn();
+      allow update, delete: if isAdmin();
+    }
+
+    match /users/{userId} {
+      allow read: if isAdmin() ||
+        (isSignedIn() && (userId == request.auth.uid || resource.data.email == request.auth.token.email));
+      allow create, update, delete: if isAdmin();
     }
 
     match /settings/{settingId} {
-      allow read, write: if isSignedIn();
+      allow read, write: if isAdmin();
     }
 
     match /venues/{venueId} {
       allow read: if true;
-      allow write: if isSignedIn();
+      allow write: if isAdmin();
 
       match /sections/{sectionId} {
         allow read: if true;
-        allow write: if isSignedIn();
+        allow write: if isAdmin();
       }
 
       match /publicContent/{docId} {
         allow read: if true;
-        allow write: if isSignedIn();
+        allow write: if isAdmin();
       }
     }
   }

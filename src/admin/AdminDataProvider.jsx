@@ -9,6 +9,7 @@ import {
 } from "../utils/booking.js";
 import { cleanParaguayPhone, titleCaseName } from "../utils/formatters.js";
 import { useAuth } from "../auth/AuthProvider.jsx";
+import { ROLES, isAdminRole } from "../auth/permissions.js";
 
 const AdminDataContext = createContext(null);
 const DEFAULT_PAYMENT_METHOD = "Transferencia";
@@ -179,11 +180,13 @@ async function uploadReceiptFile(file, folder, ownerId) {
 }
 
 export function AdminDataProvider({ children }) {
-  const { user } = useAuth();
+  const { profile, role, user } = useAuth();
   const [reservations, setReservations] = useState([]);
   const [expenses, setExpenses] = useState([]);
   const [activityLog, setActivityLog] = useState([]);
+  const [users, setUsers] = useState([]);
   const [firebaseStatus, setFirebaseStatus] = useState({ loading: true, error: "" });
+  const isAdmin = isAdminRole(role);
 
   useEffect(() => {
     const unsubscribers = [
@@ -208,21 +211,40 @@ export function AdminDataProvider({ children }) {
         },
         (error) => setFirebaseStatus({ loading: false, error: error.message }),
       ),
-      onSnapshot(
-        collection(db, "activityLog"),
-        (snapshot) => {
-          setActivityLog(
-            snapshot.docs
-              .map((item) => ({ id: item.id, ...item.data() }))
-              .sort((a, b) => String(b.date).localeCompare(String(a.date))),
-          );
-        },
-        (error) => setFirebaseStatus({ loading: false, error: error.message }),
-      ),
     ];
 
+    if (isAdmin) {
+      unsubscribers.push(
+        onSnapshot(
+          collection(db, "activityLog"),
+          (snapshot) => {
+            setActivityLog(
+              snapshot.docs
+                .map((item) => ({ id: item.id, ...item.data() }))
+                .sort((a, b) => String(b.date).localeCompare(String(a.date))),
+            );
+          },
+          (error) => setFirebaseStatus({ loading: false, error: error.message }),
+        ),
+        onSnapshot(
+          collection(db, "users"),
+          (snapshot) => {
+            setUsers(
+              snapshot.docs
+                .map((item) => ({ id: item.id, ...item.data() }))
+                .sort((a, b) => String(a.email || "").localeCompare(String(b.email || ""))),
+            );
+          },
+          (error) => setFirebaseStatus({ loading: false, error: error.message }),
+        ),
+      );
+    } else {
+      setActivityLog([]);
+      setUsers([]);
+    }
+
     return () => unsubscribers.forEach((unsubscribe) => unsubscribe());
-  }, []);
+  }, [isAdmin]);
 
   const writeActivity = async (action, detail) => {
     const id = makeId("log");
@@ -230,6 +252,9 @@ export function AdminDataProvider({ children }) {
       id,
       date: new Date().toISOString(),
       user: user?.email || "Sistema",
+      userName: profile?.name || user?.email || "Sistema",
+      userRole: role || ROLES.manager,
+      userUid: user?.uid || "",
       action,
       detail,
     };
@@ -269,6 +294,9 @@ export function AdminDataProvider({ children }) {
       ...stripFileFields(reservation),
       id,
       payments: uploadedPayments,
+      createdBy: user?.email || "",
+      createdByUid: user?.uid || "",
+      createdByRole: role || ROLES.manager,
       createdAt: reservation.createdAt || new Date().toISOString(),
       updatedAt: new Date().toISOString(),
     });
@@ -285,6 +313,9 @@ export function AdminDataProvider({ children }) {
       ...currentReservation,
       ...stripFileFields(changes),
       id,
+      updatedBy: user?.email || "",
+      updatedByUid: user?.uid || "",
+      updatedByRole: role || ROLES.manager,
       updatedAt: new Date().toISOString(),
     });
 
@@ -346,6 +377,9 @@ export function AdminDataProvider({ children }) {
       receiptUrl,
       receiptName: expense.receiptName || "",
       notes: expense.notes || "",
+      createdBy: user?.email || "",
+      createdByUid: user?.uid || "",
+      createdByRole: role || ROLES.manager,
       createdAt: expense.createdAt || new Date().toISOString(),
       updatedAt: new Date().toISOString(),
     };
@@ -354,6 +388,31 @@ export function AdminDataProvider({ children }) {
     await writeActivity("Gasto creado", `${newExpense.category} - ${newExpense.amount}`);
     if (receiptUrl) await writeActivity("Comprobante subido", `${newExpense.category} - gasto`);
     return newExpense;
+  };
+
+  const saveUserProfile = async (profileDraft) => {
+    const email = String(profileDraft.email || "").trim().toLowerCase();
+    const id = profileDraft.uid?.trim() || profileDraft.id || email;
+    if (!id || !email) return null;
+
+    const payload = {
+      id,
+      uid: profileDraft.uid?.trim() || "",
+      name: profileDraft.name?.trim() || email,
+      email,
+      role: profileDraft.role === ROLES.admin ? ROLES.admin : ROLES.manager,
+      active: profileDraft.active !== false,
+      accesses:
+        profileDraft.role === ROLES.admin
+          ? ["all"]
+          : ["Reservas", "Calendario", "Gastos"],
+      createdAt: profileDraft.createdAt || new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+    };
+
+    await setDoc(doc(db, "users", id), payload, { merge: true });
+    await writeActivity("Usuario actualizado", `${payload.email} · ${payload.role}`);
+    return payload;
   };
 
   const clients = useMemo(() => buildClients(reservations), [reservations]);
@@ -366,6 +425,7 @@ export function AdminDataProvider({ children }) {
       expenses,
       clients,
       activityLog,
+      users,
       firebaseStatus,
       availability: buildAdminAvailability(reservations),
       getReservationDates,
@@ -375,9 +435,10 @@ export function AdminDataProvider({ children }) {
       removeReservation: cancelReservation,
       addPayment,
       addExpense,
+      saveUserProfile,
       logActivity: writeActivity,
     }),
-    [reservations, expenses, clients, activityLog, firebaseStatus],
+    [reservations, expenses, clients, activityLog, users, firebaseStatus],
   );
 
   return <AdminDataContext.Provider value={value}>{children}</AdminDataContext.Provider>;
