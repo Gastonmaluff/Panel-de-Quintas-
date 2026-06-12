@@ -4984,7 +4984,28 @@ button:active,
 }
 
 .admin-modal--reservation {
+  display: flex;
+  max-height: min(860px, calc(100dvh - 36px));
+  flex-direction: column;
   overflow: hidden;
+}
+
+.admin-modal--reservation .admin-modal__header,
+.admin-modal--reservation .admin-modal__actions {
+  flex: 0 0 auto;
+}
+
+.admin-modal__body {
+  min-height: 0;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  -webkit-overflow-scrolling: touch;
+}
+
+.admin-modal__body--reservation {
+  display: grid;
+  gap: 14px;
+  padding: 2px 4px 8px;
 }
 
 .admin-modal__header--premium {
@@ -5295,6 +5316,69 @@ button:active,
     max-height: 94dvh;
     border-radius: 24px 24px 0 0;
     animation-name: admin-bottom-sheet-in;
+  }
+
+  .admin-modal-backdrop {
+    align-items: end;
+    overflow: hidden;
+    padding: 0;
+  }
+
+  .admin-modal--reservation {
+    width: 100%;
+    height: 100dvh;
+    max-height: 100dvh;
+    border-width: 1px 0 0;
+    border-radius: 24px 24px 0 0;
+    gap: 0;
+    padding: 0;
+  }
+
+  .admin-modal--reservation .admin-modal__header {
+    position: sticky;
+    top: 0;
+    z-index: 2;
+    border-bottom: 1px solid rgba(6, 27, 14, 0.08);
+    background: rgba(255, 255, 255, 0.96);
+    padding: 16px 16px 14px;
+    backdrop-filter: blur(14px);
+  }
+
+  .admin-modal--reservation .admin-modal__body {
+    flex: 1 1 auto;
+    min-height: 0;
+    overflow-x: hidden;
+    overflow-y: auto;
+    padding: 14px 14px calc(22px + env(safe-area-inset-bottom));
+  }
+
+  .admin-modal--reservation .admin-modal__actions {
+    position: sticky;
+    bottom: 0;
+    z-index: 2;
+    display: grid;
+    grid-template-columns: 1fr;
+    border-top: 1px solid rgba(6, 27, 14, 0.1);
+    background: rgba(255, 255, 255, 0.97);
+    padding: 12px 14px calc(14px + env(safe-area-inset-bottom));
+    backdrop-filter: blur(14px);
+  }
+
+  .admin-modal--reservation .admin-modal__actions button {
+    width: 100%;
+    min-height: 48px;
+  }
+
+  .admin-modal-title {
+    min-width: 0;
+  }
+
+  .admin-modal-title h3 {
+    font-size: 1.35rem;
+  }
+
+  .admin-modal-title small {
+    line-height: 1.35;
   }
 
   @keyframes admin-bottom-sheet-in {

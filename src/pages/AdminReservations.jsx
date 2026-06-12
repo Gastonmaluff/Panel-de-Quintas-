@@ -1,4 +1,4 @@
-import { Fragment, useMemo, useState } from "react";
+import { Fragment, useEffect, useMemo, useState } from "react";
 import { CalendarPlus, Plus, X } from "lucide-react";
 import DateAvailabilityPicker from "../components/calendar/DateAvailabilityPicker.jsx";
 import { buildAdminAvailability, useAdminData } from "../admin/AdminDataProvider.jsx";
@@ -313,6 +313,7 @@ export default function AdminReservations() {
   const [cancelTarget, setCancelTarget] = useState(null);
   const [cancelReason, setCancelReason] = useState("");
   const [isSaving, setIsSaving] = useState(false);
+  const isModalOpen = Boolean(editingReservation || paymentTarget || cancelTarget);
 
   const editingAvailability = useMemo(
     () =>
@@ -338,6 +339,17 @@ export default function AdminReservations() {
       ? "El nombre del cliente es obligatorio."
       : validationMessage || (overlappingReservation ? "Ya existe una reserva en ese rango de fecha y horario." : "");
   const canSaveEditedReservation = Boolean(editingReservation && !saveWarning);
+
+  useEffect(() => {
+    if (!isModalOpen) return undefined;
+
+    const previousOverflow = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+
+    return () => {
+      document.body.style.overflow = previousOverflow;
+    };
+  }, [isModalOpen]);
 
   const openNewReservation = () => {
     setEditingReservation(createReservationDraft());
@@ -582,51 +594,53 @@ export default function AdminReservations() {
               </button>
             </div>
 
-            <div className="reservation-edit-form reservation-edit-form--operations">
-              <section className="reservation-form-section">
-                <h4>Cliente</h4>
-                <label>Nombre del cliente<input value={editingReservation.clientName} onBlur={() => setEditingReservation((current) => ({ ...current, clientName: titleCaseName(current.clientName) }))} onChange={(event) => setEditingReservation((current) => ({ ...current, clientName: event.target.value }))} /></label>
-                <label>Número de cédula<input value={editingReservation.clientCedula || ""} onChange={(event) => setEditingReservation((current) => ({ ...current, clientCedula: event.target.value.replace(/\D/g, "") }))} /></label>
-                <label>Teléfono<input inputMode="numeric" placeholder="0983 332 233" value={formatParaguayPhone(editingReservation.clientPhone)} onChange={(event) => setEditingReservation((current) => ({ ...current, clientPhone: formatParaguayPhone(event.target.value) }))} /></label>
-              </section>
+            <div className="admin-modal__body admin-modal__body--reservation">
+              <div className="reservation-edit-form reservation-edit-form--operations">
+                <section className="reservation-form-section">
+                  <h4>Cliente</h4>
+                  <label>Nombre del cliente<input value={editingReservation.clientName} onBlur={() => setEditingReservation((current) => ({ ...current, clientName: titleCaseName(current.clientName) }))} onChange={(event) => setEditingReservation((current) => ({ ...current, clientName: event.target.value }))} /></label>
+                  <label>Número de cédula<input value={editingReservation.clientCedula || ""} onChange={(event) => setEditingReservation((current) => ({ ...current, clientCedula: event.target.value.replace(/\D/g, "") }))} /></label>
+                  <label>Teléfono<input inputMode="numeric" placeholder="0983 332 233" value={formatParaguayPhone(editingReservation.clientPhone)} onChange={(event) => setEditingReservation((current) => ({ ...current, clientPhone: formatParaguayPhone(event.target.value) }))} /></label>
+                </section>
 
-              <section className="reservation-form-section">
-                <h4>Fecha y horario</h4>
-                <DateAvailabilityPicker availability={editingAvailability} value={editingReservation.startDate} onChange={(date) => setEditingReservation((current) => updateReservationDate(current, "startDate", date))} label="Fecha de ingreso" />
-                <label>Hora de ingreso<input type="time" value={editingReservation.startTime} onChange={(event) => setEditingReservation((current) => ({ ...current, startTime: event.target.value }))} /></label>
-                <DateAvailabilityPicker availability={editingAvailability} value={editingReservation.endDate} minDate={editingReservation.startDate} onChange={(date) => setEditingReservation((current) => updateReservationDate(current, "endDate", date))} label="Fecha de salida" />
-                <label>Hora de salida<input type="time" value={editingReservation.endTime} onChange={(event) => setEditingReservation((current) => ({ ...current, endTime: event.target.value }))} /></label>
-              </section>
+                <section className="reservation-form-section">
+                  <h4>Fecha y horario</h4>
+                  <DateAvailabilityPicker availability={editingAvailability} value={editingReservation.startDate} onChange={(date) => setEditingReservation((current) => updateReservationDate(current, "startDate", date))} label="Fecha de ingreso" />
+                  <label>Hora de ingreso<input type="time" value={editingReservation.startTime} onChange={(event) => setEditingReservation((current) => ({ ...current, startTime: event.target.value }))} /></label>
+                  <DateAvailabilityPicker availability={editingAvailability} value={editingReservation.endDate} minDate={editingReservation.startDate} onChange={(date) => setEditingReservation((current) => updateReservationDate(current, "endDate", date))} label="Fecha de salida" />
+                  <label>Hora de salida<input type="time" value={editingReservation.endTime} onChange={(event) => setEditingReservation((current) => ({ ...current, endTime: event.target.value }))} /></label>
+                </section>
 
-              <section className="reservation-form-section">
-                <h4>Detalles de la reserva</h4>
-                <label>Tipo de evento<select value={editingReservation.eventType} onChange={(event) => setEditingReservation((current) => ({ ...current, eventType: event.target.value }))}>{eventTypes.map((eventType) => <option key={eventType} value={eventType}>{eventType}</option>)}</select></label>
-                <label>Cantidad de personas<QuantityInput value={editingReservation.guests} onChange={(guests) => setEditingReservation((current) => ({ ...current, guests }))} /></label>
-                <label className="reservation-edit-form__notes">Notas internas<textarea value={editingReservation.notes} onChange={(event) => setEditingReservation((current) => ({ ...current, notes: event.target.value }))} /></label>
-              </section>
+                <section className="reservation-form-section">
+                  <h4>Detalles de la reserva</h4>
+                  <label>Tipo de evento<select value={editingReservation.eventType} onChange={(event) => setEditingReservation((current) => ({ ...current, eventType: event.target.value }))}>{eventTypes.map((eventType) => <option key={eventType} value={eventType}>{eventType}</option>)}</select></label>
+                  <label>Cantidad de personas<QuantityInput value={editingReservation.guests} onChange={(guests) => setEditingReservation((current) => ({ ...current, guests }))} /></label>
+                  <label className="reservation-edit-form__notes">Notas internas<textarea value={editingReservation.notes} onChange={(event) => setEditingReservation((current) => ({ ...current, notes: event.target.value }))} /></label>
+                </section>
 
-              <section className="reservation-form-section">
-                <h4>Pago inicial</h4>
-                <label>Precio total acordado<AmountInput value={editingReservation.totalAmount} onChange={(totalAmount) => setEditingReservation((current) => ({ ...current, totalAmount }))} placeholder="2.850.000" /></label>
-                {!editingReservation.id ? (
-                  <>
-                    <label>Seña inicial<AmountInput value={editingReservation.initialPayment} onChange={(initialPayment) => setEditingReservation((current) => ({ ...current, initialPayment }))} placeholder="850.000" /></label>
-                    <label>Método de pago de la seña<select value={editingReservation.initialPaymentMethod} onChange={(event) => setEditingReservation((current) => ({ ...current, initialPaymentMethod: event.target.value }))}>{paymentMethods.map((method) => <option key={method} value={method}>{method}</option>)}</select></label>
+                <section className="reservation-form-section">
+                  <h4>Pago inicial</h4>
+                  <label>Precio total acordado<AmountInput value={editingReservation.totalAmount} onChange={(totalAmount) => setEditingReservation((current) => ({ ...current, totalAmount }))} placeholder="2.850.000" /></label>
+                  {!editingReservation.id ? (
+                    <>
+                      <label>Seña inicial<AmountInput value={editingReservation.initialPayment} onChange={(initialPayment) => setEditingReservation((current) => ({ ...current, initialPayment }))} placeholder="850.000" /></label>
+                      <label>Método de pago de la seña<select value={editingReservation.initialPaymentMethod} onChange={(event) => setEditingReservation((current) => ({ ...current, initialPaymentMethod: event.target.value }))}>{paymentMethods.map((method) => <option key={method} value={method}>{method}</option>)}</select></label>
+                      <div className="reservation-edit-form__notes">
+                        <ReceiptInput value={editingReservation} onChange={(receipt) => setEditingReservation((current) => ({ ...current, ...receipt }))} />
+                      </div>
+                    </>
+                  ) : (
                     <div className="reservation-edit-form__notes">
-                      <ReceiptInput value={editingReservation} onChange={(receipt) => setEditingReservation((current) => ({ ...current, ...receipt }))} />
+                      <h4>Pagos registrados</h4>
+                      <PaymentHistory reservation={editingReservation} />
                     </div>
-                  </>
-                ) : (
-                  <div className="reservation-edit-form__notes">
-                    <h4>Pagos registrados</h4>
-                    <PaymentHistory reservation={editingReservation} />
-                  </div>
-                )}
-                <label>Saldo pendiente<input value={formatGuaranies(editingReservation.id ? editingReservation.balance : reservationBalance)} readOnly /></label>
-              </section>
-            </div>
+                  )}
+                  <label>Saldo pendiente<input value={formatGuaranies(editingReservation.id ? editingReservation.balance : reservationBalance)} readOnly /></label>
+                </section>
+              </div>
 
-            {saveWarning ? <p className="admin-form-warning">{saveWarning}</p> : null}
+              {saveWarning ? <p className="admin-form-warning">{saveWarning}</p> : null}
+            </div>
             <div className="admin-modal__actions">
               <button type="button" className="admin-secondary-button" onClick={() => setEditingReservation(null)}>Cancelar</button>
               <button type="button" onClick={saveEditedReservation} disabled={!canSaveEditedReservation || isSaving}>{isSaving ? "Guardando..." : "Guardar reserva"}</button>
