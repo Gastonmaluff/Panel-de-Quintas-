@@ -5058,6 +5058,38 @@ button:active,
   padding: 0 !important;
 }
 
+.admin-modal__actions--reservation {
+  gap: 10px;
+}
+
+.admin-modal__actions--reservation button {
+  min-height: 50px;
+  border-radius: 999px !important;
+  font-size: 0.76rem;
+  font-weight: 850;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.admin-primary-button {
+  border: 1px solid var(--color-forest) !important;
+  background: var(--color-forest) !important;
+  color: white !important;
+  box-shadow: 0 14px 32px rgba(6, 27, 14, 0.18);
+}
+
+.admin-primary-button:hover {
+  background: #12301e !important;
+}
+
+.admin-primary-button:disabled {
+  cursor: not-allowed;
+  border-color: rgba(6, 27, 14, 0.14) !important;
+  background: rgba(6, 27, 14, 0.18) !important;
+  color: rgba(6, 27, 14, 0.45) !important;
+  box-shadow: none;
+}
+
 .reservation-edit-form--operations {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -5078,6 +5110,100 @@ button:active,
   margin: 0;
   color: var(--color-forest);
   font-size: 0.92rem;
+}
+
+.reservation-switch-field {
+  display: flex !important;
+  align-items: center;
+  gap: 12px;
+  border: 1px solid rgba(6, 27, 14, 0.1);
+  border-radius: 16px;
+  background: white;
+  cursor: pointer;
+  padding: 12px;
+}
+
+.reservation-switch-field input {
+  position: relative;
+  flex: 0 0 auto;
+  width: 48px;
+  height: 28px;
+  appearance: none;
+  border: 0;
+  border-radius: 999px;
+  background: rgba(6, 27, 14, 0.14);
+  cursor: pointer;
+  padding: 0;
+  transition: background 180ms ease;
+}
+
+.reservation-switch-field input::after {
+  position: absolute;
+  left: 3px;
+  top: 3px;
+  width: 22px;
+  height: 22px;
+  border-radius: 999px;
+  background: white;
+  box-shadow: 0 4px 12px rgba(6, 27, 14, 0.18);
+  content: "";
+  transition: transform 180ms ease;
+}
+
+.reservation-switch-field input:checked {
+  background: var(--color-forest);
+}
+
+.reservation-switch-field input:checked::after {
+  transform: translateX(20px);
+}
+
+.reservation-switch-field span {
+  display: grid;
+  gap: 2px;
+}
+
+.reservation-switch-field strong {
+  color: var(--color-forest);
+  font-size: 0.88rem;
+}
+
+.reservation-switch-field small {
+  color: var(--color-muted);
+  font-size: 0.76rem;
+  font-weight: 600;
+  letter-spacing: 0;
+  line-height: 1.35;
+  text-transform: none;
+}
+
+.reservation-balance-summary {
+  display: grid;
+  gap: 8px;
+  border: 1px solid rgba(6, 27, 14, 0.08);
+  border-radius: 18px;
+  background: linear-gradient(135deg, rgba(232, 245, 237, 0.95), rgba(255, 255, 255, 0.95));
+  padding: 16px;
+}
+
+.reservation-balance-summary span {
+  color: var(--color-muted);
+  font-size: 0.72rem;
+  font-weight: 850;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+.reservation-balance-summary strong {
+  color: var(--color-forest);
+  font-size: clamp(1.45rem, 4vw, 2rem);
+  line-height: 1;
+}
+
+.admin-form-warning--soft {
+  border-color: rgba(184, 107, 85, 0.18);
+  background: #fff8f4;
+  color: #8c604f;
 }
 
 .admin-accordion-panel,

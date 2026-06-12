@@ -57,6 +57,7 @@ function createReservationDraft(dateValue = new Date().toISOString().slice(0, 10
     guests: "",
     totalAmount: "",
     initialPayment: "",
+    hasInitialDeposit: false,
     initialPaymentMethod: "Transferencia",
     receiptName: "",
     receiptPreview: "",
@@ -96,11 +97,10 @@ function updateReservationDate(current, key, value) {
   return next;
 }
 
-function AmountInput({ value, onChange, placeholder = "0" }) {
+function AmountInput({ value, onChange }) {
   return (
     <input
       inputMode="numeric"
-      placeholder={placeholder}
       value={formatAmountInput(value)}
       onFocus={() => {
         if (Number(value || 0) === 0) onChange("");
@@ -124,7 +124,7 @@ function QuantityInput({ value, onChange, placeholder = "Cantidad" }) {
   );
 }
 
-function ReceiptInput({ value, onChange }) {
+function ReceiptInput({ value, onChange, label = "Subir comprobante" }) {
   const handleFile = (event) => {
     const file = event.target.files?.[0];
     if (!file) return;
@@ -139,7 +139,7 @@ function ReceiptInput({ value, onChange }) {
   return (
     <div className="admin-receipt-input">
       <label>
-        <span>Subir comprobante</span>
+        <span>{label}</span>
         <input type="file" accept="image/*,.pdf" onChange={handleFile} />
       </label>
       {value?.receiptName ? (
@@ -329,10 +329,16 @@ export default function AdminReservations() {
     [editingReservation, reservations],
   );
 
-  const reservationBalance = Math.max(
-    Number(editingReservation?.totalAmount || 0) - Number(editingReservation?.initialPayment || 0),
-    0,
-  );
+  const totalAmountValue = Number(editingReservation?.totalAmount || 0);
+  const hasInitialDeposit = Boolean(editingReservation?.hasInitialDeposit);
+  const initialPaymentValue = hasInitialDeposit
+    ? Number(editingReservation?.initialPayment || 0)
+    : totalAmountValue;
+  const reservationBalance = Math.max(totalAmountValue - initialPaymentValue, 0);
+  const paymentWarning =
+    hasInitialDeposit && initialPaymentValue <= 0
+      ? "Ingresá el monto de la seña o desmarcá esta opción."
+      : "";
   const validationMessage = editingReservation
     ? getReservationValidationMessage(editingReservation)
     : "";
@@ -340,10 +346,15 @@ export default function AdminReservations() {
     editingReservation && !validationMessage
       ? findOverlappingReservation(reservations, editingReservation, editingReservation.id)
       : null;
-  const saveWarning =
-    !editingReservation?.clientName?.trim()
-      ? "El nombre del cliente es obligatorio."
-      : validationMessage || (overlappingReservation ? "Ya existe una reserva en ese rango de fecha y horario." : "");
+  const saveWarning = !editingReservation?.clientName?.trim()
+    ? "El nombre del cliente es obligatorio."
+    : !editingReservation?.clientPhone?.trim() && !editingReservation?.clientCedula?.trim()
+      ? "Cargá al menos teléfono o cédula del cliente."
+      : !totalAmountValue || totalAmountValue <= 0
+        ? "Cargá el precio total acordado."
+        : hasInitialDeposit && initialPaymentValue > totalAmountValue
+          ? "La seña no puede ser mayor al precio total."
+          : validationMessage || (overlappingReservation ? "Ya existe una reserva en ese rango de fecha y horario." : "");
   const canSaveEditedReservation = Boolean(editingReservation && !saveWarning);
 
   useEffect(() => {
@@ -365,10 +376,12 @@ export default function AdminReservations() {
   };
 
   const openEditReservation = (reservation) => {
+    const firstPaymentType = reservation.payments[0]?.type?.toLowerCase?.() || "";
     setEditingReservation({
       ...reservation,
       clientPhone: formatParaguayPhone(reservation.clientPhone),
       initialPayment: reservation.payments[0]?.amount || "",
+      hasInitialDeposit: firstPaymentType.includes("seña") || firstPaymentType.includes("seÃ±a"),
       initialPaymentMethod: reservation.payments[0]?.method || "Transferencia",
       receiptName: reservation.payments[0]?.receiptName || "",
       receiptPreview: reservation.payments[0]?.receiptUrl || "",
@@ -381,7 +394,9 @@ export default function AdminReservations() {
     setIsSaving(true);
 
     try {
-      const initialPayment = Number(editingReservation.initialPayment || 0);
+      const totalAmount = Number(editingReservation.totalAmount || 0);
+      const isDepositPayment = Boolean(editingReservation.hasInitialDeposit);
+      const initialPayment = isDepositPayment ? Number(editingReservation.initialPayment || 0) : totalAmount;
       const firstPayment =
         initialPayment > 0
           ? {
@@ -390,8 +405,8 @@ export default function AdminReservations() {
               paymentDate: todayISO(),
               receiptName: editingReservation.receiptName || "",
               receiptFile: editingReservation.receiptFile || null,
-              notes: "Seña inicial",
-              type: "seña",
+              notes: isDepositPayment ? "Seña inicial" : "Pago total",
+              type: isDepositPayment ? "Seña" : "Pago total",
             }
           : null;
       const payload = {
@@ -399,7 +414,7 @@ export default function AdminReservations() {
         clientName: titleCaseName(editingReservation.clientName),
         clientPhone: cleanParaguayPhone(editingReservation.clientPhone),
         guests: Number(editingReservation.guests || 0),
-        totalAmount: Number(editingReservation.totalAmount || 0),
+        totalAmount,
         payments: editingReservation.id
           ? editingReservation.payments
           : firstPayment
@@ -630,13 +645,36 @@ export default function AdminReservations() {
 
                 <section className="reservation-form-section">
                   <h4>Pago inicial</h4>
-                  <label>Precio total acordado<AmountInput value={editingReservation.totalAmount} onChange={(totalAmount) => setEditingReservation((current) => ({ ...current, totalAmount }))} placeholder="2.850.000" /></label>
+                  <label>Precio total acordado<AmountInput value={editingReservation.totalAmount} onChange={(totalAmount) => setEditingReservation((current) => ({ ...current, totalAmount }))} /></label>
                   {!editingReservation.id ? (
                     <>
-                      <label>Seña inicial<AmountInput value={editingReservation.initialPayment} onChange={(initialPayment) => setEditingReservation((current) => ({ ...current, initialPayment }))} placeholder="850.000" /></label>
-                      <label>Método de pago de la seña<select value={editingReservation.initialPaymentMethod} onChange={(event) => setEditingReservation((current) => ({ ...current, initialPaymentMethod: event.target.value }))}>{paymentMethods.map((method) => <option key={method} value={method}>{method}</option>)}</select></label>
+                      <label className="reservation-switch-field">
+                        <input
+                          type="checkbox"
+                          checked={Boolean(editingReservation.hasInitialDeposit)}
+                          onChange={(event) =>
+                            setEditingReservation((current) => ({
+                              ...current,
+                              hasInitialDeposit: event.target.checked,
+                              initialPayment: event.target.checked ? current.initialPayment : "",
+                            }))
+                          }
+                        />
+                        <span>
+                          <strong>El cliente pagó una seña</strong>
+                          <small>Si no se marca, se registra como pago total.</small>
+                        </span>
+                      </label>
+                      {editingReservation.hasInitialDeposit ? (
+                        <label>Seña inicial<AmountInput value={editingReservation.initialPayment} onChange={(initialPayment) => setEditingReservation((current) => ({ ...current, initialPayment }))} /></label>
+                      ) : null}
+                      <label>{editingReservation.hasInitialDeposit ? "Método de pago de la seña" : "Método de pago"}<select value={editingReservation.initialPaymentMethod} onChange={(event) => setEditingReservation((current) => ({ ...current, initialPaymentMethod: event.target.value }))}>{paymentMethods.map((method) => <option key={method} value={method}>{method}</option>)}</select></label>
                       <div className="reservation-edit-form__notes">
-                        <ReceiptInput value={editingReservation} onChange={(receipt) => setEditingReservation((current) => ({ ...current, ...receipt }))} />
+                        <ReceiptInput
+                          value={editingReservation}
+                          label={editingReservation.hasInitialDeposit ? "Subir comprobante de seña" : "Subir comprobante de pago"}
+                          onChange={(receipt) => setEditingReservation((current) => ({ ...current, ...receipt }))}
+                        />
                       </div>
                     </>
                   ) : (
@@ -645,15 +683,19 @@ export default function AdminReservations() {
                       <PaymentHistory reservation={editingReservation} />
                     </div>
                   )}
-                  <label>Saldo pendiente<input value={formatGuaranies(editingReservation.id ? editingReservation.balance : reservationBalance)} readOnly /></label>
+                  <div className="reservation-balance-summary" aria-live="polite">
+                    <span>Saldo pendiente</span>
+                    <strong>{formatGuaranies(editingReservation.id ? editingReservation.balance : reservationBalance)}</strong>
+                  </div>
                 </section>
               </div>
 
               {saveWarning ? <p className="admin-form-warning">{saveWarning}</p> : null}
+              {!saveWarning && paymentWarning ? <p className="admin-form-warning admin-form-warning--soft">{paymentWarning}</p> : null}
             </div>
-            <div className="admin-modal__actions">
+            <div className="admin-modal__actions admin-modal__actions--reservation">
               <button type="button" className="admin-secondary-button" onClick={() => setEditingReservation(null)}>Cancelar</button>
-              <button type="button" onClick={saveEditedReservation} disabled={!canSaveEditedReservation || isSaving}>{isSaving ? "Guardando..." : "Guardar reserva"}</button>
+              <button type="button" className="admin-primary-button" onClick={saveEditedReservation} disabled={!canSaveEditedReservation || isSaving}>{isSaving ? "Guardando..." : "Guardar reserva"}</button>
             </div>
           </div>
         </div>

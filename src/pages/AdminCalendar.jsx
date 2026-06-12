@@ -56,7 +56,6 @@ function AmountInput({ value, onChange }) {
   return (
     <input
       inputMode="numeric"
-      placeholder="0"
       value={formatAmountInput(value)}
       onFocus={() => {
         if (Number(value || 0) === 0) onChange("");
