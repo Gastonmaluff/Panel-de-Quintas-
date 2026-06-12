@@ -1,5 +1,4 @@
 import { useMemo, useState } from "react";
-import { Link } from "react-router-dom";
 import DateAvailabilityPicker from "../components/calendar/DateAvailabilityPicker.jsx";
 import { useAdminData } from "../admin/AdminDataProvider.jsx";
 import { getMonthMatrix } from "../utils/date.js";
@@ -134,7 +133,7 @@ export default function AdminCalendar() {
       <div className="admin-section-heading">
         <div>
           <h2>Calendario</h2>
-          <p>Ver disponibilidad por fecha y horario, revisar detalles y crear reservas.</p>
+          <p>Tocá un día para revisar los detalles.</p>
         </div>
       </div>
 
@@ -187,16 +186,6 @@ export default function AdminCalendar() {
           <span><i className="admin-status-dot admin-status-dot--past" />Pasado</span>
         </div>
       </div>
-
-      <article className="admin-table-card admin-table-card--large">
-        <div className="admin-section-heading">
-          <div>
-            <h2>Próximos eventos</h2>
-            <p>Acceso rápido a la lista operativa de reservas.</p>
-          </div>
-          <Link to="/admin/reservas">Gestionar reservas</Link>
-        </div>
-      </article>
 
       {selectedDay ? (
         <div className="admin-modal-backdrop" role="presentation">

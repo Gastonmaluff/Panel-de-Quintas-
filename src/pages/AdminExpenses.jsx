@@ -1,4 +1,6 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
+import { createPortal } from "react-dom";
+import { ReceiptText, X } from "lucide-react";
 import { useAdminData } from "../admin/AdminDataProvider.jsx";
 import { formatGuaranies } from "../utils/pricing.js";
 import { formatAmountInput, parseAmountInput } from "../utils/formatters.js";
@@ -19,6 +21,11 @@ function createExpenseDraft() {
   };
 }
 
+function ModalPortal({ children }) {
+  if (typeof document === "undefined") return null;
+  return createPortal(children, document.body);
+}
+
 export default function AdminExpenses() {
   const { expenses, addExpense } = useAdminData();
   const [draft, setDraft] = useState(null);
@@ -27,6 +34,21 @@ export default function AdminExpenses() {
     () => expenses.reduce((total, expense) => total + Number(expense.amount || 0), 0),
     [expenses],
   );
+
+  useEffect(() => {
+    if (!draft || typeof document === "undefined") return undefined;
+
+    const previousBodyOverflow = document.body.style.overflow;
+    const previousHtmlOverflow = document.documentElement.style.overflow;
+
+    document.body.style.overflow = "hidden";
+    document.documentElement.style.overflow = "hidden";
+
+    return () => {
+      document.body.style.overflow = previousBodyOverflow;
+      document.documentElement.style.overflow = previousHtmlOverflow;
+    };
+  }, [draft]);
 
   const handleReceipt = (event) => {
     const file = event.target.files?.[0];
@@ -49,6 +71,8 @@ export default function AdminExpenses() {
       setIsSaving(false);
     }
   };
+
+  const closeDraft = () => setDraft(null);
 
   return (
     <section className="admin-section">
@@ -116,31 +140,42 @@ export default function AdminExpenses() {
       </div>
 
       {draft ? (
-        <div className="admin-modal-backdrop" role="presentation">
-          <div className="admin-modal" role="dialog" aria-modal="true">
-            <div className="admin-modal__header">
-              <div>
-                <p className="eyebrow">Gasto</p>
-                <h3>Agregar gasto</h3>
+        <ModalPortal>
+          <div className="admin-modal-backdrop admin-modal-backdrop--sheet" role="presentation">
+            <div className="admin-modal admin-modal--sheet admin-modal--expense" role="dialog" aria-modal="true" aria-labelledby="expense-modal-title">
+              <div className="admin-modal__header admin-modal__header--premium">
+                <div className="admin-modal-title">
+                  <i aria-hidden="true"><ReceiptText size={20} strokeWidth={1.8} /></i>
+                  <div>
+                    <h3 id="expense-modal-title">Agregar gasto</h3>
+                    <small>Registrar gasto operativo con comprobante.</small>
+                  </div>
+                </div>
+                <button type="button" className="admin-modal-close" onClick={closeDraft} aria-label="Cerrar">
+                  <X size={18} strokeWidth={1.8} aria-hidden="true" />
+                </button>
               </div>
-              <button type="button" onClick={() => setDraft(null)}>Cerrar</button>
-            </div>
-            <div className="reservation-edit-form">
-              <label>Fecha<input type="date" value={draft.date} onChange={(event) => setDraft((current) => ({ ...current, date: event.target.value }))} /></label>
-              <label>Categoría<select value={draft.category} onChange={(event) => setDraft((current) => ({ ...current, category: event.target.value }))}>{categories.map((category) => <option key={category} value={category}>{category}</option>)}</select></label>
-              <label>Descripción<input value={draft.description} onChange={(event) => setDraft((current) => ({ ...current, description: event.target.value }))} /></label>
-              <label>Monto<input inputMode="numeric" value={formatAmountInput(draft.amount)} onFocus={() => Number(draft.amount || 0) === 0 && setDraft((current) => ({ ...current, amount: "" }))} onChange={(event) => setDraft((current) => ({ ...current, amount: parseAmountInput(event.target.value) || "" }))} /></label>
-              <label>Método<select value={draft.method} onChange={(event) => setDraft((current) => ({ ...current, method: event.target.value }))}>{methods.map((method) => <option key={method} value={method}>{method}</option>)}</select></label>
-              <label className="reservation-edit-form__notes">Notas<textarea value={draft.notes} onChange={(event) => setDraft((current) => ({ ...current, notes: event.target.value }))} /></label>
-              <label className="admin-upload-button">Subir comprobante<input type="file" accept="image/*,.pdf" onChange={handleReceipt} /></label>
-              {draft.receiptName ? <p className="admin-empty-note">{draft.receiptName}</p> : null}
-            </div>
-            <div className="admin-modal__actions">
-              <button type="button" onClick={saveExpense} disabled={isSaving}>{isSaving ? "Guardando..." : "Guardar gasto"}</button>
-              <button type="button" onClick={() => setDraft(null)}>Cancelar</button>
+
+              <div className="admin-modal__body admin-modal__body--sheet">
+                <div className="reservation-edit-form">
+                  <label>Fecha<input type="date" value={draft.date} onChange={(event) => setDraft((current) => ({ ...current, date: event.target.value }))} /></label>
+                  <label>Categoría<select value={draft.category} onChange={(event) => setDraft((current) => ({ ...current, category: event.target.value }))}>{categories.map((category) => <option key={category} value={category}>{category}</option>)}</select></label>
+                  <label>Descripción<input value={draft.description} onChange={(event) => setDraft((current) => ({ ...current, description: event.target.value }))} /></label>
+                  <label>Monto<input inputMode="numeric" value={formatAmountInput(draft.amount)} onFocus={() => Number(draft.amount || 0) === 0 && setDraft((current) => ({ ...current, amount: "" }))} onChange={(event) => setDraft((current) => ({ ...current, amount: parseAmountInput(event.target.value) || "" }))} /></label>
+                  <label>Método<select value={draft.method} onChange={(event) => setDraft((current) => ({ ...current, method: event.target.value }))}>{methods.map((method) => <option key={method} value={method}>{method}</option>)}</select></label>
+                  <label className="reservation-edit-form__notes">Notas<textarea value={draft.notes} onChange={(event) => setDraft((current) => ({ ...current, notes: event.target.value }))} /></label>
+                  <label className="admin-upload-button">Subir comprobante<input type="file" accept="image/*,.pdf" onChange={handleReceipt} /></label>
+                  {draft.receiptName ? <p className="admin-empty-note">{draft.receiptName}</p> : null}
+                </div>
+              </div>
+
+              <div className="admin-modal__actions admin-modal__actions--sheet">
+                <button type="button" className="admin-secondary-button" onClick={closeDraft}>Cancelar</button>
+                <button type="button" className="admin-primary-button" onClick={saveExpense} disabled={isSaving}>{isSaving ? "Guardando..." : "Guardar gasto"}</button>
+              </div>
             </div>
           </div>
-        </div>
+        </ModalPortal>
       ) : null}
     </section>
   );

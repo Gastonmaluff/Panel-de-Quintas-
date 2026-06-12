@@ -3410,6 +3410,14 @@ textarea:focus {
   transform: translateY(-1px);
 }
 
+.admin-system-header__actions .share-availability > .share-availability__trigger {
+  box-shadow: 0 10px 28px rgba(6, 27, 14, 0.06);
+}
+
+.admin-system-header__actions .share-availability > .share-availability__trigger:hover .share-availability__icon {
+  transform: rotate(-8deg);
+}
+
 .admin-session-line {
   margin-bottom: 18px;
 }
@@ -4242,6 +4250,25 @@ textarea:focus {
   gap: 8px;
 }
 
+.share-availability__icon {
+  display: inline-grid;
+  place-items: center;
+  transition: transform 180ms ease;
+}
+
+.share-availability__label {
+  line-height: 1;
+}
+
+.share-availability__label--responsive {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+}
+
 .share-availability__trigger--icon {
   gap: 0;
 }
@@ -4983,7 +5010,8 @@ button:active,
   color: white;
 }
 
-.admin-modal--reservation {
+.admin-modal--reservation,
+.admin-modal--sheet {
   display: flex;
   max-height: min(860px, calc(100dvh - 36px));
   flex-direction: column;
@@ -4991,7 +5019,9 @@ button:active,
 }
 
 .admin-modal--reservation .admin-modal__header,
-.admin-modal--reservation .admin-modal__actions {
+.admin-modal--reservation .admin-modal__actions,
+.admin-modal--sheet .admin-modal__header,
+.admin-modal--sheet .admin-modal__actions {
   flex: 0 0 auto;
 }
 
@@ -5002,7 +5032,8 @@ button:active,
   -webkit-overflow-scrolling: touch;
 }
 
-.admin-modal__body--reservation {
+.admin-modal__body--reservation,
+.admin-modal__body--sheet {
   display: grid;
   gap: 14px;
   padding: 2px 4px 8px;
@@ -5058,11 +5089,13 @@ button:active,
   padding: 0 !important;
 }
 
-.admin-modal__actions--reservation {
+.admin-modal__actions--reservation,
+.admin-modal__actions--sheet {
   gap: 10px;
 }
 
-.admin-modal__actions--reservation button {
+.admin-modal__actions--reservation button,
+.admin-modal__actions--sheet button {
   min-height: 50px;
   border-radius: 999px !important;
   font-size: 0.76rem;
@@ -5410,27 +5443,46 @@ button:active,
     gap: 10px;
   }
 
+  .admin-system-header__logo {
+    width: min(124px, 36vw);
+    max-width: 100%;
+  }
+
   .admin-system-header__actions {
-    width: 100%;
-    justify-content: space-between;
-  }
-
-  .share-availability__trigger--icon {
-    min-width: 0;
     width: auto;
-    min-height: 44px;
-    gap: 8px;
-    border-radius: 999px;
-    padding: 0 14px;
+    min-width: 0;
+    justify-content: flex-end;
   }
 
-  .share-availability__trigger--icon .sr-only {
+  .admin-system-header__actions .share-availability > .share-availability__trigger--icon {
+    width: auto;
+    min-width: 0;
+    min-height: 48px;
+    gap: 7px;
+    border-color: rgba(42, 125, 91, 0.18);
+    border-radius: 999px;
+    background: #edf8f2;
+    box-shadow: 0 12px 30px rgba(6, 27, 14, 0.08);
+    padding: 0 10px;
+  }
+
+  .share-availability__label--responsive {
     position: static;
     width: auto;
     height: auto;
     overflow: visible;
     clip: auto;
+    color: var(--color-forest);
+    font-size: 0.72rem;
+    font-weight: 850;
+    letter-spacing: 0.02em;
+    line-height: 1.05;
+    max-width: 92px;
     white-space: normal;
+  }
+
+  .share-availability__icon {
+    color: var(--color-forest);
   }
 
   .admin-card--occupancy {
@@ -5454,7 +5506,8 @@ button:active,
     padding: 0 0 calc(8px + env(safe-area-inset-bottom));
   }
 
-  .admin-modal-backdrop--reservation {
+  .admin-modal-backdrop--reservation,
+  .admin-modal-backdrop--sheet {
     position: fixed;
     inset: 0;
     z-index: 9999;
@@ -5469,7 +5522,8 @@ button:active,
     padding: max(10px, env(safe-area-inset-top)) 0 0;
   }
 
-  .admin-modal--reservation {
+  .admin-modal--reservation,
+  .admin-modal--sheet {
     position: relative;
     width: 100%;
     max-width: none;
@@ -5485,7 +5539,8 @@ button:active,
     box-shadow: 0 -18px 70px rgba(6, 27, 14, 0.18);
   }
 
-  .admin-modal--reservation .admin-modal__header {
+  .admin-modal--reservation .admin-modal__header,
+  .admin-modal--sheet .admin-modal__header {
     position: sticky;
     top: 0;
     z-index: 2;
@@ -5495,7 +5550,8 @@ button:active,
     backdrop-filter: blur(14px);
   }
 
-  .admin-modal--reservation .admin-modal__body {
+  .admin-modal--reservation .admin-modal__body,
+  .admin-modal--sheet .admin-modal__body {
     flex: 1 1 auto;
     min-height: 0;
     max-height: none;
@@ -5507,7 +5563,8 @@ button:active,
     -webkit-overflow-scrolling: touch;
   }
 
-  .admin-modal--reservation .admin-modal__actions {
+  .admin-modal--reservation .admin-modal__actions,
+  .admin-modal--sheet .admin-modal__actions {
     position: sticky;
     bottom: 0;
     z-index: 2;
@@ -5519,7 +5576,8 @@ button:active,
     backdrop-filter: blur(14px);
   }
 
-  .admin-modal--reservation .admin-modal__actions button {
+  .admin-modal--reservation .admin-modal__actions button,
+  .admin-modal--sheet .admin-modal__actions button {
     width: 100%;
     min-height: 48px;
   }

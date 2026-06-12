@@ -194,12 +194,12 @@ export default function ShareAvailabilityButton({ iconOnly = false }) {
         title="Compartir disponibilidad"
         className={iconOnly ? "share-availability__trigger share-availability__trigger--icon" : "share-availability__trigger"}
       >
-        <Share2 size={16} strokeWidth={1.8} aria-hidden="true" />
-        {iconOnly ? (
-          <span className="sr-only">{isGenerating ? "Generando..." : "Compartir disponibilidad"}</span>
-        ) : (
-          isGenerating ? "Generando..." : "Compartir disponibilidad"
-        )}
+        <span className="share-availability__icon" aria-hidden="true">
+          <Share2 size={16} strokeWidth={1.8} />
+        </span>
+        <span className={iconOnly ? "share-availability__label share-availability__label--responsive" : "share-availability__label"}>
+          {isGenerating ? "Generando..." : "Compartir disponibilidad"}
+        </span>
       </button>
 
       {message ? <small>{message}</small> : null}
