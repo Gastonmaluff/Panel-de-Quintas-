@@ -10,15 +10,37 @@ import AdminFinance from "./pages/AdminFinance.jsx";
 import AdminClients from "./pages/AdminClients.jsx";
 import AdminLogin from "./pages/AdminLogin.jsx";
 import ProtectedRoute from "./auth/ProtectedRoute.jsx";
+import { useAuth } from "./auth/AuthProvider.jsx";
 import { ROLES } from "./auth/permissions.js";
 import { venues } from "./data/venues.js";
 
 const paraiso = venues.find((venue) => venue.slug === "paraiso-escondido");
 
+function InternalEntryRedirect() {
+  const { isAuthenticated, isLoading, role } = useAuth();
+
+  if (isLoading) {
+    return (
+      <main className="admin-auth-shell">
+        <div className="admin-auth-card">
+          <p className="eyebrow">Paraíso Escondido</p>
+          <h1>Preparando panel</h1>
+          <p>Estamos verificando tu sesión para abrir el sistema interno.</p>
+        </div>
+      </main>
+    );
+  }
+
+  if (!isAuthenticated) return <Navigate to="/admin/login" replace />;
+  if (role === ROLES.manager) return <Navigate to="/encargado/reservas" replace />;
+  return <Navigate to="/admin" replace />;
+}
+
 export default function App() {
   return (
     <Routes>
-      <Route path="/" element={<PublicVenuePage venue={paraiso} />} />
+      <Route path="/" element={<InternalEntryRedirect />} />
+      <Route path="/publica" element={<PublicVenuePage venue={paraiso} />} />
       <Route
         path="/quinta/paraiso-escondido"
         element={<PublicVenuePage venue={paraiso} />}
