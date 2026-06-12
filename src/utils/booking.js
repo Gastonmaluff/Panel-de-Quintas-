@@ -58,6 +58,20 @@ export function toDateTimeValue(dateValue, timeValue = "00:00") {
   return `${dateValue}T${timeValue || "00:00"}`;
 }
 
+function toStartOfDay(value) {
+  if (!value) return null;
+  const dateValue = value instanceof Date ? toISODate(value) : String(value).slice(0, 10);
+  const [year, month, day] = dateValue.split("-").map(Number);
+  if (!year || !month || !day) return null;
+  return new Date(year, month - 1, day);
+}
+
+export function isPastDay(dateValue, referenceDate = new Date()) {
+  const dayStart = toStartOfDay(dateValue);
+  const todayStart = toStartOfDay(referenceDate);
+  return Boolean(dayStart && todayStart && dayStart < todayStart);
+}
+
 export function getDefaultEndTime(startDate, endDate) {
   return startDate && endDate && endDate > startDate
     ? DEFAULT_OVERNIGHT_END_TIME
@@ -232,10 +246,9 @@ export function getReservationsForDate(dateValue, reservations = []) {
     );
 }
 
-export function getDayAvailabilityStatus(dateValue, reservations = []) {
+export function getCalendarDayStatus(dateValue, reservations = []) {
   if (!dateValue) return "invalid";
-  const today = toISODate(new Date());
-  if (dateValue < today) return "past";
+  if (isPastDay(dateValue)) return "past";
 
   const dayReservations = getReservationsForDate(dateValue, reservations);
   if (!dayReservations.length) return "available";
@@ -251,6 +264,10 @@ export function getDayAvailabilityStatus(dateValue, reservations = []) {
   if (dayReservations.some((reservation) => reservation.status === "bloqueada")) return "blocked";
   if (dayReservations.some((reservation) => reservation.status === "pre-reserva")) return "preReserved";
   return "reserved";
+}
+
+export function getDayAvailabilityStatus(dateValue, reservations = []) {
+  return getCalendarDayStatus(dateValue, reservations);
 }
 
 export function buildAvailabilityFromReservations(reservations, excludedReservationId = "") {

@@ -10,7 +10,7 @@ const statusText = {
   reserved: "Reservado",
   preReserved: "Reservado",
   blocked: "Reservado",
-  past: "No disponible",
+  past: "Pasado",
   invalid: "No disponible",
 };
 
@@ -18,6 +18,7 @@ const legendItems = [
   ["available", "Disponible"],
   ["partial", "Parcial"],
   ["reserved", "Reservado"],
+  ["past", "Pasado"],
 ];
 
 function getMonthTitle(year, month) {
@@ -49,10 +50,9 @@ export default function ShareableAvailabilityCalendar({ availability, month, exp
       <div className="shareable-calendar__grid">
         {cells.map((cell) => {
           const availabilityState = getDateAvailability(cell.iso, availability);
-          const normalizedStatus =
-            availabilityState.status === "available" || availabilityState.status === "partial"
-              ? availabilityState.status
-              : "reserved";
+          const normalizedStatus = ["available", "partial", "past"].includes(availabilityState.status)
+            ? availabilityState.status
+            : "reserved";
           const status = cell.isCurrentMonth ? normalizedStatus : "outside";
 
           return (

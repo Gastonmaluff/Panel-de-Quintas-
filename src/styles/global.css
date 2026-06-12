@@ -4616,6 +4616,10 @@ textarea:focus {
   background: #cfcfca;
 }
 
+.shareable-calendar__dot--past {
+  background: #cfcfca;
+}
+
 .shareable-calendar__footer p {
   margin: 0;
   color: #061b0e;

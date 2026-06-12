@@ -2,6 +2,7 @@ import { toISODate } from "./date.js";
 import {
   getDatesInRange,
   getUnavailableDatesInRange as getUnavailableRangeDates,
+  isPastDay,
   isRangeAvailable as getRangeAvailability,
 } from "./booking.js";
 
@@ -11,7 +12,7 @@ export const availabilityLabels = {
   partial: "Parcial",
   preReserved: "Pre-reservado",
   blocked: "Bloqueado",
-  past: "No disponible",
+  past: "Pasado",
 };
 
 export const unavailableReasons = {
@@ -59,7 +60,7 @@ export function getAvailabilityStatus(dateValue, availabilityData) {
   const availability = normalizeAvailabilityData(availabilityData);
 
   if (!isoDate) return "invalid";
-  if (isoDate < getTodayISO()) return "past";
+  if (isPastDay(isoDate)) return "past";
   if (availability.reserved.includes(isoDate)) return "reserved";
   if (availability.preReserved.includes(isoDate)) return "preReserved";
   if (availability.blocked.includes(isoDate)) return "blocked";
