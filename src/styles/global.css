@@ -5593,6 +5593,144 @@ button:active,
   box-shadow: 0 12px 32px rgba(20, 32, 25, 0.055);
 }
 
+.admin-calendar-detail-sheet {
+  width: min(100%, 760px);
+}
+
+.admin-calendar-detail-sheet .admin-modal-title h3 {
+  text-transform: capitalize;
+}
+
+.admin-calendar-detail-status {
+  display: inline-flex;
+  min-height: 28px;
+  align-items: center;
+  border-radius: 999px;
+  font-size: 0.68rem;
+  font-weight: 850;
+  letter-spacing: 0.08em;
+  padding: 0 10px;
+  text-transform: uppercase;
+}
+
+.admin-calendar-detail-status--available {
+  background: #eaf8f0;
+  color: var(--color-forest);
+}
+
+.admin-calendar-detail-status--reserved {
+  background: #f8e1dd;
+  color: #7d3527;
+}
+
+.admin-calendar-detail-status--partial {
+  background: #f6edd0;
+  color: #6f5a18;
+}
+
+.admin-calendar-detail-status--past {
+  background: #ececea;
+  color: #6e746e;
+}
+
+.admin-calendar-reservation-card {
+  display: grid;
+  gap: 16px;
+}
+
+.admin-calendar-reservation-card header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.admin-calendar-reservation-card header div {
+  display: grid;
+  gap: 4px;
+}
+
+.admin-calendar-reservation-card header span {
+  color: var(--color-muted);
+  font-weight: 680;
+}
+
+.admin-calendar-reservation-card em {
+  flex: 0 0 auto;
+  border-radius: 999px;
+  background: #eaf8f0;
+  color: var(--color-forest);
+  font-size: 0.72rem;
+  font-style: normal;
+  font-weight: 820;
+  padding: 7px 10px;
+}
+
+.admin-calendar-reservation-card h4 {
+  margin: 0 0 10px;
+  color: var(--color-forest);
+}
+
+.admin-calendar-payment-list {
+  display: grid;
+  gap: 10px;
+}
+
+.admin-calendar-payment-list div {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 10px;
+  border-radius: 14px;
+  background: #f8fbf9;
+  padding: 10px;
+}
+
+.admin-calendar-payment-list span,
+.admin-calendar-payment-list small {
+  color: var(--color-muted);
+  font-size: 0.9rem;
+  font-weight: 700;
+}
+
+.admin-calendar-reservation-card footer {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.admin-calendar-reservation-card footer a,
+.admin-calendar-reservation-card footer button {
+  display: inline-flex;
+  min-height: 42px;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid rgba(6, 27, 14, 0.12);
+  border-radius: 999px;
+  background: #f8fbf9;
+  color: var(--color-forest);
+  font-size: 0.74rem;
+  font-weight: 840;
+  letter-spacing: 0.08em;
+  padding: 0 14px;
+  text-transform: uppercase;
+  transition:
+    background 170ms ease,
+    border-color 170ms ease,
+    transform 170ms ease;
+}
+
+.admin-calendar-reservation-card footer a:hover,
+.admin-calendar-reservation-card footer button:hover {
+  border-color: rgba(42, 125, 91, 0.24);
+  background: #eaf8f0;
+}
+
+.admin-calendar-reservation-card footer a:active,
+.admin-calendar-reservation-card footer button:active {
+  transform: scale(0.98);
+}
+
 .admin-cancelled-list article header,
 .admin-expense-card header,
 .admin-finance-card-list article header,
@@ -5949,7 +6087,8 @@ button:active,
 
   .admin-expense-card header,
   .admin-finance-card-list article header,
-  .admin-client-card header {
+  .admin-client-card header,
+  .admin-calendar-reservation-card header {
     align-items: stretch;
     flex-direction: column;
   }
@@ -5958,6 +6097,20 @@ button:active,
   .admin-finance-card-list .admin-receipt-link {
     width: 100%;
     min-height: 42px;
+  }
+
+  .admin-calendar-payment-list div {
+    grid-template-columns: 1fr;
+  }
+
+  .admin-calendar-reservation-card footer {
+    display: grid;
+    grid-template-columns: 1fr;
+  }
+
+  .admin-calendar-reservation-card footer a,
+  .admin-calendar-reservation-card footer button {
+    width: 100%;
   }
 
   .admin-client-card header a {
