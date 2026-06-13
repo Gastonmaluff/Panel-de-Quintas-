@@ -2,8 +2,10 @@ import { useEffect, useMemo, useState } from "react";
 import { createPortal } from "react-dom";
 import { Eye, ReceiptText, X } from "lucide-react";
 import { useAdminData } from "../admin/AdminDataProvider.jsx";
+import PeriodFilter from "../components/admin/PeriodFilter.jsx";
 import { formatGuaranies } from "../utils/pricing.js";
 import { formatAmountInput, parseAmountInput } from "../utils/formatters.js";
+import { getCurrentMonthRange, getDateRange, isDateInRange } from "../utils/periodFilters.js";
 
 const categories = ["Limpieza", "Mantenimiento", "Jardinería", "Piscina", "Luz", "Agua", "Personal", "Compra de insumos", "Reparaciones", "Otros"];
 const methods = ["Transferencia", "Efectivo", "Tarjeta", "Otro"];
@@ -47,11 +49,23 @@ function ExpenseReceiptAction({ expense }) {
 
 export default function AdminExpenses() {
   const { expenses, addExpense } = useAdminData();
+  const defaultCustomRange = useMemo(() => getCurrentMonthRange(), []);
+  const [periodFilter, setPeriodFilter] = useState("month");
+  const [customStartDate, setCustomStartDate] = useState(defaultCustomRange.startDate);
+  const [customEndDate, setCustomEndDate] = useState(defaultCustomRange.endDate);
   const [draft, setDraft] = useState(null);
   const [isSaving, setIsSaving] = useState(false);
-  const monthTotal = useMemo(
-    () => expenses.reduce((total, expense) => total + Number(expense.amount || 0), 0),
-    [expenses],
+  const activeRange = useMemo(
+    () => getDateRange(periodFilter, customStartDate, customEndDate),
+    [periodFilter, customStartDate, customEndDate],
+  );
+  const filteredExpenses = useMemo(
+    () => expenses.filter((expense) => isDateInRange(expense.date || expense.expenseDate || expense.createdAt, activeRange)),
+    [expenses, activeRange],
+  );
+  const periodTotal = useMemo(
+    () => filteredExpenses.reduce((total, expense) => total + Number(expense.amount || 0), 0),
+    [filteredExpenses],
   );
 
   useEffect(() => {
@@ -103,19 +117,33 @@ export default function AdminExpenses() {
         <button type="button" onClick={() => setDraft(createExpenseDraft())}>Agregar gasto</button>
       </div>
 
+      <PeriodFilter
+        value={periodFilter}
+        onChange={setPeriodFilter}
+        customStartDate={customStartDate}
+        customEndDate={customEndDate}
+        onCustomStartDateChange={setCustomStartDate}
+        onCustomEndDateChange={setCustomEndDate}
+        range={activeRange}
+      />
+
       <div className="admin-grid">
         <article className="admin-card admin-card--compact-value">
           <span>Gastos cargados</span>
-          <strong>{expenses.length}</strong>
+          <strong>{filteredExpenses.length}</strong>
         </article>
         <article className="admin-card admin-card--compact-value">
           <span>Total de gastos</span>
-          <strong>{formatGuaranies(monthTotal)}</strong>
+          <strong>{formatGuaranies(periodTotal)}</strong>
         </article>
       </div>
 
+      {filteredExpenses.length === 0 ? (
+        <p className="admin-empty-state">No hay gastos registrados en este período.</p>
+      ) : null}
+
       <div className="admin-expense-card-list">
-        {expenses.map((expense) => (
+        {filteredExpenses.map((expense) => (
           <article className="admin-expense-card" key={expense.id}>
             <header>
               <strong>{expense.category}</strong>
@@ -144,7 +172,7 @@ export default function AdminExpenses() {
             </tr>
           </thead>
           <tbody>
-            {expenses.map((expense) => (
+            {filteredExpenses.map((expense) => (
               <tr key={expense.id}>
                 <td>{expense.date}</td>
                 <td>{expense.category}</td>

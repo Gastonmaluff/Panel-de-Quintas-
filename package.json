@@ -12,6 +12,7 @@
     "@vitejs/plugin-react": "^5.0.4",
     "firebase": "^12.4.0",
     "html-to-image": "^1.11.13",
+    "jspdf": "^4.2.1",
     "lucide-react": "^1.11.0",
     "react": "^19.1.1",
     "react-dom": "^19.1.1",
