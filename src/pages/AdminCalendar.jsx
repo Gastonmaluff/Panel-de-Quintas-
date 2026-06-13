@@ -52,7 +52,6 @@ function formatDate(dateValue) {
 
 function getCalendarStatusLabel(status, reservationCount) {
   if (status === "past") return "Pasado";
-  if (status === "partial") return "Ocupación parcial";
   if (status === "reserved" || reservationCount > 0) return "Reservado";
   return "Disponible";
 }
@@ -119,8 +118,9 @@ export default function AdminCalendar() {
     () => (selectedDay ? getReservationsForDate(selectedDay.iso, activeReservations) : []),
     [activeReservations, selectedDay],
   );
+  const selectedBlockingReservations = selectedDay?.status === "reserved" ? selectedReservations : [];
   const selectedStatusLabel = selectedDay
-    ? getCalendarStatusLabel(selectedDay.status, selectedReservations.length)
+    ? getCalendarStatusLabel(selectedDay.status, selectedBlockingReservations.length)
     : "";
   const validationMessage = reservationDraft ? getReservationValidationMessage(reservationDraft) : "";
   const overlappingReservation =
@@ -208,6 +208,7 @@ export default function AdminCalendar() {
           {cells.map((cell) => {
             const status = getDayAvailabilityStatus(cell.iso, activeReservations);
             const dayReservations = getReservationsForDate(cell.iso, activeReservations);
+            const visibleReservations = status === "reserved" ? dayReservations : [];
             const isPast = status === "past";
 
             return (
@@ -219,11 +220,11 @@ export default function AdminCalendar() {
                 onClick={() => setSelectedDay({ ...cell, status })}
               >
                 <span className="admin-calendar-day__number">{cell.day}</span>
-                {dayReservations.length ? (
+                {visibleReservations.length ? (
                   <>
-                    <span className="admin-calendar-day__status">{status === "partial" ? "Parcial" : "Reservado"}</span>
-                    <strong>{dayReservations[0].clientName}</strong>
-                    <small>{dayReservations[0].startTime} - {dayReservations[0].endTime}</small>
+                    <span className="admin-calendar-day__status">Reservado</span>
+                    <strong>{visibleReservations[0].clientName}</strong>
+                    <small>{visibleReservations[0].startTime} - {visibleReservations[0].endTime}</small>
                   </>
                 ) : isPast ? (
                   <strong className="admin-calendar-day__free">PASADO</strong>
@@ -238,7 +239,6 @@ export default function AdminCalendar() {
         <div className="admin-calendar-legend">
           <span><i className="admin-status-dot admin-status-dot--available" />Disponible</span>
           <span><i className="admin-status-dot admin-status-dot--reserved" />Reservado</span>
-          <span><i className="admin-status-dot admin-status-dot--partial" />Ocupación parcial</span>
           <span><i className="admin-status-dot admin-status-dot--past" />Pasado</span>
         </div>
       </div>
@@ -288,9 +288,9 @@ export default function AdminCalendar() {
                       </p>
                     ) : null}
                   </>
-                ) : selectedReservations.length ? (
+                ) : selectedBlockingReservations.length ? (
                   <div className="admin-day-blocks admin-calendar-reservation-list">
-                    {selectedReservations.map((reservation) => (
+                    {selectedBlockingReservations.map((reservation) => (
                       <article className="admin-calendar-reservation-card" key={reservation.id}>
                         <header>
                           <div>
@@ -356,7 +356,7 @@ export default function AdminCalendar() {
                     <button type="button" className="admin-primary-button" onClick={saveReservation} disabled={!canSaveReservation || isSaving}>{isSaving ? "Guardando..." : "Guardar reserva"}</button>
                     <button type="button" className="admin-secondary-button" onClick={() => setReservationDraft(null)}>Volver</button>
                   </>
-                ) : selectedReservations.length === 0 && selectedDay.status !== "past" && canCreateReservation ? (
+                ) : selectedBlockingReservations.length === 0 && selectedDay.status !== "past" && canCreateReservation ? (
                   <>
                     <button type="button" className="admin-primary-button" onClick={() => setReservationDraft(createReservationDraft(selectedDay.iso))}>
                       Crear reserva

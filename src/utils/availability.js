@@ -9,19 +9,13 @@ import {
 export const availabilityLabels = {
   available: "Disponible",
   reserved: "Reservado",
-  partial: "Parcial",
-  preReserved: "Pre-reservado",
-  blocked: "Bloqueado",
   past: "Pasado",
 };
 
 export const unavailableReasons = {
   reserved: "Fecha reservada",
-  partial: "Ocupacion parcial",
-  preReserved: "Fecha pre-reservada",
-  blocked: "Fecha bloqueada",
   past: "Fecha pasada",
-  invalid: "Fecha inválida",
+  invalid: "Fecha invalida",
 };
 
 function normalizeDateValue(value) {
@@ -43,7 +37,7 @@ export function normalizeAvailabilityData(availabilityData = {}) {
         }
         return accumulator;
       },
-      { reserved: [], preReserved: [], blocked: [], partial: [] },
+      { reserved: [], preReserved: [], blocked: [] },
     );
   }
 
@@ -51,7 +45,6 @@ export function normalizeAvailabilityData(availabilityData = {}) {
     reserved: availabilityData.reserved || [],
     preReserved: availabilityData.preReserved || [],
     blocked: availabilityData.blocked || [],
-    partial: availabilityData.partial || [],
   };
 }
 
@@ -62,15 +55,14 @@ export function getAvailabilityStatus(dateValue, availabilityData) {
   if (!isoDate) return "invalid";
   if (isPastDay(isoDate)) return "past";
   if (availability.reserved.includes(isoDate)) return "reserved";
-  if (availability.preReserved.includes(isoDate)) return "preReserved";
-  if (availability.blocked.includes(isoDate)) return "blocked";
-  if (availability.partial.includes(isoDate)) return "partial";
+  if (availability.preReserved.includes(isoDate)) return "reserved";
+  if (availability.blocked.includes(isoDate)) return "reserved";
   return "available";
 }
 
 export function getDateAvailability(dateValue, availabilityData) {
   const status = getAvailabilityStatus(dateValue, availabilityData);
-  const selectable = status === "available" || status === "partial";
+  const selectable = status === "available";
 
   return {
     status,
@@ -105,7 +97,6 @@ export function getFirstAvailabilityMonth(availabilityData) {
     ...availability.reserved,
     ...availability.preReserved,
     ...availability.blocked,
-    ...availability.partial,
   ]
     .filter((date) => date >= today)
     .sort();

@@ -259,10 +259,8 @@ export function getCalendarDayStatus(dateValue, reservations = []) {
     return interval.start < defaultSlot.end && interval.end > defaultSlot.start;
   });
 
-  if (!blocksDefaultSlot) return "partial";
+  if (!blocksDefaultSlot) return "available";
 
-  if (dayReservations.some((reservation) => reservation.status === "bloqueada")) return "blocked";
-  if (dayReservations.some((reservation) => reservation.status === "pre-reserva")) return "preReserved";
   return "reserved";
 }
 
@@ -275,7 +273,6 @@ export function buildAvailabilityFromReservations(reservations, excludedReservat
     reserved: new Set(),
     preReserved: new Set(),
     blocked: new Set(),
-    partial: new Set(),
   };
   const activeReservations = reservations.filter(
     (reservation) => reservation.id !== excludedReservationId && reservationBlocksAvailability(reservation),
@@ -295,7 +292,6 @@ export function buildAvailabilityFromReservations(reservations, excludedReservat
     reserved: [...availability.reserved],
     preReserved: [...availability.preReserved],
     blocked: [...availability.blocked],
-    partial: [...availability.partial],
   };
 }
 

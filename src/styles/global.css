@@ -5510,10 +5510,6 @@ button:active,
   background: #f5ddd7;
 }
 
-.admin-calendar-day--partial {
-  background: #f2ead0;
-}
-
 .admin-calendar-day--blocked,
 .admin-calendar-day--past {
   background: #eceae5;
@@ -5535,29 +5531,8 @@ button:active,
   background: #d88273;
 }
 
-.admin-status-dot--partial {
-  background: #d3b85b;
-}
-
 .admin-status-dot--past {
   background: #bab7ae;
-}
-
-.date-picker-day--partial {
-  background: #f2ead0;
-  border-color: #dfcb92;
-}
-
-.legend-dot--partial {
-  background: #d3b85b;
-}
-
-.shareable-calendar__day--partial {
-  background: #f2ead0;
-}
-
-.shareable-calendar__dot--partial {
-  background: #d3b85b;
 }
 
 .admin-day-blocks,
@@ -5621,11 +5596,6 @@ button:active,
 .admin-calendar-detail-status--reserved {
   background: #f8e1dd;
   color: #7d3527;
-}
-
-.admin-calendar-detail-status--partial {
-  background: #f6edd0;
-  color: #6f5a18;
 }
 
 .admin-calendar-detail-status--past {
