@@ -1379,6 +1379,21 @@ textarea:focus {
   .site-footer strong {
     font-size: 1.35rem;
   }
+
+  .access-splash {
+    padding-inline: 16px;
+  }
+
+  .access-splash__card {
+    border-radius: 24px;
+    padding: 28px 20px;
+  }
+
+  .access-splash__status {
+    align-items: center;
+    flex-direction: column;
+    gap: 4px;
+  }
 }
 
 .admin-auth-shell {
@@ -1471,6 +1486,126 @@ textarea:focus {
   background: #f4ded8;
   color: #783d2f !important;
   padding: 12px;
+}
+
+.access-splash {
+  display: grid;
+  min-height: 100dvh;
+  place-items: center;
+  overflow: hidden;
+  background:
+    radial-gradient(circle at 50% 12%, rgba(95, 129, 114, 0.13), transparent 34%),
+    linear-gradient(180deg, rgba(251, 250, 247, 0.98), rgba(240, 236, 229, 0.68)),
+    var(--color-paper);
+  padding: max(24px, env(safe-area-inset-top)) 24px max(24px, env(safe-area-inset-bottom));
+}
+
+.access-splash__card {
+  display: grid;
+  width: min(100%, 500px);
+  justify-items: center;
+  gap: 14px;
+  border: 1px solid rgba(6, 27, 14, 0.1);
+  border-radius: 28px;
+  background: rgba(255, 255, 255, 0.86);
+  box-shadow: 0 28px 90px rgba(20, 32, 25, 0.12);
+  padding: clamp(28px, 6vw, 48px);
+  text-align: center;
+  animation: access-splash-in 260ms ease-out both;
+}
+
+.access-splash__logo {
+  width: min(250px, 72vw);
+  max-height: 84px;
+  object-fit: contain;
+}
+
+.access-splash__brand {
+  margin: 2px 0 0;
+  color: var(--color-sage);
+  font-size: 0.72rem;
+  font-weight: 850;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+}
+
+.access-splash h1 {
+  margin: 4px 0 0;
+  color: var(--color-forest);
+  font-size: clamp(2rem, 6vw, 3.4rem);
+  font-weight: 360;
+  line-height: 1;
+}
+
+.access-splash__copy {
+  max-width: 320px;
+  margin: 0;
+  color: var(--color-muted);
+  line-height: 1.65;
+}
+
+.access-splash__progress {
+  position: relative;
+  width: min(100%, 340px);
+  height: 10px;
+  overflow: hidden;
+  border-radius: 999px;
+  background: rgba(6, 27, 14, 0.08);
+  margin-top: 10px;
+}
+
+.access-splash__progress span {
+  position: absolute;
+  inset: 0 auto 0 0;
+  border-radius: inherit;
+  background:
+    linear-gradient(90deg, var(--color-forest), #2a7d5b),
+    var(--color-forest);
+  box-shadow: 0 8px 22px rgba(6, 27, 14, 0.18);
+  transition: width 180ms ease-out;
+}
+
+.access-splash__progress span::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.38), transparent);
+  animation: access-progress-shine 1100ms ease-in-out infinite;
+}
+
+.access-splash__status {
+  display: flex;
+  width: min(100%, 340px);
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+  color: var(--color-muted);
+  font-size: 0.86rem;
+}
+
+.access-splash__status strong {
+  color: var(--color-forest);
+  font-size: 1.05rem;
+}
+
+@keyframes access-splash-in {
+  from {
+    opacity: 0;
+    transform: translateY(10px) scale(0.985);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+@keyframes access-progress-shine {
+  from {
+    transform: translateX(-100%);
+  }
+  to {
+    transform: translateX(100%);
+  }
 }
 
 .admin-app {

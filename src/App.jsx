@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { Navigate, Route, Routes } from "react-router-dom";
 import PublicVenuePage from "./pages/PublicVenuePage.jsx";
 import AdminLayout from "./pages/AdminLayout.jsx";
@@ -13,22 +14,16 @@ import ProtectedRoute from "./auth/ProtectedRoute.jsx";
 import { useAuth } from "./auth/AuthProvider.jsx";
 import { ROLES } from "./auth/permissions.js";
 import { venues } from "./data/venues.js";
+import AccessSplash from "./components/admin/AccessSplash.jsx";
 
 const paraiso = venues.find((venue) => venue.slug === "paraiso-escondido");
 
 function InternalEntryRedirect() {
   const { isAuthenticated, isLoading, role } = useAuth();
+  const [canContinue, setCanContinue] = useState(false);
 
-  if (isLoading) {
-    return (
-      <main className="admin-auth-shell">
-        <div className="admin-auth-card">
-          <p className="eyebrow">Paraíso Escondido</p>
-          <h1>Preparando panel</h1>
-          <p>Estamos verificando tu sesión para abrir el sistema interno.</p>
-        </div>
-      </main>
-    );
+  if (isLoading || !canContinue) {
+    return <AccessSplash isReady={!isLoading} onComplete={() => setCanContinue(true)} />;
   }
 
   if (!isAuthenticated) return <Navigate to="/admin/login" replace />;

@@ -1,20 +1,15 @@
+import { useState } from "react";
 import { Navigate, useLocation } from "react-router-dom";
+import AccessSplash from "../components/admin/AccessSplash.jsx";
 import { useAuth } from "./AuthProvider.jsx";
 
 export default function ProtectedRoute({ children, allowedRoles, redirectTo }) {
   const location = useLocation();
   const { isAuthenticated, isLoading, role } = useAuth();
+  const [canContinue, setCanContinue] = useState(false);
 
-  if (isLoading) {
-    return (
-      <main className="admin-auth-shell">
-        <div className="admin-auth-card">
-          <p className="eyebrow">Acceso administrador</p>
-          <h1>Verificando sesión</h1>
-          <p>Estamos preparando el panel.</p>
-        </div>
-      </main>
-    );
+  if (isLoading || !canContinue) {
+    return <AccessSplash isReady={!isLoading} onComplete={() => setCanContinue(true)} />;
   }
 
   if (!isAuthenticated) {
