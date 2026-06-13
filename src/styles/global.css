@@ -1396,9 +1396,22 @@ textarea:focus {
   width: min(100%, 460px);
   gap: 18px;
   border: 1px solid var(--color-line);
+  border-radius: 24px;
   background: white;
   box-shadow: var(--shadow-soft);
   padding: clamp(24px, 5vw, 42px);
+}
+
+.admin-auth-brand {
+  display: flex;
+  justify-content: center;
+  margin-bottom: 8px;
+}
+
+.admin-auth-brand img {
+  width: min(230px, 74vw);
+  max-height: 78px;
+  object-fit: contain;
 }
 
 .admin-auth-card h1 {
@@ -5856,7 +5869,8 @@ button:active,
     flex-direction: column;
   }
 
-  .admin-expense-card .admin-receipt-link {
+  .admin-expense-card .admin-receipt-link,
+  .admin-finance-card-list .admin-receipt-link {
     width: 100%;
     min-height: 42px;
   }

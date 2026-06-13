@@ -1,16 +1,8 @@
 import { Link } from "react-router-dom";
-import { CalendarCheck, CalendarDays, Clock3, PiggyBank, WalletCards } from "lucide-react";
+import { CalendarCheck, CalendarDays, PiggyBank, WalletCards } from "lucide-react";
 import { useAdminData } from "../admin/AdminDataProvider.jsx";
 import { formatGuaranies } from "../utils/pricing.js";
 import { getDayAvailabilityStatus } from "../utils/booking.js";
-
-function formatShortDate(dateValue) {
-  if (!dateValue) return "Sin fecha";
-  return new Intl.DateTimeFormat("es-PY", {
-    day: "2-digit",
-    month: "long",
-  }).format(new Date(`${dateValue}T12:00:00`));
-}
 
 function isCurrentMonth(dateValue, currentMonth, currentYear) {
   const date = new Date(`${dateValue}T12:00:00`);
@@ -22,14 +14,9 @@ export default function AdminDashboard() {
   const today = new Date();
   const currentMonth = today.getMonth();
   const currentYear = today.getFullYear();
-  const todayISO = today.toISOString().slice(0, 10);
   const monthReservations = activeReservations.filter((reservation) =>
     getReservationDates(reservation).some((date) => isCurrentMonth(date, currentMonth, currentYear)),
   );
-  const upcomingReservations = activeReservations
-    .filter((reservation) => reservation.startDate >= todayISO && reservation.status !== "cancelada")
-    .sort((a, b) => a.startDate.localeCompare(b.startDate))
-    .slice(0, 4);
   const occupiedDateSet = new Set();
   const daysInMonth = new Date(currentYear, currentMonth + 1, 0).getDate();
   Array.from({ length: daysInMonth }, (_, index) => {
@@ -40,16 +27,12 @@ export default function AdminDashboard() {
   });
   const occupancyPercentage = Math.round((occupiedDateSet.size / daysInMonth) * 100);
   const paidThisMonth = monthReservations.reduce((total, reservation) => total + reservation.totalPaid, 0);
-  const pendingBalance = reservations.reduce((total, reservation) => total + reservation.balance, 0);
   const pendingDeposits = reservations.filter((reservation) => reservation.paymentStatus === "Sin pago").length;
 
   const metrics = [
     { label: "Reservas del mes", value: monthReservations.length, icon: CalendarCheck },
     { label: "Ingresos cobrados", value: formatGuaranies(paidThisMonth), icon: WalletCards, compactValue: true },
     { label: "Señas pendientes", value: pendingDeposits, icon: PiggyBank },
-    { label: "Saldos pendientes", value: formatGuaranies(pendingBalance), icon: PiggyBank, compactValue: true },
-    { label: "Fechas ocupadas", value: occupiedDateSet.size, icon: CalendarDays },
-    { label: "Próximos eventos", value: upcomingReservations.length, icon: Clock3 },
   ];
 
   return (
@@ -74,40 +57,6 @@ export default function AdminDashboard() {
           </article>
         ))}
       </div>
-
-      <article className="admin-table-card admin-table-card--large admin-events-card">
-        <div className="admin-section-heading">
-          <div>
-            <h2>Próximos eventos</h2>
-            <p>Reservas próximas con saldo, pago y datos de contacto.</p>
-          </div>
-          <Link to="/admin/calendario">Abrir calendario</Link>
-        </div>
-        <div className="admin-event-list">
-          {upcomingReservations.map((reservation) => (
-            <article key={reservation.id}>
-              <div className="admin-event-list__date admin-event-list__date--text">
-                <strong>{formatShortDate(reservation.startDate)}</strong>
-              </div>
-              <div className="admin-event-list__body">
-                <div>
-                  <h3>{reservation.clientName}</h3>
-                  <span className="admin-status-pill">{reservation.paymentStatus}</span>
-                </div>
-                <p>{reservation.eventType} · {reservation.guests || "No aplica"} personas</p>
-                <small>Ingreso: {formatShortDate(reservation.startDate)}, {reservation.startTime}</small>
-                <small>Salida: {formatShortDate(reservation.endDate)}, {reservation.endTime}</small>
-                <small>{reservation.clientPhone || "Sin teléfono cargado"}</small>
-              </div>
-              <div className="admin-event-list__amount">
-                <span>Saldo pendiente</span>
-                <strong>{formatGuaranies(reservation.balance)}</strong>
-                <Link to="/admin/reservas">Gestionar</Link>
-              </div>
-            </article>
-          ))}
-        </div>
-      </article>
     </section>
   );
 }

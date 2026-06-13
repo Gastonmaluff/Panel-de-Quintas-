@@ -5,6 +5,7 @@ import { doc, setDoc } from "firebase/firestore";
 import { auth, db } from "../config/firebase.js";
 import { useAuth } from "../auth/AuthProvider.jsx";
 import { ROLES } from "../auth/permissions.js";
+import BrandLogo from "../components/branding/BrandLogo.jsx";
 
 export default function AdminLogin() {
   const { isAuthenticated, isLoading, role } = useAuth();
@@ -42,11 +43,13 @@ export default function AdminLogin() {
   return (
     <main className="admin-auth-shell">
       <form className="admin-auth-card" onSubmit={handleSubmit}>
+        <div className="admin-auth-brand">
+          <BrandLogo variant="horizontal" />
+        </div>
         <p className="eyebrow">Acceso administrador</p>
-        <h1>Entrar al panel</h1>
+        <h1>Bienvenido</h1>
         <p>
-          Ingresá con el usuario autorizado para administrar reservas, precios y
-          contenido público.
+          Ingresá tus datos para acceder al panel.
         </p>
 
         <label>
