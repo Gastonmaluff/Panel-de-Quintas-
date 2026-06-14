@@ -162,7 +162,7 @@ export default function AdminCalendar() {
 
   useEffect(() => {
     if (!celebration) return undefined;
-    const timeout = window.setTimeout(() => setCelebration(null), 3200);
+    const timeout = window.setTimeout(() => setCelebration(null), 4300);
     return () => window.clearTimeout(timeout);
   }, [celebration]);
 

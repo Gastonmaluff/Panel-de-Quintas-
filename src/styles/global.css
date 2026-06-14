@@ -4244,9 +4244,11 @@ textarea:focus {
 .admin-calendar-day.is-celebrating-booking {
   z-index: 3;
   overflow: visible;
-  border-color: rgba(122, 53, 39, 0.22);
+  border-color: rgba(122, 53, 39, 0.26);
   background: #f5ddd7;
-  animation: booking-cell-pop 1450ms cubic-bezier(0.22, 1, 0.36, 1) both;
+  box-shadow: 0 18px 44px rgba(122, 53, 39, 0.14);
+  animation: booking-created-celebration 3650ms cubic-bezier(0.22, 1, 0.36, 1) both;
+  will-change: transform, box-shadow, background-color;
 }
 
 .admin-calendar-day.is-celebrating-booking::before,
@@ -4257,13 +4259,13 @@ textarea:focus {
 }
 
 .admin-calendar-day.is-celebrating-booking::before {
-  inset: -8px;
+  inset: -10px;
   border-radius: inherit;
-  border: 1px solid rgba(216, 130, 115, 0.36);
+  border: 1px solid rgba(216, 130, 115, 0.42);
   box-shadow:
     0 0 0 0 rgba(216, 130, 115, 0.28),
     0 18px 42px rgba(122, 53, 39, 0.12);
-  animation: booking-cell-glow 1450ms ease-out both;
+  animation: booking-cell-glow 1650ms ease-out 2000ms both;
 }
 
 .admin-calendar-day.is-celebrating-booking::after {
@@ -4274,14 +4276,16 @@ textarea:focus {
   border-radius: 50%;
   background: #d88273;
   box-shadow:
-    -28px -18px 0 #2a7d5b,
-    26px -22px 0 #d3b85b,
-    -34px 14px 0 #d88273,
-    32px 18px 0 #2a7d5b,
-    0 -36px 0 #f2c66d,
-    0 34px 0 #d88273;
+    -32px -24px 0 #2a7d5b,
+    30px -28px 0 #d3b85b,
+    -40px 16px 0 #d88273,
+    38px 20px 0 #2a7d5b,
+    -12px -42px 0 #f2c66d,
+    12px 40px 0 #d88273,
+    -48px -4px 0 #f2c66d,
+    48px 4px 0 #d88273;
   transform: translate(-50%, -50%) scale(0);
-  animation: booking-confetti 1150ms ease-out 120ms both;
+  animation: booking-confetti 1450ms ease-out 2050ms both;
 }
 
 .admin-calendar-toast {
@@ -4303,19 +4307,63 @@ textarea:focus {
   letter-spacing: 0.02em;
   padding: 0 18px;
   transform: translateX(-50%);
-  animation: admin-toast-in 2800ms ease both;
+  animation: admin-toast-in 4000ms ease both;
   backdrop-filter: blur(14px);
 }
 
-@keyframes booking-cell-pop {
+@keyframes booking-created-celebration {
   0% {
-    transform: scale(0.98);
+    background: #fff8f0;
+    box-shadow: 0 10px 26px rgba(122, 53, 39, 0.08);
+    transform: translateX(0) scale(1);
   }
-  22% {
-    transform: scale(1.05);
+  8% {
+    transform: translateX(-2px) scale(1);
+  }
+  16% {
+    transform: translateX(2px) scale(1);
+  }
+  25% {
+    transform: translateX(-3px) scale(1.005);
+  }
+  33% {
+    transform: translateX(3px) scale(1.005);
+  }
+  40% {
+    transform: translateX(-4px) scale(1.01);
+  }
+  46% {
+    transform: translateX(4px) scale(1.01);
+  }
+  51% {
+    transform: translateX(-5px) scale(1.015);
+  }
+  55% {
+    transform: translateX(5px) scale(1.015);
+  }
+  58% {
+    background: #fff8f0;
+    box-shadow: 0 12px 30px rgba(122, 53, 39, 0.1);
+    transform: translateX(0) scale(1);
+  }
+  68% {
+    background: #faebe5;
+    box-shadow:
+      0 0 0 8px rgba(216, 130, 115, 0.12),
+      0 22px 54px rgba(122, 53, 39, 0.18);
+    transform: translateX(0) scale(1.08);
+  }
+  78% {
+    background: #f5ddd7;
+    box-shadow:
+      0 0 0 4px rgba(216, 130, 115, 0.08),
+      0 18px 44px rgba(122, 53, 39, 0.14);
+    transform: translateX(0) scale(1.02);
   }
   100% {
-    transform: scale(1);
+    background: #f5ddd7;
+    box-shadow: 0 18px 44px rgba(122, 53, 39, 0.14);
+    transform: translateX(0) scale(1);
   }
 }
 
@@ -4345,7 +4393,7 @@ textarea:focus {
   }
   100% {
     opacity: 0;
-    transform: translate(-50%, -50%) scale(1.9) rotate(18deg);
+    transform: translate(-50%, -50%) scale(2.25) rotate(22deg);
   }
 }
 
@@ -6306,6 +6354,15 @@ button:active,
   .admin-calendar-day small,
   .admin-calendar-day > strong:not(.admin-calendar-day__free) {
     display: none;
+  }
+
+  .admin-calendar-day.is-celebrating-booking .admin-calendar-day__status {
+    display: inline-flex;
+    width: max-content;
+    max-width: 100%;
+    font-size: 0.46rem;
+    line-height: 1;
+    padding: 2px 5px;
   }
 
   .admin-calendar-day__free {
