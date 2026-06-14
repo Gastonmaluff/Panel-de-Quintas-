@@ -2598,6 +2598,34 @@ textarea:focus {
   background: rgba(247, 250, 247, 0.9);
 }
 
+.admin-reservation-detail-row:not(.is-open) > td {
+  border: 0;
+  background: transparent;
+}
+
+.admin-reservation-detail-shell {
+  max-height: 0;
+  opacity: 0;
+  overflow: hidden;
+  pointer-events: none;
+  transform: translateY(-6px);
+  transition:
+    max-height 260ms ease,
+    opacity 190ms ease,
+    transform 240ms ease;
+}
+
+.admin-reservation-detail-shell.is-open {
+  max-height: 1800px;
+  opacity: 1;
+  pointer-events: auto;
+  transform: translateY(0);
+}
+
+.admin-reservation-detail-shell .admin-accordion-panel {
+  animation: none;
+}
+
 .admin-reservation-detail-card {
   display: grid;
   gap: 18px;
@@ -2693,7 +2721,7 @@ textarea:focus {
   padding: 10px 12px;
 }
 
-.admin-reservation-finance-summary div:nth-child(3) {
+.admin-reservation-finance-summary__balance {
   background: #fff5df;
 }
 
@@ -2737,8 +2765,7 @@ textarea:focus {
   text-transform: uppercase;
 }
 
-.admin-reservation-detail-actions a,
-.admin-reservation-detail-actions button:first-of-type {
+.admin-reservation-detail-actions a {
   border-color: transparent;
   background: var(--color-forest);
   color: white;
@@ -5810,6 +5837,11 @@ button:active,
 .admin-reservation-mobile-card__detail {
   animation: admin-accordion-in 240ms ease-out both;
   transform-origin: top;
+}
+
+.admin-reservation-detail-shell.admin-reservation-mobile-card__detail,
+.admin-reservation-detail-shell .admin-accordion-panel {
+  animation: none;
 }
 
 @keyframes admin-accordion-in {

@@ -81,6 +81,11 @@ function createPaymentDraft(amount = "") {
   };
 }
 
+function reservationHasPendingBalance(reservation) {
+  const status = reservation.paymentStatus?.toLowerCase?.() || "";
+  return Number(reservation.balance || 0) > 0 && !status.includes("pagado");
+}
+
 function todayISO() {
   return new Date().toISOString().slice(0, 10);
 }
@@ -193,6 +198,8 @@ function ReservationDetailPanel({
   onCancel,
   canCancel = true,
 }) {
+  const hasPendingBalance = reservationHasPendingBalance(reservation);
+
   return (
     <article className="admin-reservation-detail-card admin-accordion-panel">
       <header className="admin-reservation-detail-card__header">
@@ -229,7 +236,12 @@ function ReservationDetailPanel({
           <dl className="admin-reservation-finance-summary">
             <div><dt>Total</dt><dd>{formatGuaranies(reservation.totalAmount)}</dd></div>
             <div><dt>Pagado</dt><dd>{formatGuaranies(reservation.totalPaid)}</dd></div>
-            <div><dt>Saldo</dt><dd>{formatGuaranies(reservation.balance)}</dd></div>
+            {hasPendingBalance ? (
+              <div className="admin-reservation-finance-summary__balance">
+                <dt>Saldo</dt>
+                <dd>{formatGuaranies(reservation.balance)}</dd>
+              </div>
+            ) : null}
             <div><dt>Estado</dt><dd>{reservation.paymentStatus}</dd></div>
           </dl>
         </section>
@@ -249,10 +261,12 @@ function ReservationDetailPanel({
         <a href={buildClientWhatsappUrl(venue, reservation)} target="_blank" rel="noreferrer">
           WhatsApp
         </a>
-        <button type="button" onClick={() => onAddPayment(reservation)}>Agregar pago</button>
-        <button type="button" onClick={() => onPayBalance(reservation)} disabled={reservation.balance <= 0}>
-          Pagar saldo
-        </button>
+        {hasPendingBalance ? (
+          <>
+            <button type="button" onClick={() => onAddPayment(reservation)}>Agregar pago</button>
+            <button type="button" onClick={() => onPayBalance(reservation)}>Pagar saldo</button>
+          </>
+        ) : null}
         <button type="button" onClick={() => onEdit(reservation)}>Editar reserva</button>
         {canCancel ? (
           <button type="button" className="is-danger" onClick={() => onCancel(reservation)}>
@@ -521,10 +535,14 @@ export default function AdminReservations({ mode = "admin" }) {
             </tr>
           </thead>
           <tbody>
-            {activeReservations.map((reservation) => (
+            {activeReservations.map((reservation) => {
+              const isExpanded = expandedReservationId === reservation.id;
+              const hasPendingBalance = reservationHasPendingBalance(reservation);
+
+              return (
               <Fragment key={reservation.id}>
                 <tr>
-                  <td><strong>{reservation.clientName}</strong><small>{reservation.clientCedula || "Sin cédula"}</small></td>
+                  <td><strong>{reservation.clientName}</strong></td>
                   <td>{formatParaguayPhone(reservation.clientPhone) || "Sin teléfono"}</td>
                   <td>
                     <strong>{formatDate(reservation.startDate)}</strong>
@@ -535,23 +553,27 @@ export default function AdminReservations({ mode = "admin" }) {
                     <small>{reservation.endTime}</small>
                   </td>
                   <td className="money-column">{formatGuaranies(reservation.totalAmount)}</td>
-                  <td className="money-column">{formatGuaranies(reservation.balance)}</td>
+                  <td className="money-column">{hasPendingBalance ? formatGuaranies(reservation.balance) : "-"}</td>
                   <td><span className="admin-status-pill">{reservation.paymentStatus}</span></td>
                   <td className="admin-actions-cell">
                     <button
                       type="button"
-                      className={`admin-detail-toggle ${expandedReservationId === reservation.id ? "is-open" : ""}`}
+                      className={`admin-detail-toggle ${isExpanded ? "is-open" : ""}`}
                       aria-label={`Ver detalle de ${reservation.clientName}`}
-                      aria-expanded={expandedReservationId === reservation.id}
+                      aria-expanded={isExpanded}
                       onClick={() => setExpandedReservationId((current) => (current === reservation.id ? null : reservation.id))}
                     >
                       <Plus size={18} strokeWidth={2} aria-hidden="true" />
                     </button>
                   </td>
                 </tr>
-                {expandedReservationId === reservation.id ? (
-                  <tr className="admin-reservation-detail-row">
-                    <td colSpan={8}>
+                <tr className={`admin-reservation-detail-row ${isExpanded ? "is-open" : ""}`}>
+                  <td colSpan={8}>
+                    <div
+                      className={`admin-reservation-detail-shell ${isExpanded ? "is-open" : ""}`}
+                      aria-hidden={!isExpanded}
+                      inert={isExpanded ? undefined : true}
+                    >
                       <ReservationDetailPanel
                         reservation={reservation}
                         venue={venue}
@@ -562,62 +584,68 @@ export default function AdminReservations({ mode = "admin" }) {
                         onCancel={(currentReservation) => setCancelTarget(currentReservation)}
                         canCancel={canCancelReservations}
                       />
-                    </td>
-                  </tr>
-                ) : null}
+                    </div>
+                  </td>
+                </tr>
               </Fragment>
-            ))}
+              );
+            })}
           </tbody>
         </table>
       </div>
 
       <div className="admin-reservations-mobile-list">
-        {activeReservations.map((reservation) => (
+        {activeReservations.map((reservation) => {
+          const isExpanded = expandedReservationId === reservation.id;
+          const hasPendingBalance = reservationHasPendingBalance(reservation);
+
+          return (
           <article className="admin-reservation-mobile-card" key={reservation.id}>
             <header>
               <div>
                 <h3>{reservation.clientName}</h3>
-                <small>{reservation.clientCedula || "Sin cédula"}</small>
               </div>
               <span className="admin-status-pill">{reservation.paymentStatus}</span>
             </header>
-            <p className="admin-reservation-mobile-card__phone">{formatParaguayPhone(reservation.clientPhone) || "Sin teléfono"}</p>
             <div className="admin-reservation-mobile-card__dates">
               <div><span>Ingreso</span><strong>{formatDate(reservation.startDate)} · {reservation.startTime}</strong></div>
               <div><span>Salida</span><strong>{formatDate(reservation.endDate)} · {reservation.endTime}</strong></div>
             </div>
             <div className="admin-reservation-mobile-card__money">
               <div><span>Total</span><strong>{formatGuaranies(reservation.totalAmount)}</strong></div>
-              <div><span>Saldo</span><strong>{formatGuaranies(reservation.balance)}</strong></div>
+              {hasPendingBalance ? <div><span>Saldo pendiente</span><strong>{formatGuaranies(reservation.balance)}</strong></div> : null}
             </div>
             <footer className="admin-reservation-mobile-card__actions">
               <a href={buildClientWhatsappUrl(venue, reservation)} target="_blank" rel="noreferrer">WhatsApp</a>
               <button
                 type="button"
-                className={`admin-detail-toggle admin-detail-toggle--mobile ${expandedReservationId === reservation.id ? "is-open" : ""}`}
+                className={`admin-detail-toggle admin-detail-toggle--mobile ${isExpanded ? "is-open" : ""}`}
                 aria-label={`Ver detalle de ${reservation.clientName}`}
-                aria-expanded={expandedReservationId === reservation.id}
+                aria-expanded={isExpanded}
                 onClick={() => setExpandedReservationId((current) => (current === reservation.id ? null : reservation.id))}
               >
                 <Plus size={18} strokeWidth={2} aria-hidden="true" />
               </button>
             </footer>
-            {expandedReservationId === reservation.id ? (
-              <div className="admin-reservation-mobile-card__detail admin-accordion-panel">
-                <ReservationDetailPanel
-                  reservation={reservation}
-                  venue={venue}
-                  onClose={() => setExpandedReservationId(null)}
-                  onEdit={openEditReservation}
-                  onAddPayment={(currentReservation) => openPaymentModal(currentReservation)}
-                  onPayBalance={(currentReservation) => openPaymentModal(currentReservation, true)}
-                  onCancel={(currentReservation) => setCancelTarget(currentReservation)}
-                  canCancel={canCancelReservations}
-                />
-              </div>
-            ) : null}
+            <div
+              className={`admin-reservation-mobile-card__detail admin-reservation-detail-shell ${isExpanded ? "is-open" : ""}`}
+              aria-hidden={!isExpanded}
+              inert={isExpanded ? undefined : true}
+            >
+              <ReservationDetailPanel
+                reservation={reservation}
+                venue={venue}
+                onClose={() => setExpandedReservationId(null)}
+                onEdit={openEditReservation}
+                onAddPayment={(currentReservation) => openPaymentModal(currentReservation)}
+                onPayBalance={(currentReservation) => openPaymentModal(currentReservation, true)}
+                onCancel={(currentReservation) => setCancelTarget(currentReservation)}
+                canCancel={canCancelReservations}
+              />
+            </div>
           </article>
-        ))}
+          );
+        })}
       </div>
 
       {canCancelReservations ? <CancelledReservations reservations={cancelledReservations} /> : null}
