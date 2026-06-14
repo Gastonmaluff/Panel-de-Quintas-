@@ -56,6 +56,7 @@ export default function BookingFields({ availability, value, onChange, eventFiel
           value={booking.endDate}
           onChange={(date) => updateBooking("endDate", date)}
           label="Fecha de salida"
+          allowReservedSelection
         />
       ) : (
         <label>

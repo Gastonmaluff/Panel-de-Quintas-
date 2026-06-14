@@ -376,7 +376,7 @@ export default function AdminReservations({ mode = "admin" }) {
         ? "Cargá el precio total acordado."
         : hasInitialDeposit && initialPaymentValue > totalAmountValue
           ? "La seña no puede ser mayor al precio total."
-          : validationMessage || (overlappingReservation ? "Ya existe una reserva en ese rango de fecha y horario." : "");
+          : validationMessage || (overlappingReservation ? "Ese horario se cruza con otra reserva. Ajustá la hora de salida o elegí otra fecha." : "");
   const canSaveEditedReservation = Boolean(editingReservation && !saveWarning);
 
   useEffect(() => {
@@ -681,7 +681,7 @@ export default function AdminReservations({ mode = "admin" }) {
                   <h4>Fecha y horario</h4>
                   <DateAvailabilityPicker availability={editingAvailability} value={editingReservation.startDate} onChange={(date) => setEditingReservation((current) => updateReservationDate(current, "startDate", date))} label="Fecha de ingreso" />
                   <label>Hora de ingreso<input type="time" value={editingReservation.startTime} onChange={(event) => setEditingReservation((current) => ({ ...current, startTime: event.target.value }))} /></label>
-                  <DateAvailabilityPicker availability={editingAvailability} value={editingReservation.endDate} minDate={editingReservation.startDate} onChange={(date) => setEditingReservation((current) => updateReservationDate(current, "endDate", date))} label="Fecha de salida" />
+                  <DateAvailabilityPicker availability={editingAvailability} value={editingReservation.endDate} minDate={editingReservation.startDate} onChange={(date) => setEditingReservation((current) => updateReservationDate(current, "endDate", date))} label="Fecha de salida" allowReservedSelection />
                   <label>Hora de salida<input type="time" value={editingReservation.endTime} onChange={(event) => setEditingReservation((current) => ({ ...current, endTime: event.target.value }))} /></label>
                 </section>
 

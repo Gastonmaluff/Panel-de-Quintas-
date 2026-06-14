@@ -29,6 +29,7 @@ export default function DateAvailabilityPicker({
   onChange,
   label = "Fecha",
   minDate = "",
+  allowReservedSelection = false,
 }) {
   const pickerRef = useRef(null);
   const [isOpen, setIsOpen] = useState(false);
@@ -104,7 +105,11 @@ export default function DateAvailabilityPicker({
             const availabilityState = getDateAvailability(cell.iso, availability);
             const isSelected = value === cell.iso;
             const isBeforeMinDate = Boolean(minDate && cell.iso < minDate);
-            const isDisabled = !cell.isCurrentMonth || isBeforeMinDate || !availabilityState.selectable;
+            const isReservedSelectionAllowed = allowReservedSelection && availabilityState.status === "reserved";
+            const isDisabled =
+              !cell.isCurrentMonth ||
+              isBeforeMinDate ||
+              (!availabilityState.selectable && !isReservedSelectionAllowed);
 
             return (
               <button

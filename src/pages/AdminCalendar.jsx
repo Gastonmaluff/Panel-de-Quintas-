@@ -323,7 +323,7 @@ export default function AdminCalendar() {
                       <label>Teléfono<input inputMode="numeric" value={formatParaguayPhone(reservationDraft.clientPhone)} onChange={(event) => setReservationDraft((current) => ({ ...current, clientPhone: formatParaguayPhone(event.target.value) }))} /></label>
                       <DateAvailabilityPicker availability={availability} value={reservationDraft.startDate} onChange={(date) => setReservationDraft((current) => updateDraftDate(current, "startDate", date))} label="Fecha de ingreso" />
                       <label>Hora ingreso<input type="time" value={reservationDraft.startTime} onChange={(event) => setReservationDraft((current) => ({ ...current, startTime: event.target.value }))} /></label>
-                      <DateAvailabilityPicker availability={availability} value={reservationDraft.endDate} minDate={reservationDraft.startDate} onChange={(date) => setReservationDraft((current) => updateDraftDate(current, "endDate", date))} label="Fecha de salida" />
+                      <DateAvailabilityPicker availability={availability} value={reservationDraft.endDate} minDate={reservationDraft.startDate} onChange={(date) => setReservationDraft((current) => updateDraftDate(current, "endDate", date))} label="Fecha de salida" allowReservedSelection />
                       <label>Hora salida<input type="time" value={reservationDraft.endTime} onChange={(event) => setReservationDraft((current) => ({ ...current, endTime: event.target.value }))} /></label>
                       <label>Evento<input value={reservationDraft.eventType} onChange={(event) => setReservationDraft((current) => ({ ...current, eventType: event.target.value }))} /></label>
                       <label>Personas<input inputMode="numeric" value={reservationDraft.guests} onChange={(event) => setReservationDraft((current) => ({ ...current, guests: event.target.value.replace(/\D/g, "") }))} /></label>
@@ -334,7 +334,7 @@ export default function AdminCalendar() {
                       <p className="admin-form-warning">
                         {!reservationDraft.clientName?.trim()
                           ? "El nombre del cliente es obligatorio."
-                          : validationMessage || "Ya existe una reserva en ese rango de fecha y horario."}
+                          : validationMessage || "Ese horario se cruza con otra reserva. Ajustá la hora de salida o elegí otra fecha."}
                       </p>
                     ) : null}
                   </>
