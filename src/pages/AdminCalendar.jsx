@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { createPortal } from "react-dom";
-import { useNavigate } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 import { CalendarDays, X } from "lucide-react";
 import DateAvailabilityPicker from "../components/calendar/DateAvailabilityPicker.jsx";
 import { useAdminData } from "../admin/AdminDataProvider.jsx";
@@ -26,6 +26,14 @@ import {
 } from "../utils/formatters.js";
 
 const weekdays = ["Lun", "Mar", "Mié", "Jue", "Vie", "Sáb", "Dom"];
+
+function getMonthFromISO(dateValue) {
+  const date = new Date(`${dateValue}T12:00:00`);
+  return {
+    year: date.getFullYear(),
+    month: date.getMonth(),
+  };
+}
 
 function ModalPortal({ children }) {
   if (typeof document === "undefined") return null;
@@ -103,12 +111,14 @@ function updateDraftDate(current, key, value) {
 export default function AdminCalendar() {
   const today = new Date();
   const navigate = useNavigate();
+  const location = useLocation();
   const { hasPermission, isManager } = useAuth();
   const { reservations, activeReservations, availability, addReservation } = useAdminData();
   const [visibleMonth, setVisibleMonth] = useState({ year: today.getFullYear(), month: today.getMonth() });
   const [selectedDay, setSelectedDay] = useState(null);
   const [reservationDraft, setReservationDraft] = useState(null);
   const [isSaving, setIsSaving] = useState(false);
+  const [celebration, setCelebration] = useState(null);
 
   const cells = getMonthMatrix(visibleMonth.year, visibleMonth.month);
   const monthLabel = new Intl.DateTimeFormat("es-PY", { month: "long", year: "numeric" }).format(
@@ -133,6 +143,28 @@ export default function AdminCalendar() {
   const canEditReservations = hasPermission("reservations:update_basic");
   const canAddPayments = hasPermission("payments:create");
   const reservationsPath = isManager ? "/encargado/reservas" : "/admin/reservas";
+
+  useEffect(() => {
+    const targetDate = location.state?.calendarCelebrationDate;
+    if (!targetDate) return;
+
+    setVisibleMonth(getMonthFromISO(targetDate));
+    setSelectedDay(null);
+    setReservationDraft(null);
+    setCelebration({
+      date: targetDate,
+      reservationId: location.state.highlightedReservationId || "",
+      key: location.state.celebrationKey || `${targetDate}-${Date.now()}`,
+    });
+
+    navigate(".", { replace: true, state: null });
+  }, [location.state, navigate]);
+
+  useEffect(() => {
+    if (!celebration) return undefined;
+    const timeout = window.setTimeout(() => setCelebration(null), 3200);
+    return () => window.clearTimeout(timeout);
+  }, [celebration]);
 
   useEffect(() => {
     if (!selectedDay || typeof document === "undefined") return undefined;
@@ -165,7 +197,7 @@ export default function AdminCalendar() {
     if (!canSaveReservation || isSaving) return;
     setIsSaving(true);
     try {
-      await addReservation({
+      const createdReservation = await addReservation({
         ...reservationDraft,
         clientName: titleCaseName(reservationDraft.clientName),
         clientPhone: cleanParaguayPhone(reservationDraft.clientPhone),
@@ -176,7 +208,14 @@ export default function AdminCalendar() {
             ? [{ amount: Number(reservationDraft.initialPayment), method: "Transferencia", type: "seña" }]
             : [],
       });
-      closeModal();
+      setVisibleMonth(getMonthFromISO(createdReservation.startDate));
+      setSelectedDay(null);
+      setReservationDraft(null);
+      setCelebration({
+        date: createdReservation.startDate,
+        reservationId: createdReservation.id,
+        key: `${createdReservation.id}-${Date.now()}`,
+      });
     } finally {
       setIsSaving(false);
     }
@@ -210,21 +249,26 @@ export default function AdminCalendar() {
             const dayReservations = getReservationsForDate(cell.iso, activeReservations);
             const visibleReservations = status === "reserved" ? dayReservations : [];
             const isPast = status === "past";
+            const isCelebrating = celebration?.date === cell.iso;
 
             return (
               <button
-                className={`admin-calendar-day admin-calendar-day--${status} ${cell.isCurrentMonth ? "" : "is-muted"}`}
+                className={`admin-calendar-day admin-calendar-day--${status} ${isCelebrating ? "is-celebrating-booking" : ""} ${cell.isCurrentMonth ? "" : "is-muted"}`}
                 type="button"
-                key={cell.iso}
+                key={`${cell.iso}-${isCelebrating ? celebration.key : "idle"}`}
                 disabled={isPast || !cell.isCurrentMonth}
                 onClick={() => setSelectedDay({ ...cell, status })}
               >
                 <span className="admin-calendar-day__number">{cell.day}</span>
-                {visibleReservations.length ? (
+                {visibleReservations.length || isCelebrating ? (
                   <>
                     <span className="admin-calendar-day__status">Reservado</span>
-                    <strong>{visibleReservations[0].clientName}</strong>
-                    <small>{visibleReservations[0].startTime} - {visibleReservations[0].endTime}</small>
+                    <strong>{visibleReservations[0]?.clientName || "Reserva creada"}</strong>
+                    <small>
+                      {visibleReservations[0]
+                        ? `${visibleReservations[0].startTime} - ${visibleReservations[0].endTime}`
+                        : "Confirmada"}
+                    </small>
                   </>
                 ) : isPast ? (
                   <strong className="admin-calendar-day__free">PASADO</strong>
@@ -242,6 +286,12 @@ export default function AdminCalendar() {
           <span><i className="admin-status-dot admin-status-dot--past" />Pasado</span>
         </div>
       </div>
+
+      {celebration ? (
+        <div className="admin-calendar-toast" role="status">
+          Reserva guardada en el calendario
+        </div>
+      ) : null}
 
       {selectedDay ? (
         <ModalPortal>

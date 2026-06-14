@@ -4241,6 +4241,146 @@ textarea:focus {
   transform: translateY(-1px);
 }
 
+.admin-calendar-day.is-celebrating-booking {
+  z-index: 3;
+  overflow: visible;
+  border-color: rgba(122, 53, 39, 0.22);
+  background: #f5ddd7;
+  animation: booking-cell-pop 1450ms cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+.admin-calendar-day.is-celebrating-booking::before,
+.admin-calendar-day.is-celebrating-booking::after {
+  content: "";
+  position: absolute;
+  pointer-events: none;
+}
+
+.admin-calendar-day.is-celebrating-booking::before {
+  inset: -8px;
+  border-radius: inherit;
+  border: 1px solid rgba(216, 130, 115, 0.36);
+  box-shadow:
+    0 0 0 0 rgba(216, 130, 115, 0.28),
+    0 18px 42px rgba(122, 53, 39, 0.12);
+  animation: booking-cell-glow 1450ms ease-out both;
+}
+
+.admin-calendar-day.is-celebrating-booking::after {
+  left: 50%;
+  top: 50%;
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: #d88273;
+  box-shadow:
+    -28px -18px 0 #2a7d5b,
+    26px -22px 0 #d3b85b,
+    -34px 14px 0 #d88273,
+    32px 18px 0 #2a7d5b,
+    0 -36px 0 #f2c66d,
+    0 34px 0 #d88273;
+  transform: translate(-50%, -50%) scale(0);
+  animation: booking-confetti 1150ms ease-out 120ms both;
+}
+
+.admin-calendar-toast {
+  position: fixed;
+  left: 50%;
+  bottom: calc(22px + env(safe-area-inset-bottom));
+  z-index: 10000;
+  display: inline-flex;
+  min-height: 48px;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid rgba(6, 27, 14, 0.12);
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.94);
+  color: var(--color-forest);
+  box-shadow: 0 18px 60px rgba(20, 32, 25, 0.16);
+  font-size: 0.82rem;
+  font-weight: 850;
+  letter-spacing: 0.02em;
+  padding: 0 18px;
+  transform: translateX(-50%);
+  animation: admin-toast-in 2800ms ease both;
+  backdrop-filter: blur(14px);
+}
+
+@keyframes booking-cell-pop {
+  0% {
+    transform: scale(0.98);
+  }
+  22% {
+    transform: scale(1.05);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+
+@keyframes booking-cell-glow {
+  0% {
+    opacity: 0;
+    box-shadow: 0 0 0 0 rgba(216, 130, 115, 0.32);
+  }
+  35% {
+    opacity: 1;
+    box-shadow: 0 0 0 10px rgba(216, 130, 115, 0.12);
+  }
+  100% {
+    opacity: 0;
+    box-shadow: 0 0 0 18px rgba(216, 130, 115, 0);
+  }
+}
+
+@keyframes booking-confetti {
+  0% {
+    opacity: 0;
+    transform: translate(-50%, -50%) scale(0);
+  }
+  24% {
+    opacity: 1;
+    transform: translate(-50%, -50%) scale(1);
+  }
+  100% {
+    opacity: 0;
+    transform: translate(-50%, -50%) scale(1.9) rotate(18deg);
+  }
+}
+
+@keyframes admin-toast-in {
+  0% {
+    opacity: 0;
+    transform: translate(-50%, 10px);
+  }
+  12%,
+  82% {
+    opacity: 1;
+    transform: translate(-50%, 0);
+  }
+  100% {
+    opacity: 0;
+    transform: translate(-50%, 8px);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .admin-calendar-day.is-celebrating-booking {
+    animation: none;
+    box-shadow: 0 0 0 4px rgba(216, 130, 115, 0.18);
+  }
+
+  .admin-calendar-day.is-celebrating-booking::before,
+  .admin-calendar-day.is-celebrating-booking::after {
+    display: none;
+  }
+
+  .admin-calendar-toast {
+    animation: none;
+  }
+}
+
 .admin-calendar-day__status {
   border: 0;
   background: rgba(255, 255, 255, 0.58);

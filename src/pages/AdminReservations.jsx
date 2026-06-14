@@ -1,5 +1,6 @@
 import { Fragment, useEffect, useMemo, useState } from "react";
 import { createPortal } from "react-dom";
+import { useNavigate } from "react-router-dom";
 import { CalendarPlus, Plus, X } from "lucide-react";
 import DateAvailabilityPicker from "../components/calendar/DateAvailabilityPicker.jsx";
 import { buildAdminAvailability, useAdminData } from "../admin/AdminDataProvider.jsx";
@@ -305,6 +306,7 @@ function CancelledReservations({ reservations }) {
 }
 
 export default function AdminReservations({ mode = "admin" }) {
+  const navigate = useNavigate();
   const venue = venues[0];
   const { isAdmin } = useAuth();
   const {
@@ -428,10 +430,21 @@ export default function AdminReservations({ mode = "admin" }) {
             : [],
       };
 
-      if (editingReservation.id && reservations.some((reservation) => reservation.id === editingReservation.id)) {
+      const isExistingReservation = editingReservation.id && reservations.some((reservation) => reservation.id === editingReservation.id);
+
+      if (isExistingReservation) {
         await updateReservation(editingReservation.id, payload);
       } else {
-        await addReservation(payload);
+        const createdReservation = await addReservation(payload);
+        setEditingReservation(null);
+        navigate(mode === "manager" ? "/encargado/calendario" : "/admin/calendario", {
+          state: {
+            calendarCelebrationDate: createdReservation.startDate,
+            highlightedReservationId: createdReservation.id,
+            celebrationKey: `${createdReservation.id}-${Date.now()}`,
+          },
+        });
+        return;
       }
 
       setEditingReservation(null);
