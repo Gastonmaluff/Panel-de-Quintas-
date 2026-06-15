@@ -112,7 +112,6 @@ export default function AdminExpenses() {
       <div className="admin-section-heading">
         <div>
           <h2>Gastos</h2>
-          <p>Registro de gastos operativos con comprobantes.</p>
         </div>
         <button type="button" onClick={() => setDraft(createExpenseDraft())}>Agregar gasto</button>
       </div>

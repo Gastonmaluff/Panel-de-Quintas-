@@ -1,9 +1,9 @@
 import { NavLink, Outlet, useLocation, useNavigate } from "react-router-dom";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import {
   BarChart3,
   CalendarDays,
-  LogOut,
+  UserCircle,
   Users,
   WalletCards,
   ReceiptText,
@@ -38,6 +38,7 @@ function AdminShell({ mode = "admin" }) {
   const { logActivity } = useAdminData();
   const isManagerView = mode === "manager";
   const links = isManagerView ? managerLinks : adminLinks;
+  const userMenuRef = useRef(null);
   const activeIndex = useMemo(
     () =>
       links.findIndex((link) =>
@@ -46,7 +47,9 @@ function AdminShell({ mode = "admin" }) {
     [links, location.pathname],
   );
   const [lastIndex, setLastIndex] = useState(activeIndex);
+  const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
   const direction = activeIndex >= lastIndex ? "forward" : "back";
+  const roleLabel = ROLE_LABELS[role] || role || "Sin rol";
 
   const handleLogout = async () => {
     await logActivity(
@@ -60,6 +63,19 @@ function AdminShell({ mode = "admin" }) {
   useEffect(() => {
     setLastIndex(activeIndex);
   }, [activeIndex]);
+
+  useEffect(() => {
+    if (!isUserMenuOpen) return undefined;
+
+    const handlePointerDown = (event) => {
+      if (!userMenuRef.current?.contains(event.target)) {
+        setIsUserMenuOpen(false);
+      }
+    };
+
+    document.addEventListener("pointerdown", handlePointerDown);
+    return () => document.removeEventListener("pointerdown", handlePointerDown);
+  }, [isUserMenuOpen]);
 
   return (
     <div className={`admin-app admin-app--topnav${isManagerView ? " admin-app--manager" : ""}`}>
@@ -89,18 +105,33 @@ function AdminShell({ mode = "admin" }) {
 
         <div className="admin-system-header__actions">
           <ShareAvailabilityButton iconOnly />
-          <button type="button" onClick={handleLogout} aria-label="Cerrar sesión" title="Cerrar sesión">
-            <LogOut size={17} strokeWidth={1.8} aria-hidden="true" />
-            <span className="sr-only">Cerrar sesión</span>
-          </button>
+          <div className="admin-user-menu" ref={userMenuRef}>
+            <button
+              type="button"
+              className="admin-user-menu__trigger"
+              onClick={() => setIsUserMenuOpen((current) => !current)}
+              aria-expanded={isUserMenuOpen}
+              aria-haspopup="menu"
+              aria-label="Abrir menu de usuario"
+              title="Usuario"
+            >
+              <UserCircle size={18} strokeWidth={1.8} aria-hidden="true" />
+            </button>
+            {isUserMenuOpen ? (
+              <div className="admin-user-menu__popover" role="menu">
+                <small>Sesion activa</small>
+                <strong>{user?.email || "Sin usuario"}</strong>
+                <span>{roleLabel}</span>
+                <button type="button" onClick={handleLogout} role="menuitem">
+                  Cerrar sesion
+                </button>
+              </div>
+            ) : null}
+          </div>
         </div>
       </header>
 
       <main className="admin-main">
-        <div className="admin-session-line">
-          Sesion activa: {user?.email}
-          {isManagerView ? <span> · Encargado</span> : null}
-        </div>
         <div className={`admin-route-transition admin-route-transition--${direction}`} key={location.pathname}>
           <Outlet />
         </div>

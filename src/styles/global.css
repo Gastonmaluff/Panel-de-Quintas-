@@ -3575,6 +3575,7 @@ textarea:focus {
 }
 
 .admin-system-header__actions > button,
+.admin-user-menu__trigger,
 .admin-system-header__actions .share-availability > button {
   display: inline-flex;
   width: 42px;
@@ -3595,11 +3596,60 @@ textarea:focus {
 }
 
 .admin-system-header__actions > button:hover,
+.admin-user-menu__trigger:hover,
 .admin-system-header__actions .share-availability > button:hover {
   border-color: rgba(42, 125, 91, 0.2);
   background: #eaf8f0;
   color: var(--color-forest);
   transform: translateY(-1px);
+}
+
+.admin-user-menu {
+  position: relative;
+}
+
+.admin-user-menu__popover {
+  position: absolute;
+  z-index: 100;
+  top: calc(100% + 10px);
+  right: 0;
+  display: grid;
+  min-width: 238px;
+  gap: 6px;
+  border: 1px solid rgba(6, 27, 14, 0.1);
+  border-radius: 18px;
+  background: rgba(255, 255, 255, 0.98);
+  box-shadow: 0 20px 54px rgba(6, 27, 14, 0.14);
+  padding: 14px;
+}
+
+.admin-user-menu__popover small {
+  color: var(--color-muted);
+  font-size: 0.68rem;
+  font-weight: 850;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.admin-user-menu__popover strong {
+  overflow-wrap: anywhere;
+  color: var(--color-forest);
+}
+
+.admin-user-menu__popover span {
+  color: var(--color-muted);
+  font-size: 0.84rem;
+  font-weight: 750;
+}
+
+.admin-user-menu__popover button {
+  min-height: 40px;
+  margin-top: 8px;
+  border: 1px solid rgba(6, 27, 14, 0.12);
+  border-radius: 999px;
+  background: #f8fbf9;
+  color: var(--color-forest);
+  font-weight: 850;
 }
 
 .admin-system-header__actions .share-availability > .share-availability__trigger {
@@ -3862,54 +3912,119 @@ textarea:focus {
 }
 
 .admin-user-role-form .reservation-switch-field,
-.admin-user-role-form button {
+.admin-user-role-form button,
+.admin-user-role-form__actions {
   align-self: end;
+}
+
+.admin-user-role-form__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.admin-user-role-form__actions button {
+  flex: 1 1 160px;
+  min-height: 46px;
+}
+
+.admin-form-message {
+  margin: 0;
+  border: 1px solid rgba(42, 125, 91, 0.12);
+  border-radius: 14px;
+  background: #f2faf5;
+  color: var(--color-forest);
+  font-weight: 750;
+  padding: 10px 12px;
 }
 
 .admin-user-role-list {
   display: grid;
-  gap: 10px;
+  gap: 12px;
 }
 
-.admin-user-role-list article {
+.admin-user-card {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) auto auto;
-  align-items: center;
-  gap: 10px;
+  gap: 14px;
   border: 1px solid rgba(6, 27, 14, 0.08);
-  border-radius: 16px;
+  border-radius: 18px;
   background: white;
-  padding: 14px;
+  box-shadow: 0 12px 32px rgba(20, 32, 25, 0.045);
+  padding: 16px;
 }
 
-.admin-user-role-list article div {
+.admin-user-card header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.admin-user-card header div {
   display: grid;
+  min-width: 0;
   gap: 3px;
 }
 
 .admin-user-role-list span,
-.admin-user-role-list p {
+.admin-user-role-list p,
+.admin-user-card dd {
   margin: 0;
   color: var(--color-muted);
   font-size: 0.82rem;
 }
 
-.admin-user-role-list em {
+.admin-user-card strong,
+.admin-user-card dd {
+  overflow-wrap: anywhere;
+}
+
+.admin-user-card em {
   border-radius: 999px;
   background: #eaf8f0;
   color: var(--color-forest);
   font-style: normal;
   font-weight: 800;
   padding: 7px 10px;
+  white-space: nowrap;
 }
 
-.admin-user-role-list small {
+.admin-user-card dl {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 10px;
+  margin: 0;
+}
+
+.admin-user-card dt {
   color: var(--color-muted);
+  font-size: 0.68rem;
+  font-weight: 850;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.admin-user-card dd {
+  margin-top: 4px;
+  color: var(--color-forest);
   font-weight: 750;
 }
 
-.admin-user-role-list p {
-  grid-column: 1 / -1;
+.admin-user-card__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.admin-user-card__actions button {
+  min-height: 38px;
+  border: 1px solid rgba(6, 27, 14, 0.12);
+  border-radius: 999px;
+  background: #f8fbf9;
+  color: var(--color-forest);
+  font-size: 0.76rem;
+  font-weight: 850;
+  padding: 0 12px;
 }
 
 .admin-search-field {
@@ -3992,6 +4107,7 @@ textarea:focus {
   }
 
   .admin-system-header__actions > button,
+  .admin-user-menu__trigger,
   .admin-system-header__actions .share-availability > button {
     width: 40px;
     min-width: 40px;
@@ -4000,7 +4116,7 @@ textarea:focus {
   .admin-payment-list article,
   .admin-permission-grid,
   .admin-user-role-form,
-  .admin-user-role-list article {
+  .admin-user-card dl {
     grid-template-columns: 1fr;
   }
 }
@@ -6108,6 +6224,47 @@ button:active,
   padding: 0 14px;
 }
 
+.admin-client-card__identity {
+  display: grid;
+  min-width: 0;
+  gap: 5px;
+}
+
+.admin-client-card__identity strong {
+  color: var(--color-forest);
+  font-size: 1.08rem;
+  line-height: 1.15;
+  overflow-wrap: anywhere;
+}
+
+.admin-client-card__identity span {
+  color: var(--color-muted);
+  font-size: 0.86rem;
+  font-weight: 720;
+  overflow-wrap: anywhere;
+}
+
+.admin-client-card .admin-client-card__whatsapp {
+  width: 42px;
+  min-width: 42px;
+  min-height: 42px;
+  justify-content: center;
+  border: 1px solid rgba(42, 125, 91, 0.18);
+  background: #edf8f2;
+  color: var(--color-forest);
+  padding: 0;
+  transition:
+    background 180ms ease,
+    border-color 180ms ease,
+    transform 180ms ease;
+}
+
+.admin-client-card .admin-client-card__whatsapp:hover {
+  border-color: rgba(42, 125, 91, 0.26);
+  background: #dff3e8;
+  transform: translateY(-1px);
+}
+
 .admin-firebase-warning {
   display: inline-block;
   margin-top: 8px;
@@ -6158,6 +6315,11 @@ button:active,
     width: auto;
     min-width: 0;
     justify-content: flex-end;
+  }
+
+  .admin-user-menu__popover {
+    right: 0;
+    min-width: min(260px, calc(100vw - 28px));
   }
 
   .admin-system-header__actions .share-availability > .share-availability__trigger--icon {
@@ -6421,7 +6583,6 @@ button:active,
 
   .admin-expense-card header,
   .admin-finance-card-list article header,
-  .admin-client-card header,
   .admin-calendar-reservation-card header {
     align-items: stretch;
     flex-direction: column;
@@ -6447,8 +6608,28 @@ button:active,
     width: 100%;
   }
 
-  .admin-client-card header a {
+  .admin-client-card header {
+    align-items: flex-start;
+    flex-direction: row;
+  }
+
+  .admin-client-card .admin-client-card__whatsapp {
     justify-content: center;
-    width: 100%;
+    width: 42px;
+    min-width: 42px;
+  }
+
+  .admin-user-card header {
+    flex-direction: column;
+  }
+
+  .admin-user-card__actions {
+    display: grid;
+    grid-template-columns: 1fr;
+  }
+
+  .admin-user-role-form__actions {
+    display: grid;
+    grid-template-columns: 1fr;
   }
 }

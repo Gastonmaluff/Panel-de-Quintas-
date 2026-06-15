@@ -98,7 +98,6 @@ export default function AdminFinance() {
       <div className="admin-section-heading">
         <div>
           <h2>Finanzas</h2>
-          <p>Resumen de ingresos, gastos, resultado y saldos pendientes.</p>
         </div>
         <button type="button" onClick={handleExportPdf} disabled={!activeRange.isValid || isExportingPdf}>
           {isExportingPdf ? "Exportando..." : "Exportar PDF"}

@@ -510,7 +510,6 @@ export default function AdminReservations({ mode = "admin" }) {
       <div className="admin-section-heading">
         <div>
           <h2>Reservas</h2>
-          <p>Gestión operativa de fechas, pagos, saldos y comprobantes.</p>
           {firebaseStatus.error ? (
             <small className="admin-firebase-warning">Firebase: {firebaseStatus.error}</small>
           ) : null}

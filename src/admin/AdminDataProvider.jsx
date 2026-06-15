@@ -1,5 +1,5 @@
 import { createContext, useContext, useEffect, useMemo, useState } from "react";
-import { collection, doc, onSnapshot, setDoc } from "firebase/firestore";
+import { collection, deleteDoc, doc, onSnapshot, setDoc } from "firebase/firestore";
 import { getDownloadURL, ref, uploadBytes } from "firebase/storage";
 import { db, storage } from "../config/firebase.js";
 import {
@@ -231,7 +231,10 @@ export function AdminDataProvider({ children }) {
           (snapshot) => {
             setUsers(
               snapshot.docs
-                .map((item) => ({ id: item.id, ...item.data() }))
+                .map((item) => {
+                  const data = item.data();
+                  return { ...data, id: data.id || item.id, docId: item.id };
+                })
                 .sort((a, b) => String(a.email || "").localeCompare(String(b.email || ""))),
             );
           },
@@ -392,12 +395,20 @@ export function AdminDataProvider({ children }) {
 
   const saveUserProfile = async (profileDraft) => {
     const email = String(profileDraft.email || "").trim().toLowerCase();
-    const id = profileDraft.uid?.trim() || profileDraft.id || email;
-    if (!id || !email) return null;
+    const uid = String(profileDraft.uid || profileDraft.id || "").trim();
+    const id = uid;
+    if (!id || !email || !profileDraft.name?.trim()) {
+      throw new Error("Nombre, email y UID de Firebase son obligatorios.");
+    }
+
+    const existingUser = users.find((item) => item.id === id || item.uid === id);
+    if (!profileDraft.id && existingUser) {
+      throw new Error("Ya existe un usuario con este UID.");
+    }
 
     const payload = {
       id,
-      uid: profileDraft.uid?.trim() || "",
+      uid,
       name: profileDraft.name?.trim() || email,
       email,
       role: profileDraft.role === ROLES.admin ? ROLES.admin : ROLES.manager,
@@ -406,13 +417,49 @@ export function AdminDataProvider({ children }) {
         profileDraft.role === ROLES.admin
           ? ["all"]
           : ["Reservas", "Calendario", "Gastos"],
-      createdAt: profileDraft.createdAt || new Date().toISOString(),
+      createdAt: profileDraft.createdAt || existingUser?.createdAt || new Date().toISOString(),
       updatedAt: new Date().toISOString(),
     };
 
     await setDoc(doc(db, "users", id), payload, { merge: true });
-    await writeActivity("Usuario actualizado", `${payload.email} · ${payload.role}`);
+    await writeActivity(profileDraft.id ? "Usuario editado" : "Usuario creado", `${payload.email} - ${payload.role}`);
     return payload;
+  };
+
+  const updateUserActiveState = async (id, active) => {
+    const target = users.find((item) => item.id === id || item.uid === id);
+    if (!target) return null;
+    if (active === false && target.uid && target.uid === user?.uid) {
+      throw new Error("No podés desactivar tu propio usuario activo.");
+    }
+    const activeAdmins = users.filter((item) => item.role === ROLES.admin && item.active !== false);
+    if (active === false && target.role === ROLES.admin && activeAdmins.length <= 1) {
+      throw new Error("No podés desactivar el último Dueño/Admin activo.");
+    }
+
+    await setDoc(
+      doc(db, "users", target.docId || id),
+      { active, updatedAt: new Date().toISOString() },
+      { merge: true },
+    );
+    await writeActivity(active ? "Usuario activado" : "Usuario desactivado", `${target.email || id}`);
+    return { ...target, active };
+  };
+
+  const deleteUserProfile = async (id) => {
+    const target = users.find((item) => item.id === id || item.uid === id);
+    if (!target) return null;
+    if (target.uid && target.uid === user?.uid) {
+      throw new Error("No podés eliminar tu propio usuario activo.");
+    }
+    const activeAdmins = users.filter((item) => item.role === ROLES.admin && item.active !== false);
+    if (target.role === ROLES.admin && target.active !== false && activeAdmins.length <= 1) {
+      throw new Error("No podés eliminar el último Dueño/Admin activo.");
+    }
+
+    await deleteDoc(doc(db, "users", target.docId || id));
+    await writeActivity("Usuario eliminado", `${target.email || id}`);
+    return target;
   };
 
   const clients = useMemo(() => buildClients(reservations), [reservations]);
@@ -436,6 +483,8 @@ export function AdminDataProvider({ children }) {
       addPayment,
       addExpense,
       saveUserProfile,
+      updateUserActiveState,
+      deleteUserProfile,
       logActivity: writeActivity,
     }),
     [reservations, expenses, clients, activityLog, users, firebaseStatus],

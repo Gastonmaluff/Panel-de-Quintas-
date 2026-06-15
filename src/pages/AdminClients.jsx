@@ -1,4 +1,5 @@
 import { useMemo, useState } from "react";
+import { MessageCircle } from "lucide-react";
 import { useAdminData } from "../admin/AdminDataProvider.jsx";
 import { venues } from "../data/venues.js";
 import { formatGuaranies } from "../utils/pricing.js";
@@ -27,7 +28,6 @@ export default function AdminClients() {
       <div className="admin-section-heading">
         <div>
           <h2>Clientes</h2>
-          <p>Clientes generados automáticamente desde las reservas activas.</p>
         </div>
         <label className="admin-search-field">
           Buscar
@@ -39,18 +39,30 @@ export default function AdminClients() {
         {filteredClients.map((client) => (
           <article className="admin-client-card" key={client.id}>
             <header>
-              <div>
+              <div className="admin-client-card__identity">
                 <strong>{client.name}</strong>
-                <span>{formatParaguayPhone(client.phone) || "Sin teléfono"}</span>
+                <span>Cedula: {client.cedula || "Sin cedula"}</span>
+                <span>Telefono: {formatParaguayPhone(client.phone) || "Sin telefono"}</span>
               </div>
-              <a href={buildWhatsappUrl(client.phone, client.name)} target="_blank" rel="noreferrer">WhatsApp</a>
+              <a
+                className="admin-client-card__whatsapp"
+                href={buildWhatsappUrl(client.phone, client.name)}
+                target="_blank"
+                rel="noreferrer"
+                title="Abrir WhatsApp"
+                aria-label={`Abrir WhatsApp de ${client.name}`}
+              >
+                <MessageCircle size={18} strokeWidth={2} aria-hidden="true" />
+              </a>
             </header>
             <dl>
-              <div><dt>Cédula</dt><dd>{client.cedula || "Sin cédula"}</dd></div>
               <div><dt>Reservas</dt><dd>{client.reservationCount}</dd></div>
-              <div><dt>Última reserva</dt><dd>{client.lastReservationDate || "Sin fecha"}</dd></div>
+              <div><dt>Ultima reserva</dt><dd>{client.lastReservationDate || "Sin fecha"}</dd></div>
               <div><dt>Total facturado</dt><dd>{formatGuaranies(client.totalBilled)}</dd></div>
-              <div><dt>Saldo pendiente</dt><dd>{formatGuaranies(client.totalBalance)}</dd></div>
+              <div><dt>Total pagado</dt><dd>{formatGuaranies(client.totalPaid)}</dd></div>
+              {client.totalBalance > 0 ? (
+                <div><dt>Saldo pendiente</dt><dd>{formatGuaranies(client.totalBalance)}</dd></div>
+              ) : null}
             </dl>
             <details>
               <summary>Ver historial</summary>
