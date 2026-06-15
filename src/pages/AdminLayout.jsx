@@ -16,19 +16,19 @@ import ShareAvailabilityButton from "../components/admin/ShareAvailabilityButton
 import BrandLogo from "../components/branding/BrandLogo.jsx";
 
 const adminLinks = [
-  { to: "/admin", label: "Control", icon: BarChart3, end: true },
-  { to: "/admin/reservas", label: "Reservas", icon: WalletCards },
-  { to: "/admin/calendario", label: "Calendario", icon: CalendarDays },
-  { to: "/admin/gastos", label: "Gastos", icon: ReceiptText },
-  { to: "/admin/finanzas", label: "Finanzas", icon: BarChart3 },
-  { to: "/admin/clientes", label: "Clientes", icon: Users },
-  { to: "/admin/configuracion", label: "Configuración", icon: Settings },
+  { to: "/admin", key: "control", label: "Control", icon: BarChart3, end: true },
+  { to: "/admin/reservas", key: "reservas", label: "Reservas", icon: WalletCards },
+  { to: "/admin/calendario", key: "calendario", label: "Calendario", icon: CalendarDays },
+  { to: "/admin/gastos", key: "gastos", label: "Gastos", icon: ReceiptText },
+  { to: "/admin/finanzas", key: "finanzas", label: "Finanzas", icon: BarChart3 },
+  { to: "/admin/clientes", key: "clientes", label: "Clientes", icon: Users },
+  { to: "/admin/configuracion", key: "configuracion", label: "Configuración", icon: Settings },
 ];
 
 const managerLinks = [
-  { to: "/encargado/reservas", label: "Reservas", icon: WalletCards },
-  { to: "/encargado/calendario", label: "Calendario", icon: CalendarDays },
-  { to: "/encargado/gastos", label: "Gastos", icon: ReceiptText },
+  { to: "/encargado/reservas", key: "reservas", label: "Reservas", icon: WalletCards },
+  { to: "/encargado/calendario", key: "calendario", label: "Calendario", icon: CalendarDays },
+  { to: "/encargado/gastos", key: "gastos", label: "Gastos", icon: ReceiptText },
 ];
 
 function AdminShell({ mode = "admin" }) {
@@ -94,9 +94,13 @@ function AdminShell({ mode = "admin" }) {
                 end={link.end}
                 key={link.to}
                 to={link.to}
-                className={({ isActive }) => (isActive ? "is-active" : "")}
+                className={({ isActive }) =>
+                  `admin-nav-link admin-nav-link--${link.key}${isActive ? " is-active" : ""}`
+                }
               >
-                <Icon size={17} strokeWidth={1.8} aria-hidden="true" />
+                <span className={`admin-nav-icon admin-nav-icon--${link.key}`} aria-hidden="true">
+                  <Icon size={17} strokeWidth={1.95} />
+                </span>
                 {link.label}
               </NavLink>
             );
