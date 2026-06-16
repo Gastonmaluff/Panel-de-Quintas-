@@ -2483,6 +2483,142 @@ textarea:focus {
   display: none;
 }
 
+.admin-reservation-time-section {
+  display: grid;
+  gap: 14px;
+}
+
+.admin-reservation-time-section + .admin-reservation-time-section,
+.admin-reservation-time-section + .cancelled-reservations {
+  margin-top: 22px;
+}
+
+.admin-reservation-time-section > header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+  border: 1px solid rgba(17, 52, 32, 0.08);
+  border-radius: 20px;
+  background: rgba(255, 255, 255, 0.86);
+  padding: 16px 18px;
+}
+
+.admin-reservation-time-section > header h3,
+.admin-reservation-time-section > header span {
+  margin: 0;
+}
+
+.admin-reservation-time-section > header h3 {
+  color: var(--color-forest);
+  font-size: clamp(1.05rem, 2vw, 1.28rem);
+}
+
+.admin-reservation-time-section > header span {
+  color: var(--color-muted);
+  font-size: 0.8rem;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.admin-reservation-time-section--today > header {
+  border-color: rgba(190, 137, 50, 0.2);
+  background: linear-gradient(135deg, #fffaf0, #f3fbf6);
+  box-shadow: 0 16px 40px rgba(78, 55, 17, 0.08);
+}
+
+.admin-reservation-row--today > td {
+  background: linear-gradient(90deg, rgba(255, 250, 240, 0.92), rgba(248, 253, 250, 0.92));
+}
+
+.admin-reservation-mobile-card--today {
+  position: relative;
+  border-color: rgba(190, 137, 50, 0.28);
+  background: linear-gradient(145deg, #fffaf0, #ffffff 52%, #f5fbf7);
+  box-shadow: 0 20px 52px rgba(78, 55, 17, 0.11);
+  animation: adminTodayReservationPulse 2.8s ease-in-out infinite;
+}
+
+.admin-reservation-mobile-card--today::before {
+  position: absolute;
+  inset: -1px;
+  z-index: -1;
+  border-radius: inherit;
+  background: linear-gradient(135deg, rgba(190, 137, 50, 0.22), rgba(42, 125, 91, 0.2));
+  content: "";
+  opacity: 0.72;
+}
+
+.admin-today-badge {
+  display: inline-flex;
+  width: max-content;
+  min-height: 24px;
+  align-items: center;
+  border: 1px solid rgba(190, 137, 50, 0.26);
+  border-radius: 999px;
+  background: #fff3d5;
+  color: #7b5521;
+  font-size: 0.66rem;
+  font-weight: 900;
+  letter-spacing: 0.12em;
+  line-height: 1;
+  margin-top: 5px;
+  padding: 0 9px;
+  text-transform: uppercase;
+}
+
+.admin-balance-alert-cell {
+  color: #9b392f !important;
+}
+
+.admin-balance-alert-cell small,
+.admin-balance-alert-cell span {
+  display: block;
+  color: #9b392f !important;
+  font-weight: 900;
+}
+
+.admin-balance-alert-cell strong {
+  color: #9b392f !important;
+  font-weight: 900;
+}
+
+.admin-register-balance-button {
+  border: 1px solid rgba(155, 57, 47, 0.22) !important;
+  background: #fff1ee !important;
+  color: #8f3027 !important;
+  font-weight: 900 !important;
+}
+
+.admin-register-balance-button--compact {
+  min-height: 34px !important;
+  border-radius: 999px !important;
+  font-size: 0.68rem !important;
+  letter-spacing: 0.06em;
+  padding: 0 10px !important;
+  white-space: nowrap;
+}
+
+.admin-reservation-row-actions {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+
+@keyframes adminTodayReservationPulse {
+  0%,
+  100% {
+    transform: scale(1);
+    box-shadow: 0 20px 52px rgba(78, 55, 17, 0.1);
+  }
+  50% {
+    transform: scale(1.012);
+    box-shadow: 0 24px 62px rgba(190, 137, 50, 0.17);
+  }
+}
+
 .admin-reservation-mobile-card {
   display: grid;
   gap: 18px;
@@ -5056,7 +5192,8 @@ textarea:focus {
 
 .admin-reservations-table--operations th:nth-child(8),
 .admin-reservations-table--operations td:nth-child(8) {
-  width: 52px;
+  width: 15%;
+  min-width: 150px;
   text-align: center;
 }
 
@@ -6477,6 +6614,7 @@ button:active,
   .admin-accordion-panel,
   .admin-reservation-detail-row td > .admin-reservation-detail-card,
   .admin-reservation-mobile-card__detail,
+  .admin-reservation-mobile-card--today,
   .admin-nav-icon {
     animation: none !important;
     transition: none !important;

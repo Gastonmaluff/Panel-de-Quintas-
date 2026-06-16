@@ -90,6 +90,59 @@ function todayISO() {
   return new Date().toISOString().slice(0, 10);
 }
 
+function parseLocalDateTime(dateValue, timeValue = "00:00") {
+  if (!dateValue) return null;
+  const [year, month, day] = dateValue.split("-").map(Number);
+  const [hour = 0, minute = 0] = String(timeValue || "00:00").split(":").map(Number);
+  return new Date(year, month - 1, day, hour, minute, 0, 0);
+}
+
+function startOfLocalDay(dateValue = new Date()) {
+  const date = new Date(dateValue);
+  date.setHours(0, 0, 0, 0);
+  return date;
+}
+
+function endOfLocalDay(dateValue = new Date()) {
+  const date = new Date(dateValue);
+  date.setHours(23, 59, 59, 999);
+  return date;
+}
+
+function getReservationStartDateTime(reservation) {
+  return parseLocalDateTime(reservation.startDate, reservation.startTime);
+}
+
+function getReservationEndDateTime(reservation) {
+  return parseLocalDateTime(reservation.endDate || reservation.startDate, reservation.endTime || "23:59");
+}
+
+function isReservationActiveNow(reservation, now = new Date()) {
+  const start = getReservationStartDateTime(reservation);
+  const end = getReservationEndDateTime(reservation);
+  return Boolean(start && end && start <= now && end >= now);
+}
+
+function getReservationTimeGroup(reservation, now = new Date()) {
+  const start = getReservationStartDateTime(reservation);
+  const end = getReservationEndDateTime(reservation);
+  if (!start || !end) return "upcoming";
+  if (end < now) return "past";
+
+  const todayStart = startOfLocalDay(now);
+  const todayEnd = endOfLocalDay(now);
+  if (start <= todayEnd && end >= todayStart) return "today";
+  return "upcoming";
+}
+
+function compareReservationStartAsc(a, b) {
+  return getReservationStartDateTime(a) - getReservationStartDateTime(b);
+}
+
+function compareReservationEndDesc(a, b) {
+  return getReservationEndDateTime(b) - getReservationEndDateTime(a);
+}
+
 function updateReservationDate(current, key, value) {
   const next = { ...current, [key]: value };
 
@@ -197,6 +250,8 @@ function ReservationDetailPanel({
   onPayBalance,
   onCancel,
   canCancel = true,
+  canEdit = true,
+  allowPayments = true,
 }) {
   const hasPendingBalance = reservationHasPendingBalance(reservation);
 
@@ -261,13 +316,13 @@ function ReservationDetailPanel({
         <a href={buildClientWhatsappUrl(venue, reservation)} target="_blank" rel="noreferrer">
           WhatsApp
         </a>
-        {hasPendingBalance ? (
+        {allowPayments && hasPendingBalance ? (
           <>
             <button type="button" onClick={() => onAddPayment(reservation)}>Agregar pago</button>
-            <button type="button" onClick={() => onPayBalance(reservation)}>Pagar saldo</button>
+            <button type="button" onClick={() => onPayBalance(reservation)}>Registrar saldo</button>
           </>
         ) : null}
-        <button type="button" onClick={() => onEdit(reservation)}>Editar reserva</button>
+        {canEdit ? <button type="button" onClick={() => onEdit(reservation)}>Editar reserva</button> : null}
         {canCancel ? (
           <button type="button" className="is-danger" onClick={() => onCancel(reservation)}>
             Eliminar reserva
@@ -350,6 +405,35 @@ export default function AdminReservations({ mode = "admin" }) {
         : buildAdminAvailability(reservations),
     [editingReservation, reservations],
   );
+  const reservationGroups = useMemo(() => {
+    const now = new Date();
+    const groups = {
+      today: [],
+      upcoming: [],
+      past: [],
+    };
+
+    activeReservations.forEach((reservation) => {
+      groups[getReservationTimeGroup(reservation, now)].push(reservation);
+    });
+
+    groups.today.sort((a, b) => {
+      const activeDelta =
+        Number(isReservationActiveNow(b, now)) - Number(isReservationActiveNow(a, now));
+      return activeDelta || compareReservationStartAsc(a, b);
+    });
+    groups.upcoming.sort(compareReservationStartAsc);
+    groups.past.sort(compareReservationEndDesc);
+
+    return groups;
+  }, [activeReservations]);
+  const sortedCancelledReservations = useMemo(
+    () =>
+      [...cancelledReservations].sort((a, b) =>
+        String(b.cancelledAt || "").localeCompare(String(a.cancelledAt || "")),
+      ),
+    [cancelledReservations],
+  );
 
   const totalAmountValue = Number(editingReservation?.totalAmount || 0);
   const hasInitialDeposit = Boolean(editingReservation?.hasInitialDeposit);
@@ -357,6 +441,14 @@ export default function AdminReservations({ mode = "admin" }) {
     ? Number(editingReservation?.initialPayment || 0)
     : totalAmountValue;
   const reservationBalance = Math.max(totalAmountValue - initialPaymentValue, 0);
+  const isNewReservation = Boolean(editingReservation && !editingReservation.id);
+  const initialPaymentMethod = editingReservation?.initialPaymentMethod || "";
+  const requiresInitialReceipt =
+    isNewReservation &&
+    initialPaymentValue > 0 &&
+    initialPaymentMethod === "Transferencia" &&
+    !editingReservation?.receiptFile &&
+    !editingReservation?.receiptName;
   const paymentWarning =
     hasInitialDeposit && initialPaymentValue <= 0
       ? "Ingresá el monto de la seña o desmarcá esta opción."
@@ -369,15 +461,35 @@ export default function AdminReservations({ mode = "admin" }) {
       ? findOverlappingReservation(reservations, editingReservation, editingReservation.id)
       : null;
   const saveWarning = !editingReservation?.clientName?.trim()
-    ? "El nombre del cliente es obligatorio."
-    : !editingReservation?.clientPhone?.trim() && !editingReservation?.clientCedula?.trim()
-      ? "Cargá al menos teléfono o cédula del cliente."
-      : !totalAmountValue || totalAmountValue <= 0
-        ? "Cargá el precio total acordado."
-        : hasInitialDeposit && initialPaymentValue > totalAmountValue
-          ? "La seña no puede ser mayor al precio total."
-          : validationMessage || (overlappingReservation ? "Ese horario se cruza con otra reserva. Ajustá la hora de salida o elegí otra fecha." : "");
+    ? "Completá el nombre del cliente."
+    : !editingReservation?.clientCedula?.trim()
+      ? "Completá el número de cédula."
+      : !editingReservation?.clientPhone?.trim()
+        ? "Completá el teléfono."
+        : !editingReservation?.startDate || !editingReservation?.startTime
+          ? "Seleccioná fecha y hora de ingreso."
+          : !editingReservation?.endDate || !editingReservation?.endTime
+            ? "Seleccioná fecha y hora de salida."
+            : !editingReservation?.eventType
+              ? "Seleccioná el tipo de evento."
+              : !Number(editingReservation?.guests || 0)
+                ? "Ingresá la cantidad de personas."
+                : !totalAmountValue || totalAmountValue <= 0
+                  ? "Ingresá el precio total acordado."
+                  : isNewReservation && !initialPaymentMethod
+                    ? "Seleccioná el método de pago."
+                    : isNewReservation && hasInitialDeposit && initialPaymentValue <= 0
+                      ? "Ingresá el monto de la seña o desmarcá esta opción."
+                      : hasInitialDeposit && initialPaymentValue > totalAmountValue
+                        ? "La seña no puede ser mayor al precio total."
+                        : requiresInitialReceipt
+                          ? "Para pagos por transferencia, subí el comprobante."
+                          : validationMessage || (overlappingReservation ? "Ese horario se cruza con otra reserva. Ajustá la hora de salida o elegí otra fecha." : "");
   const canSaveEditedReservation = Boolean(editingReservation && !saveWarning);
+  const paymentSaveWarning =
+    paymentDraft?.method === "Transferencia" && !paymentDraft?.receiptFile && !paymentDraft?.receiptName
+      ? "Para pagos por transferencia, subí el comprobante."
+      : "";
 
   useEffect(() => {
     if (!isModalOpen) return undefined;
@@ -473,7 +585,7 @@ export default function AdminReservations({ mode = "admin" }) {
   };
 
   const savePayment = async () => {
-    if (!paymentTarget || !paymentDraft?.amount || isSaving) return;
+    if (!paymentTarget || !paymentDraft?.amount || paymentSaveWarning || isSaving) return;
     setIsSaving(true);
     try {
       await addPayment(paymentTarget.id, {
@@ -505,6 +617,201 @@ export default function AdminReservations({ mode = "admin" }) {
     }
   };
 
+  const renderReservationRows = (reservationList, { isTodayGroup = false, isPastGroup = false } = {}) =>
+    reservationList.map((reservation) => {
+      const isExpanded = expandedReservationId === reservation.id;
+      const hasPendingBalance = reservationHasPendingBalance(reservation);
+      const rowClassName = [
+        isTodayGroup ? "admin-reservation-row--today" : "",
+        isTodayGroup && hasPendingBalance ? "admin-reservation-row--today-pending" : "",
+      ]
+        .filter(Boolean)
+        .join(" ");
+
+      return (
+        <Fragment key={reservation.id}>
+          <tr className={rowClassName}>
+            <td>
+              <strong>{reservation.clientName}</strong>
+              {isTodayGroup ? <small className="admin-today-badge">Hoy</small> : null}
+            </td>
+            <td>{formatParaguayPhone(reservation.clientPhone) || "Sin teléfono"}</td>
+            <td>
+              <strong>{formatDate(reservation.startDate)}</strong>
+              <small>{reservation.startTime}</small>
+            </td>
+            <td>
+              <strong>{formatDate(reservation.endDate)}</strong>
+              <small>{reservation.endTime}</small>
+            </td>
+            <td className="money-column">{formatGuaranies(reservation.totalAmount)}</td>
+            <td className={`money-column ${isTodayGroup && hasPendingBalance ? "admin-balance-alert-cell" : ""}`}>
+              {hasPendingBalance ? (
+                <>
+                  {isTodayGroup ? <small>Saldo pendiente</small> : null}
+                  <strong>{formatGuaranies(reservation.balance)}</strong>
+                </>
+              ) : (
+                "-"
+              )}
+            </td>
+            <td><span className="admin-status-pill">{reservation.paymentStatus}</span></td>
+            <td className="admin-actions-cell">
+              <div className="admin-reservation-row-actions">
+                {isTodayGroup && hasPendingBalance ? (
+                  <button
+                    type="button"
+                    className="admin-register-balance-button admin-register-balance-button--compact"
+                    onClick={() => openPaymentModal(reservation, true)}
+                  >
+                    Registrar saldo
+                  </button>
+                ) : null}
+                <button
+                  type="button"
+                  className={`admin-detail-toggle ${isExpanded ? "is-open" : ""}`}
+                  aria-label={`Ver detalle de ${reservation.clientName}`}
+                  aria-expanded={isExpanded}
+                  onClick={() => setExpandedReservationId((current) => (current === reservation.id ? null : reservation.id))}
+                >
+                  <Plus size={18} strokeWidth={2} aria-hidden="true" />
+                </button>
+              </div>
+            </td>
+          </tr>
+          <tr className={`admin-reservation-detail-row ${isExpanded ? "is-open" : ""}`}>
+            <td colSpan={8}>
+              <div
+                className={`admin-reservation-detail-shell ${isExpanded ? "is-open" : ""}`}
+                aria-hidden={!isExpanded}
+                inert={isExpanded ? undefined : true}
+              >
+                <ReservationDetailPanel
+                  reservation={reservation}
+                  venue={venue}
+                  onClose={() => setExpandedReservationId(null)}
+                  onEdit={openEditReservation}
+                  onAddPayment={(currentReservation) => openPaymentModal(currentReservation)}
+                  onPayBalance={(currentReservation) => openPaymentModal(currentReservation, true)}
+                  onCancel={(currentReservation) => setCancelTarget(currentReservation)}
+                  canCancel={canCancelReservations && !isPastGroup}
+                  canEdit={!isPastGroup}
+                  allowPayments={!isPastGroup}
+                />
+              </div>
+            </td>
+          </tr>
+        </Fragment>
+      );
+    });
+
+  const renderReservationCards = (reservationList, { isTodayGroup = false, isPastGroup = false } = {}) =>
+    reservationList.map((reservation) => {
+      const isExpanded = expandedReservationId === reservation.id;
+      const hasPendingBalance = reservationHasPendingBalance(reservation);
+      const cardClassName = [
+        "admin-reservation-mobile-card",
+        isTodayGroup ? "admin-reservation-mobile-card--today" : "",
+        isTodayGroup && hasPendingBalance ? "admin-reservation-mobile-card--today-pending" : "",
+      ]
+        .filter(Boolean)
+        .join(" ");
+
+      return (
+        <article className={cardClassName} key={reservation.id}>
+          <header>
+            <div>
+              {isTodayGroup ? <span className="admin-today-badge">Hoy</span> : null}
+              <h3>{reservation.clientName}</h3>
+            </div>
+            <span className="admin-status-pill">{reservation.paymentStatus}</span>
+          </header>
+          <div className="admin-reservation-mobile-card__dates">
+            <div><span>Ingreso</span><strong>{formatDate(reservation.startDate)} · {reservation.startTime}</strong></div>
+            <div><span>Salida</span><strong>{formatDate(reservation.endDate)} · {reservation.endTime}</strong></div>
+          </div>
+          <div className="admin-reservation-mobile-card__money">
+            <div><span>Total</span><strong>{formatGuaranies(reservation.totalAmount)}</strong></div>
+            {hasPendingBalance ? (
+              <div className={isTodayGroup ? "admin-balance-alert-cell" : ""}>
+                <span>{isTodayGroup ? "Saldo pendiente" : "Saldo"}</span>
+                <strong>{formatGuaranies(reservation.balance)}</strong>
+              </div>
+            ) : null}
+          </div>
+          <footer className="admin-reservation-mobile-card__actions">
+            <a href={buildClientWhatsappUrl(venue, reservation)} target="_blank" rel="noreferrer">WhatsApp</a>
+            {isTodayGroup && hasPendingBalance ? (
+              <button
+                type="button"
+                className="admin-register-balance-button"
+                onClick={() => openPaymentModal(reservation, true)}
+              >
+                Registrar saldo
+              </button>
+            ) : null}
+            <button
+              type="button"
+              className={`admin-detail-toggle admin-detail-toggle--mobile ${isExpanded ? "is-open" : ""}`}
+              aria-label={`Ver detalle de ${reservation.clientName}`}
+              aria-expanded={isExpanded}
+              onClick={() => setExpandedReservationId((current) => (current === reservation.id ? null : reservation.id))}
+            >
+              <Plus size={18} strokeWidth={2} aria-hidden="true" />
+            </button>
+          </footer>
+          <div
+            className={`admin-reservation-mobile-card__detail admin-reservation-detail-shell ${isExpanded ? "is-open" : ""}`}
+            aria-hidden={!isExpanded}
+            inert={isExpanded ? undefined : true}
+          >
+            <ReservationDetailPanel
+              reservation={reservation}
+              venue={venue}
+              onClose={() => setExpandedReservationId(null)}
+              onEdit={openEditReservation}
+              onAddPayment={(currentReservation) => openPaymentModal(currentReservation)}
+              onPayBalance={(currentReservation) => openPaymentModal(currentReservation, true)}
+              onCancel={(currentReservation) => setCancelTarget(currentReservation)}
+              canCancel={canCancelReservations && !isPastGroup}
+              canEdit={!isPastGroup}
+              allowPayments={!isPastGroup}
+            />
+          </div>
+        </article>
+      );
+    });
+
+  const renderReservationContent = (reservationList, emptyMessage, options = {}) => (
+    <>
+      <div className="admin-reservations-table-wrap">
+        {reservationList.length ? (
+          <table className="admin-reservations-table admin-reservations-table--operations">
+            <thead>
+              <tr>
+                <th>Cliente</th>
+                <th>Teléfono</th>
+                <th>Ingreso</th>
+                <th>Salida</th>
+                <th className="money-column">Total</th>
+                <th className="money-column">Saldo</th>
+                <th>Estado</th>
+                <th>Más</th>
+              </tr>
+            </thead>
+            <tbody>{renderReservationRows(reservationList, options)}</tbody>
+          </table>
+        ) : (
+          <p className="admin-empty-note">{emptyMessage}</p>
+        )}
+      </div>
+
+      <div className="admin-reservations-mobile-list">
+        {reservationList.length ? renderReservationCards(reservationList, options) : <p className="admin-empty-note">{emptyMessage}</p>}
+      </div>
+    </>
+  );
+
   return (
     <section className="admin-section admin-reservations-section">
       <div className="admin-section-heading">
@@ -519,6 +826,39 @@ export default function AdminReservations({ mode = "admin" }) {
         </button>
       </div>
 
+      <section className="admin-reservation-time-section admin-reservation-time-section--today">
+        <header>
+          <div>
+            <h3>Reservas de hoy</h3>
+            <span>{reservationGroups.today.length} reservas</span>
+          </div>
+        </header>
+        {renderReservationContent(reservationGroups.today, "No hay reservas para hoy.", { isTodayGroup: true })}
+      </section>
+
+      <section className="admin-reservation-time-section">
+        <header>
+          <div>
+            <h3>Próximas reservas</h3>
+            <span>{reservationGroups.upcoming.length} reservas</span>
+          </div>
+        </header>
+        {renderReservationContent(reservationGroups.upcoming, "No hay próximas reservas.")}
+      </section>
+
+      <details className="admin-reservation-time-section admin-reservation-time-section--collapsed admin-collapsible-card">
+        <summary>
+          <span>
+            <strong>Reservas pasadas</strong>
+            <small>{reservationGroups.past.length} reservas históricas.</small>
+          </span>
+        </summary>
+        <div className="admin-collapsible-card__content">
+          {renderReservationContent(reservationGroups.past, "No hay reservas pasadas.", { isPastGroup: true })}
+        </div>
+      </details>
+
+      <div className="admin-legacy-reservation-list" hidden>
       <div className="admin-reservations-table-wrap">
         <table className="admin-reservations-table admin-reservations-table--operations">
           <thead>
@@ -647,7 +987,9 @@ export default function AdminReservations({ mode = "admin" }) {
         })}
       </div>
 
-      {canCancelReservations ? <CancelledReservations reservations={cancelledReservations} /> : null}
+      </div>
+
+      {canCancelReservations ? <CancelledReservations reservations={sortedCancelledReservations} /> : null}
 
       {editingReservation ? (
         <ModalPortal>
@@ -770,8 +1112,9 @@ export default function AdminReservations({ mode = "admin" }) {
                 <ReceiptInput value={paymentDraft} onChange={(receipt) => setPaymentDraft((current) => ({ ...current, ...receipt }))} />
               </div>
             </div>
+            {paymentSaveWarning ? <p className="admin-form-warning">{paymentSaveWarning}</p> : null}
             <div className="admin-modal__actions">
-              <button type="button" onClick={savePayment} disabled={!paymentDraft.amount || isSaving}>{isSaving ? "Guardando..." : "Guardar pago"}</button>
+              <button type="button" onClick={savePayment} disabled={!paymentDraft.amount || Boolean(paymentSaveWarning) || isSaving}>{isSaving ? "Guardando..." : "Guardar pago"}</button>
               <button type="button" className="admin-secondary-button" onClick={() => setPaymentTarget(null)}>Cancelar</button>
             </div>
           </div>
