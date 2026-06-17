@@ -4245,6 +4245,63 @@ textarea:focus {
   transform: rotate(-8deg);
 }
 
+@media (min-width: 1024px) {
+  .admin-system-header {
+    grid-template-columns: minmax(130px, 176px) minmax(0, 1fr) auto;
+    gap: clamp(8px, 1vw, 14px);
+    padding-inline: clamp(12px, 1.4vw, 20px);
+  }
+
+  .admin-system-header__brand,
+  .admin-system-header__actions,
+  .admin-system-header__actions .share-availability,
+  .admin-user-menu {
+    flex-shrink: 0;
+  }
+
+  .admin-system-header__logo {
+    width: clamp(126px, 10vw, 158px);
+  }
+
+  .admin-system-nav {
+    flex: 1 1 auto;
+    gap: clamp(2px, 0.35vw, 6px);
+    justify-content: center;
+    min-width: 0;
+  }
+
+  .admin-system-nav a {
+    min-height: 36px;
+    gap: 5px;
+    border-radius: 18px;
+    font-size: clamp(0.68rem, 0.73vw, 0.76rem);
+    padding-inline: clamp(6px, 0.55vw, 10px);
+  }
+
+  .admin-nav-icon {
+    width: 18px;
+    height: 18px;
+  }
+
+  .admin-nav-icon svg {
+    width: 16px;
+    height: 16px;
+  }
+
+  .admin-system-header__actions {
+    min-width: max-content;
+    gap: 7px;
+  }
+
+  .admin-system-header__actions > button,
+  .admin-user-menu__trigger,
+  .admin-system-header__actions .share-availability > button {
+    width: 40px;
+    min-width: 40px;
+    min-height: 40px;
+  }
+}
+
 .admin-session-line {
   margin-bottom: 18px;
 }
@@ -4521,6 +4578,12 @@ textarea:focus {
   color: var(--color-forest);
   font-weight: 750;
   padding: 10px 12px;
+}
+
+.admin-form-message--warning {
+  border-color: rgba(155, 57, 47, 0.18);
+  background: #fff4f1;
+  color: #8f3027;
 }
 
 .admin-user-role-list {

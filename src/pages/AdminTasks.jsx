@@ -62,9 +62,16 @@ function canManagerSeeTask(task, profile, user) {
   return !task.assignedTo || task.assignedTo === "general" || task.assignedTo === uid || task.assignedTo === email;
 }
 
+function getTaskErrorMessage(error) {
+  if (error?.code === "permission-denied" || /permission|insufficient/i.test(error?.message || "")) {
+    return "No tenés permisos para ver tareas o falta configurar tu usuario.";
+  }
+  return error?.message || "No se pudo completar la acción.";
+}
+
 export default function AdminTasks({ mode = "admin" }) {
   const { profile, user } = useAuth();
-  const { tasks, users, saveTask, completeTask, reopenTask, deleteTask } = useAdminData();
+  const { tasks, tasksStatus, users, saveTask, completeTask, reopenTask, deleteTask } = useAdminData();
   const isManager = mode === "manager";
   const [draft, setDraft] = useState(emptyTaskDraft);
   const [isFormOpen, setIsFormOpen] = useState(false);
@@ -126,7 +133,7 @@ export default function AdminTasks({ mode = "admin" }) {
       setMessage(draft.id ? "Tarea editada." : "Tarea creada.");
       resetForm();
     } catch (error) {
-      setMessage(error.message || "No se pudo guardar la tarea.");
+      setMessage(getTaskErrorMessage(error));
     } finally {
       setIsSaving(false);
     }
@@ -148,22 +155,34 @@ export default function AdminTasks({ mode = "admin" }) {
   };
 
   const markDone = async (task) => {
-    await completeTask(task.id);
-    setMessage("Tarea completada.");
+    try {
+      await completeTask(task.id);
+      setMessage("Tarea completada.");
+    } catch (error) {
+      setMessage(getTaskErrorMessage(error));
+    }
   };
 
   const reopen = async (task) => {
     if (isManager) return;
-    await reopenTask(task.id);
-    setMessage("Tarea reabierta.");
+    try {
+      await reopenTask(task.id);
+      setMessage("Tarea reabierta.");
+    } catch (error) {
+      setMessage(getTaskErrorMessage(error));
+    }
   };
 
   const removeTask = async (task) => {
     if (isManager) return;
     const confirmed = window.confirm("¿Seguro que querés eliminar esta tarea?");
     if (!confirmed) return;
-    await deleteTask(task.id);
-    setMessage("Tarea eliminada.");
+    try {
+      await deleteTask(task.id);
+      setMessage("Tarea eliminada.");
+    } catch (error) {
+      setMessage(getTaskErrorMessage(error));
+    }
   };
 
   const renderTaskCard = (task) => {
@@ -221,6 +240,7 @@ export default function AdminTasks({ mode = "admin" }) {
       </div>
 
       {message ? <p className="admin-form-message">{message}</p> : null}
+      {tasksStatus?.error ? <p className="admin-form-message admin-form-message--warning">{tasksStatus.error}</p> : null}
 
       {!isManager && isFormOpen ? (
         <form className="admin-task-form admin-editor-card" onSubmit={submitTask}>

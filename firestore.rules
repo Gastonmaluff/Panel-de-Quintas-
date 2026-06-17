@@ -42,6 +42,30 @@ service cloud.firestore {
       return isSignedIn() && userRole() == "manager";
     }
 
+    function managerCanReadTask() {
+      return isManager() && (
+        resource.data.assignedTo == "general" ||
+        resource.data.assignedTo == request.auth.uid ||
+        resource.data.assignedTo == request.auth.token.email
+      );
+    }
+
+    function managerCanCompleteTask() {
+      return managerCanReadTask() &&
+        request.resource.data.diff(resource.data).affectedKeys().hasOnly([
+          "status",
+          "completedAt",
+          "completedBy",
+          "completedByName",
+          "updatedAt"
+        ]) &&
+        request.resource.data.status == "done" &&
+        (
+          request.resource.data.completedBy == request.auth.uid ||
+          request.resource.data.completedBy == request.auth.token.email
+        );
+    }
+
     function managerReservationUpdate() {
       return isManager() &&
         !request.resource.data.diff(resource.data).affectedKeys().hasAny([
@@ -63,6 +87,12 @@ service cloud.firestore {
       allow update: if isAdmin() ||
         (isManager() && resource.data.createdByUid == request.auth.uid);
       allow delete: if isAdmin();
+    }
+
+    match /tasks/{taskId} {
+      allow read: if isAdmin() || managerCanReadTask();
+      allow create, delete: if isAdmin();
+      allow update: if isAdmin() || managerCanCompleteTask();
     }
 
     match /clients/{clientId} {
@@ -99,6 +129,12 @@ service cloud.firestore {
       match /publicContent/{docId} {
         allow read: if true;
         allow write: if isAdmin();
+      }
+
+      match /tasks/{taskId} {
+        allow read: if isAdmin() || managerCanReadTask();
+        allow create, delete: if isAdmin();
+        allow update: if isAdmin() || managerCanCompleteTask();
       }
     }
   }

@@ -1,5 +1,5 @@
 import { createContext, useContext, useEffect, useMemo, useState } from "react";
-import { collection, deleteDoc, doc, onSnapshot, setDoc } from "firebase/firestore";
+import { collection, deleteDoc, doc, onSnapshot, query, setDoc, where } from "firebase/firestore";
 import { getDownloadURL, ref, uploadBytes } from "firebase/storage";
 import { db, storage } from "../config/firebase.js";
 import {
@@ -204,12 +204,28 @@ export function AdminDataProvider({ children }) {
   const [reservations, setReservations] = useState([]);
   const [expenses, setExpenses] = useState([]);
   const [tasks, setTasks] = useState([]);
+  const [tasksStatus, setTasksStatus] = useState({ loading: true, error: "" });
   const [activityLog, setActivityLog] = useState([]);
   const [users, setUsers] = useState([]);
   const [firebaseStatus, setFirebaseStatus] = useState({ loading: true, error: "" });
   const isAdmin = isAdminRole(role);
 
   useEffect(() => {
+    if (!user || !role) {
+      setReservations([]);
+      setExpenses([]);
+      setTasks([]);
+      setActivityLog([]);
+      setUsers([]);
+      setFirebaseStatus({ loading: false, error: "" });
+      setTasksStatus({ loading: false, error: "" });
+      return undefined;
+    }
+
+    const taskAssignees = [...new Set(["general", user.uid, user.email].filter(Boolean))];
+    const tasksRef = isAdmin
+      ? collection(db, "tasks")
+      : query(collection(db, "tasks"), where("assignedTo", "in", taskAssignees));
     const unsubscribers = [
       onSnapshot(
         collection(db, "reservations"),
@@ -233,15 +249,23 @@ export function AdminDataProvider({ children }) {
         (error) => setFirebaseStatus({ loading: false, error: error.message }),
       ),
       onSnapshot(
-        collection(db, "tasks"),
+        tasksRef,
         (snapshot) => {
           setTasks(
             snapshot.docs
               .map((item) => normalizeTask({ id: item.id, ...item.data() }))
               .sort((a, b) => String(a.dueDate || "9999-12-31").localeCompare(String(b.dueDate || "9999-12-31"))),
           );
+          setTasksStatus({ loading: false, error: "" });
         },
-        (error) => setFirebaseStatus({ loading: false, error: error.message }),
+        (error) => {
+          console.error("Tasks permission error", error);
+          setTasks([]);
+          setTasksStatus({
+            loading: false,
+            error: "No tenés permisos para ver tareas o falta configurar tu usuario.",
+          });
+        },
       ),
     ];
 
@@ -279,7 +303,7 @@ export function AdminDataProvider({ children }) {
     }
 
     return () => unsubscribers.forEach((unsubscribe) => unsubscribe());
-  }, [isAdmin]);
+  }, [isAdmin, role, user]);
 
   const writeActivity = async (action, detail) => {
     const id = makeId("log");
@@ -565,6 +589,7 @@ export function AdminDataProvider({ children }) {
       cancelledReservations: reservations.filter((reservation) => reservation.status === "cancelada"),
       expenses,
       tasks,
+      tasksStatus,
       clients,
       activityLog,
       users,
@@ -586,7 +611,7 @@ export function AdminDataProvider({ children }) {
       deleteUserProfile,
       logActivity: writeActivity,
     }),
-    [reservations, expenses, tasks, clients, activityLog, users, firebaseStatus],
+    [reservations, expenses, tasks, tasksStatus, clients, activityLog, users, firebaseStatus],
   );
 
   return <AdminDataContext.Provider value={value}>{children}</AdminDataContext.Provider>;
