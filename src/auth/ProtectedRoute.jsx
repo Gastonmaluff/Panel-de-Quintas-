@@ -17,7 +17,7 @@ export default function ProtectedRoute({ children, allowedRoles, redirectTo }) {
   }
 
   if (allowedRoles?.length && !allowedRoles.includes(role)) {
-    return <Navigate to={redirectTo || "/encargado/reservas"} replace />;
+    return <Navigate to={redirectTo || "/encargado/tareas"} replace />;
   }
 
   return children;

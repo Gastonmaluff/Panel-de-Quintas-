@@ -3,6 +3,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import {
   BarChart3,
   CalendarDays,
+  ListTodo,
   UserCircle,
   Users,
   WalletCards,
@@ -20,12 +21,14 @@ const adminLinks = [
   { to: "/admin/reservas", key: "reservas", label: "Reservas", icon: WalletCards },
   { to: "/admin/calendario", key: "calendario", label: "Calendario", icon: CalendarDays },
   { to: "/admin/gastos", key: "gastos", label: "Gastos", icon: ReceiptText },
+  { to: "/admin/tareas", key: "tareas", label: "Tareas", icon: ListTodo },
   { to: "/admin/finanzas", key: "finanzas", label: "Finanzas", icon: BarChart3 },
   { to: "/admin/clientes", key: "clientes", label: "Clientes", icon: Users },
   { to: "/admin/configuracion", key: "configuracion", label: "Configuración", icon: Settings },
 ];
 
 const managerLinks = [
+  { to: "/encargado/tareas", key: "tareas", label: "Tareas", icon: ListTodo },
   { to: "/encargado/reservas", key: "reservas", label: "Reservas", icon: WalletCards },
   { to: "/encargado/calendario", key: "calendario", label: "Calendario", icon: CalendarDays },
   { to: "/encargado/gastos", key: "gastos", label: "Gastos", icon: ReceiptText },

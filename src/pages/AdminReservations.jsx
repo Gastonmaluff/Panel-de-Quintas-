@@ -409,18 +409,30 @@ export default function AdminReservations({ mode = "admin" }) {
     const now = new Date();
     const groups = {
       today: [],
+      pendingBalance: [],
       upcoming: [],
       past: [],
     };
 
     activeReservations.forEach((reservation) => {
-      groups[getReservationTimeGroup(reservation, now)].push(reservation);
+      const group = getReservationTimeGroup(reservation, now);
+      if (group === "today") {
+        groups.today.push(reservation);
+      } else if (reservationHasPendingBalance(reservation)) {
+        groups.pendingBalance.push(reservation);
+      } else {
+        groups[group].push(reservation);
+      }
     });
 
     groups.today.sort((a, b) => {
       const activeDelta =
         Number(isReservationActiveNow(b, now)) - Number(isReservationActiveNow(a, now));
       return activeDelta || compareReservationStartAsc(a, b);
+    });
+    groups.pendingBalance.sort((a, b) => {
+      const endDelta = compareReservationEndDesc(a, b);
+      return endDelta || compareReservationStartAsc(a, b);
     });
     groups.upcoming.sort(compareReservationStartAsc);
     groups.past.sort(compareReservationEndDesc);
@@ -617,13 +629,15 @@ export default function AdminReservations({ mode = "admin" }) {
     }
   };
 
-  const renderReservationRows = (reservationList, { isTodayGroup = false, isPastGroup = false } = {}) =>
+  const renderReservationRows = (reservationList, { isTodayGroup = false, isPendingBalanceGroup = false, isPastGroup = false } = {}) =>
     reservationList.map((reservation) => {
       const isExpanded = expandedReservationId === reservation.id;
       const hasPendingBalance = reservationHasPendingBalance(reservation);
+      const showRegisterBalance = (isTodayGroup || isPendingBalanceGroup) && hasPendingBalance;
       const rowClassName = [
         isTodayGroup ? "admin-reservation-row--today" : "",
-        isTodayGroup && hasPendingBalance ? "admin-reservation-row--today-pending" : "",
+        isPendingBalanceGroup ? "admin-reservation-row--pending-balance" : "",
+        showRegisterBalance ? "admin-reservation-row--today-pending" : "",
       ]
         .filter(Boolean)
         .join(" ");
@@ -645,10 +659,10 @@ export default function AdminReservations({ mode = "admin" }) {
               <small>{reservation.endTime}</small>
             </td>
             <td className="money-column">{formatGuaranies(reservation.totalAmount)}</td>
-            <td className={`money-column ${isTodayGroup && hasPendingBalance ? "admin-balance-alert-cell" : ""}`}>
+            <td className={`money-column ${showRegisterBalance ? "admin-balance-alert-cell" : ""}`}>
               {hasPendingBalance ? (
                 <>
-                  {isTodayGroup ? <small>Saldo pendiente</small> : null}
+                  {showRegisterBalance ? <small>Saldo pendiente</small> : null}
                   <strong>{formatGuaranies(reservation.balance)}</strong>
                 </>
               ) : (
@@ -658,7 +672,7 @@ export default function AdminReservations({ mode = "admin" }) {
             <td><span className="admin-status-pill">{reservation.paymentStatus}</span></td>
             <td className="admin-actions-cell">
               <div className="admin-reservation-row-actions">
-                {isTodayGroup && hasPendingBalance ? (
+                {showRegisterBalance ? (
                   <button
                     type="button"
                     className="admin-register-balance-button admin-register-balance-button--compact"
@@ -705,14 +719,16 @@ export default function AdminReservations({ mode = "admin" }) {
       );
     });
 
-  const renderReservationCards = (reservationList, { isTodayGroup = false, isPastGroup = false } = {}) =>
+  const renderReservationCards = (reservationList, { isTodayGroup = false, isPendingBalanceGroup = false, isPastGroup = false } = {}) =>
     reservationList.map((reservation) => {
       const isExpanded = expandedReservationId === reservation.id;
       const hasPendingBalance = reservationHasPendingBalance(reservation);
+      const showRegisterBalance = (isTodayGroup || isPendingBalanceGroup) && hasPendingBalance;
       const cardClassName = [
         "admin-reservation-mobile-card",
         isTodayGroup ? "admin-reservation-mobile-card--today" : "",
-        isTodayGroup && hasPendingBalance ? "admin-reservation-mobile-card--today-pending" : "",
+        isPendingBalanceGroup ? "admin-reservation-mobile-card--pending-balance" : "",
+        showRegisterBalance ? "admin-reservation-mobile-card--today-pending" : "",
       ]
         .filter(Boolean)
         .join(" ");
@@ -733,15 +749,15 @@ export default function AdminReservations({ mode = "admin" }) {
           <div className="admin-reservation-mobile-card__money">
             <div><span>Total</span><strong>{formatGuaranies(reservation.totalAmount)}</strong></div>
             {hasPendingBalance ? (
-              <div className={isTodayGroup ? "admin-balance-alert-cell" : ""}>
-                <span>{isTodayGroup ? "Saldo pendiente" : "Saldo"}</span>
+              <div className={showRegisterBalance ? "admin-balance-alert-cell" : ""}>
+                <span>{showRegisterBalance ? "Saldo pendiente" : "Saldo"}</span>
                 <strong>{formatGuaranies(reservation.balance)}</strong>
               </div>
             ) : null}
           </div>
           <footer className="admin-reservation-mobile-card__actions">
             <a href={buildClientWhatsappUrl(venue, reservation)} target="_blank" rel="noreferrer">WhatsApp</a>
-            {isTodayGroup && hasPendingBalance ? (
+            {showRegisterBalance ? (
               <button
                 type="button"
                 className="admin-register-balance-button"
@@ -834,6 +850,16 @@ export default function AdminReservations({ mode = "admin" }) {
           </div>
         </header>
         {renderReservationContent(reservationGroups.today, "No hay reservas para hoy.", { isTodayGroup: true })}
+      </section>
+
+      <section className="admin-reservation-time-section admin-reservation-time-section--pending-balance">
+        <header>
+          <div>
+            <h3>Reservas con saldo pendiente</h3>
+            <span>{reservationGroups.pendingBalance.length} reservas</span>
+          </div>
+        </header>
+        {renderReservationContent(reservationGroups.pendingBalance, "No hay reservas con saldo pendiente.", { isPendingBalanceGroup: true })}
       </section>
 
       <section className="admin-reservation-time-section">

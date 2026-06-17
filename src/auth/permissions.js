@@ -20,6 +20,8 @@ const ROLE_PERMISSIONS = {
     "calendar:create_reservation",
     "expenses:read",
     "expenses:create",
+    "tasks:read",
+    "tasks:complete",
     "availability:share",
     "activityLog:create",
   ],

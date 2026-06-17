@@ -54,6 +54,26 @@ function normalizePayment(payment = {}, index = 0) {
   };
 }
 
+function normalizeTask(task = {}) {
+  return {
+    id: task.id || makeId("task"),
+    title: String(task.title || "").trim(),
+    description: task.description || "",
+    assignedTo: task.assignedTo || "general",
+    assignedToName: task.assignedToName || "General",
+    dueDate: task.dueDate || "",
+    priority: task.priority || "normal",
+    status: task.status === "done" ? "done" : "pending",
+    createdBy: task.createdBy || "",
+    createdByName: task.createdByName || "",
+    completedBy: task.completedBy || "",
+    completedByName: task.completedByName || "",
+    createdAt: task.createdAt || new Date().toISOString(),
+    updatedAt: task.updatedAt || new Date().toISOString(),
+    completedAt: task.completedAt || "",
+  };
+}
+
 export function normalizeReservation(reservation = {}) {
   const booking = normalizeBooking(reservation);
   const totalAmount = toNumber(reservation.totalAmount ?? reservation.totalPrice);
@@ -183,6 +203,7 @@ export function AdminDataProvider({ children }) {
   const { profile, role, user } = useAuth();
   const [reservations, setReservations] = useState([]);
   const [expenses, setExpenses] = useState([]);
+  const [tasks, setTasks] = useState([]);
   const [activityLog, setActivityLog] = useState([]);
   const [users, setUsers] = useState([]);
   const [firebaseStatus, setFirebaseStatus] = useState({ loading: true, error: "" });
@@ -207,6 +228,17 @@ export function AdminDataProvider({ children }) {
             snapshot.docs
               .map((item) => ({ id: item.id, ...item.data() }))
               .sort((a, b) => String(b.date).localeCompare(String(a.date))),
+          );
+        },
+        (error) => setFirebaseStatus({ loading: false, error: error.message }),
+      ),
+      onSnapshot(
+        collection(db, "tasks"),
+        (snapshot) => {
+          setTasks(
+            snapshot.docs
+              .map((item) => normalizeTask({ id: item.id, ...item.data() }))
+              .sort((a, b) => String(a.dueDate || "9999-12-31").localeCompare(String(b.dueDate || "9999-12-31"))),
           );
         },
         (error) => setFirebaseStatus({ loading: false, error: error.message }),
@@ -393,6 +425,68 @@ export function AdminDataProvider({ children }) {
     return newExpense;
   };
 
+  const saveTask = async (taskDraft) => {
+    const id = taskDraft.id || makeId("task");
+    const currentTask = tasks.find((item) => item.id === id) || {};
+    const normalizedTask = normalizeTask({
+      ...currentTask,
+      ...taskDraft,
+      id,
+      createdBy: currentTask.createdBy || user?.uid || user?.email || "",
+      createdByName: currentTask.createdByName || profile?.name || user?.email || "Sistema",
+      createdAt: currentTask.createdAt || taskDraft.createdAt || new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+    });
+
+    if (!normalizedTask.title) {
+      throw new Error("El título de la tarea es obligatorio.");
+    }
+
+    await setDoc(doc(db, "tasks", id), normalizedTask, { merge: true });
+    await writeActivity(taskDraft.id ? "Tarea editada" : "Tarea creada", `${normalizedTask.title} - ${normalizedTask.assignedToName}`);
+    return normalizedTask;
+  };
+
+  const completeTask = async (id) => {
+    const task = tasks.find((item) => item.id === id);
+    if (!task) return null;
+    const payload = {
+      status: "done",
+      completedAt: new Date().toISOString(),
+      completedBy: user?.uid || user?.email || "",
+      completedByName: profile?.name || user?.email || "Usuario",
+      updatedAt: new Date().toISOString(),
+    };
+
+    await setDoc(doc(db, "tasks", id), payload, { merge: true });
+    await writeActivity("Tarea completada", `${task.title}`);
+    return { ...task, ...payload };
+  };
+
+  const reopenTask = async (id) => {
+    const task = tasks.find((item) => item.id === id);
+    if (!task) return null;
+    const payload = {
+      status: "pending",
+      completedAt: "",
+      completedBy: "",
+      completedByName: "",
+      updatedAt: new Date().toISOString(),
+    };
+
+    await setDoc(doc(db, "tasks", id), payload, { merge: true });
+    await writeActivity("Tarea reabierta", `${task.title}`);
+    return { ...task, ...payload };
+  };
+
+  const deleteTask = async (id) => {
+    const task = tasks.find((item) => item.id === id);
+    if (!task) return null;
+    await deleteDoc(doc(db, "tasks", id));
+    await writeActivity("Tarea eliminada", `${task.title}`);
+    return task;
+  };
+
   const saveUserProfile = async (profileDraft) => {
     const email = String(profileDraft.email || "").trim().toLowerCase();
     const uid = String(profileDraft.uid || profileDraft.id || "").trim();
@@ -470,6 +564,7 @@ export function AdminDataProvider({ children }) {
       activeReservations: reservations.filter((reservation) => reservation.status !== "cancelada"),
       cancelledReservations: reservations.filter((reservation) => reservation.status === "cancelada"),
       expenses,
+      tasks,
       clients,
       activityLog,
       users,
@@ -482,12 +577,16 @@ export function AdminDataProvider({ children }) {
       removeReservation: cancelReservation,
       addPayment,
       addExpense,
+      saveTask,
+      completeTask,
+      reopenTask,
+      deleteTask,
       saveUserProfile,
       updateUserActiveState,
       deleteUserProfile,
       logActivity: writeActivity,
     }),
-    [reservations, expenses, clients, activityLog, users, firebaseStatus],
+    [reservations, expenses, tasks, clients, activityLog, users, firebaseStatus],
   );
 
   return <AdminDataContext.Provider value={value}>{children}</AdminDataContext.Provider>;

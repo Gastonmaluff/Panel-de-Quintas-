@@ -2528,8 +2528,18 @@ textarea:focus {
   box-shadow: 0 16px 40px rgba(78, 55, 17, 0.08);
 }
 
+.admin-reservation-time-section--pending-balance > header {
+  border-color: rgba(155, 57, 47, 0.18);
+  background: linear-gradient(135deg, #fff1ee, #fffaf7);
+  box-shadow: 0 16px 40px rgba(155, 57, 47, 0.08);
+}
+
 .admin-reservation-row--today > td {
   background: linear-gradient(90deg, rgba(255, 250, 240, 0.92), rgba(248, 253, 250, 0.92));
+}
+
+.admin-reservation-row--pending-balance > td {
+  background: linear-gradient(90deg, rgba(255, 241, 238, 0.86), rgba(255, 252, 248, 0.9));
 }
 
 .admin-reservation-mobile-card--today {
@@ -2538,6 +2548,12 @@ textarea:focus {
   background: linear-gradient(145deg, #fffaf0, #ffffff 52%, #f5fbf7);
   box-shadow: 0 20px 52px rgba(78, 55, 17, 0.11);
   animation: adminTodayReservationPulse 2.8s ease-in-out infinite;
+}
+
+.admin-reservation-mobile-card--pending-balance {
+  border-color: rgba(155, 57, 47, 0.24);
+  background: linear-gradient(145deg, #fff5f2, #ffffff 55%, #fffaf7);
+  box-shadow: 0 18px 46px rgba(155, 57, 47, 0.09);
 }
 
 .admin-reservation-mobile-card--today::before {
@@ -2605,6 +2621,235 @@ textarea:focus {
   align-items: center;
   justify-content: center;
   gap: 8px;
+}
+
+.admin-tasks-section {
+  display: grid;
+  gap: 22px;
+}
+
+.admin-task-form {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 14px;
+  border-radius: 24px;
+}
+
+.admin-task-form label {
+  display: grid;
+  gap: 8px;
+  color: #6a756f;
+  font-size: 0.72rem;
+  font-weight: 850;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.admin-task-form input,
+.admin-task-form select,
+.admin-task-form textarea {
+  width: 100%;
+  min-width: 0;
+  border: 1px solid rgba(6, 27, 14, 0.1);
+  border-radius: 16px;
+  background: rgba(251, 252, 250, 0.96);
+  color: var(--color-forest);
+  font: inherit;
+  letter-spacing: 0;
+  padding: 13px 14px;
+  text-transform: none;
+}
+
+.admin-task-form textarea {
+  min-height: 108px;
+  resize: vertical;
+}
+
+.admin-task-form__description,
+.admin-task-form__actions {
+  grid-column: 1 / -1;
+}
+
+.admin-task-form__actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+}
+
+.admin-task-form__actions button {
+  min-height: 46px;
+  border-radius: 999px !important;
+  font-weight: 850;
+  letter-spacing: 0.08em;
+  padding-inline: 18px;
+  text-transform: uppercase;
+}
+
+.admin-task-group {
+  display: grid;
+  gap: 14px;
+}
+
+.admin-task-group > header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.admin-task-group > header h3,
+.admin-task-group > header span {
+  margin: 0;
+}
+
+.admin-task-group > header h3 {
+  color: var(--color-forest);
+  font-size: 1.18rem;
+}
+
+.admin-task-group > header span {
+  color: var(--color-muted);
+  font-size: 0.78rem;
+  font-weight: 850;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.admin-task-list {
+  display: grid;
+  gap: 14px;
+}
+
+.admin-task-card {
+  display: grid;
+  gap: 14px;
+  overflow: hidden;
+  border: 1px solid rgba(17, 52, 32, 0.08);
+  border-radius: 22px;
+  background: rgba(255, 255, 255, 0.95);
+  box-shadow: 0 18px 48px rgba(24, 39, 30, 0.08);
+  padding: 18px;
+}
+
+.admin-task-card--today {
+  border-color: rgba(190, 137, 50, 0.22);
+  background: linear-gradient(145deg, #fffaf0, #ffffff 56%, #f5fbf7);
+}
+
+.admin-task-card--overdue {
+  border-color: rgba(155, 57, 47, 0.24);
+  background: linear-gradient(145deg, #fff4f1, #ffffff 58%, #fffaf7);
+}
+
+.admin-task-card--done {
+  opacity: 0.78;
+  background: rgba(250, 251, 249, 0.9);
+}
+
+.admin-task-card header,
+.admin-task-card footer {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.admin-task-card header > div:first-child {
+  min-width: 0;
+}
+
+.admin-task-card h3,
+.admin-task-card p,
+.admin-task-card dl {
+  margin: 0;
+}
+
+.admin-task-card h3 {
+  color: var(--color-forest);
+  font-size: 1.12rem;
+  line-height: 1.25;
+}
+
+.admin-task-card header span,
+.admin-task-card p {
+  color: var(--color-muted);
+  line-height: 1.45;
+}
+
+.admin-task-card__badges {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 6px;
+}
+
+.admin-task-card__badges em,
+.admin-task-card__badges strong {
+  display: inline-flex;
+  min-height: 26px;
+  align-items: center;
+  border-radius: 999px;
+  font-size: 0.66rem;
+  font-style: normal;
+  font-weight: 900;
+  letter-spacing: 0.08em;
+  padding: 0 9px;
+  text-transform: uppercase;
+}
+
+.admin-task-card__badges em {
+  border: 1px solid rgba(155, 57, 47, 0.18);
+  background: #fff1ee;
+  color: #9b392f;
+}
+
+.admin-task-card__badges strong {
+  border: 1px solid rgba(42, 125, 91, 0.16);
+  background: #edf8f2;
+  color: var(--color-forest);
+}
+
+.admin-task-card dl {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.admin-task-card dl div {
+  min-width: 0;
+  border-radius: 16px;
+  background: rgba(244, 248, 245, 0.8);
+  padding: 12px;
+}
+
+.admin-task-card dt {
+  color: #8a958f;
+  font-size: 0.66rem;
+  font-weight: 900;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.admin-task-card dd {
+  margin: 4px 0 0;
+  color: var(--color-forest);
+  font-weight: 850;
+}
+
+.admin-task-card footer {
+  justify-content: flex-end;
+  flex-wrap: wrap;
+}
+
+.admin-task-card footer button {
+  display: inline-flex;
+  min-height: 40px;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  border-radius: 999px;
+  font-weight: 850;
+  padding-inline: 14px;
 }
 
 @keyframes adminTodayReservationPulse {
@@ -3755,6 +4000,12 @@ textarea:focus {
   animation: adminNavReceipt 580ms cubic-bezier(0.2, 1, 0.3, 1) both;
 }
 
+.admin-nav-link--tareas:hover .admin-nav-icon,
+.admin-nav-link--tareas:focus-visible .admin-nav-icon,
+.admin-nav-link--tareas:active .admin-nav-icon {
+  animation: adminNavTasks 560ms cubic-bezier(0.2, 1, 0.3, 1) both;
+}
+
 .admin-nav-link--finanzas:hover .admin-nav-icon,
 .admin-nav-link--finanzas:focus-visible .admin-nav-icon,
 .admin-nav-link--finanzas:active .admin-nav-icon {
@@ -3846,6 +4097,19 @@ textarea:focus {
   }
   82% {
     transform: translateY(-1px) rotate(-1deg);
+  }
+}
+
+@keyframes adminNavTasks {
+  0%,
+  100% {
+    transform: translateY(0) rotate(0deg) scale(1);
+  }
+  35% {
+    transform: translateY(-3px) rotate(-4deg) scale(1.1);
+  }
+  68% {
+    transform: translateY(1px) rotate(3deg) scale(1.03);
   }
 }
 
@@ -5818,6 +6082,28 @@ textarea:focus {
     width: 100%;
   }
 
+  .admin-task-form,
+  .admin-task-card dl {
+    grid-template-columns: 1fr;
+  }
+
+  .admin-task-form__actions,
+  .admin-task-card header,
+  .admin-task-card footer,
+  .admin-task-group > header {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .admin-task-card__badges {
+    justify-content: flex-start;
+  }
+
+  .admin-task-card footer button,
+  .admin-task-form__actions button {
+    width: 100%;
+  }
+
   .admin-period-filter__buttons {
     width: 100%;
   }
@@ -6615,6 +6901,7 @@ button:active,
   .admin-reservation-detail-row td > .admin-reservation-detail-card,
   .admin-reservation-mobile-card__detail,
   .admin-reservation-mobile-card--today,
+  .admin-reservation-mobile-card--pending-balance,
   .admin-nav-icon {
     animation: none !important;
     transition: none !important;
