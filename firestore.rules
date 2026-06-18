@@ -69,11 +69,11 @@ service cloud.firestore {
     function managerReservationUpdate() {
       return isManager() &&
         !request.resource.data.diff(resource.data).affectedKeys().hasAny([
-          "status",
           "cancelledAt",
           "cancelledBy",
           "cancellationReason"
-        ]);
+        ]) &&
+        !["cancelada", "cancelado", "cancelled", "canceled", "deleted", "eliminada", "eliminado"].hasAny([request.resource.data.status]);
     }
 
     match /reservations/{reservationId} {

@@ -82,6 +82,20 @@ function createPaymentDraft(amount = "") {
   };
 }
 
+function createRescheduleDraft(reservation, mode = "date") {
+  const startDate = reservation.startDate || todayISO();
+  const endDate = reservation.endDate && reservation.endDate >= startDate ? reservation.endDate : startDate;
+
+  return {
+    mode,
+    startDate,
+    startTime: reservation.startTime || DEFAULT_START_TIME,
+    endDate,
+    endTime: reservation.endTime || getDefaultEndTime(startDate, endDate),
+    reason: reservation.rescheduleReason || "",
+  };
+}
+
 function reservationHasPendingBalance(reservation) {
   return hasPendingReservationBalance(reservation);
 }
@@ -248,10 +262,12 @@ function ReservationDetailPanel({
   onEdit,
   onAddPayment,
   onPayBalance,
+  onReschedule,
   onCancel,
   canCancel = true,
   canEdit = true,
   allowPayments = true,
+  canReschedule = true,
 }) {
   const hasPendingBalance = reservationHasPendingBalance(reservation);
 
@@ -323,6 +339,7 @@ function ReservationDetailPanel({
           </>
         ) : null}
         {canEdit ? <button type="button" onClick={() => onEdit(reservation)}>Editar reserva</button> : null}
+        {canReschedule && onReschedule ? <button type="button" onClick={() => onReschedule(reservation)}>Remarcar reserva</button> : null}
         {canCancel ? (
           <button type="button" className="is-danger" onClick={() => onCancel(reservation)}>
             Eliminar reserva
@@ -381,9 +398,12 @@ export default function AdminReservations({ mode = "admin" }) {
   const {
     reservations,
     activeReservations,
+    rescheduleReservations,
     cancelledReservations,
     addReservation,
     updateReservation,
+    markReservationForReschedule,
+    rescheduleReservation,
     cancelReservation,
     addPayment,
     firebaseStatus,
@@ -392,10 +412,12 @@ export default function AdminReservations({ mode = "admin" }) {
   const [editingReservation, setEditingReservation] = useState(null);
   const [paymentTarget, setPaymentTarget] = useState(null);
   const [paymentDraft, setPaymentDraft] = useState(null);
+  const [rescheduleTarget, setRescheduleTarget] = useState(null);
+  const [rescheduleDraft, setRescheduleDraft] = useState(null);
   const [cancelTarget, setCancelTarget] = useState(null);
   const [cancelReason, setCancelReason] = useState("");
   const [isSaving, setIsSaving] = useState(false);
-  const isModalOpen = Boolean(editingReservation || paymentTarget || cancelTarget);
+  const isModalOpen = Boolean(editingReservation || paymentTarget || rescheduleTarget || cancelTarget);
   const canCancelReservations = mode !== "manager" && isAdmin;
 
   const editingAvailability = useMemo(
@@ -404,6 +426,13 @@ export default function AdminReservations({ mode = "admin" }) {
         ? buildAdminAvailability(reservations, editingReservation.id)
         : buildAdminAvailability(reservations),
     [editingReservation, reservations],
+  );
+  const rescheduleAvailability = useMemo(
+    () =>
+      rescheduleTarget
+        ? buildAdminAvailability(reservations, rescheduleTarget.id)
+        : buildAdminAvailability(reservations),
+    [rescheduleTarget, reservations],
   );
   const reservationGroups = useMemo(() => {
     const now = new Date();
@@ -445,6 +474,13 @@ export default function AdminReservations({ mode = "admin" }) {
         String(b.cancelledAt || "").localeCompare(String(a.cancelledAt || "")),
       ),
     [cancelledReservations],
+  );
+  const sortedRescheduleReservations = useMemo(
+    () =>
+      [...(rescheduleReservations || [])].sort((a, b) =>
+        String(b.rescheduleRequestedAt || b.updatedAt || "").localeCompare(String(a.rescheduleRequestedAt || a.updatedAt || "")),
+      ),
+    [rescheduleReservations],
   );
 
   const totalAmountValue = Number(editingReservation?.totalAmount || 0);
@@ -501,6 +537,28 @@ export default function AdminReservations({ mode = "admin" }) {
   const paymentSaveWarning =
     paymentDraft?.method === "Transferencia" && !paymentDraft?.receiptFile && !paymentDraft?.receiptName
       ? "Para pagos por transferencia, subí el comprobante."
+      : "";
+  const rescheduleCandidate =
+    rescheduleTarget && rescheduleDraft?.mode === "date"
+      ? {
+          ...rescheduleTarget,
+          startDate: rescheduleDraft.startDate,
+          startTime: rescheduleDraft.startTime,
+          endDate: rescheduleDraft.endDate,
+          endTime: rescheduleDraft.endTime,
+          status: "confirmada",
+        }
+      : null;
+  const rescheduleValidationMessage = rescheduleCandidate
+    ? getReservationValidationMessage(rescheduleCandidate)
+    : "";
+  const rescheduleOverlap =
+    rescheduleCandidate && !rescheduleValidationMessage
+      ? findOverlappingReservation(reservations, rescheduleCandidate, rescheduleTarget.id)
+      : null;
+  const rescheduleWarning =
+    rescheduleDraft?.mode === "date"
+      ? rescheduleValidationMessage || (rescheduleOverlap ? "Ese horario se cruza con otra reserva. Ajustá la hora de salida o elegí otra fecha." : "")
       : "";
 
   useEffect(() => {
@@ -594,6 +652,40 @@ export default function AdminReservations({ mode = "admin" }) {
   const openPaymentModal = (reservation, fullBalance = false) => {
     setPaymentTarget(reservation);
     setPaymentDraft(createPaymentDraft(fullBalance ? reservation.balance : ""));
+  };
+
+  const openRescheduleModal = (reservation, modeValue = reservation.status === "pending_reschedule" ? "date" : "date") => {
+    setRescheduleTarget(reservation);
+    setRescheduleDraft(createRescheduleDraft(reservation, modeValue));
+  };
+
+  const closeRescheduleModal = () => {
+    setRescheduleTarget(null);
+    setRescheduleDraft(null);
+  };
+
+  const saveReschedule = async () => {
+    if (!rescheduleTarget || !rescheduleDraft || rescheduleWarning || isSaving) return;
+    setIsSaving(true);
+    try {
+      if (rescheduleDraft.mode === "pending") {
+        await markReservationForReschedule(rescheduleTarget.id, rescheduleDraft.reason);
+      } else {
+        await rescheduleReservation(rescheduleTarget.id, {
+          startDate: rescheduleDraft.startDate,
+          startTime: rescheduleDraft.startTime,
+          endDate: rescheduleDraft.endDate,
+          endTime: rescheduleDraft.endTime,
+          eventDate: rescheduleDraft.startDate,
+          timeSlot: `${rescheduleDraft.startTime} - ${rescheduleDraft.endTime}`,
+          rescheduleReason: rescheduleDraft.reason,
+        });
+      }
+      setExpandedReservationId(null);
+      closeRescheduleModal();
+    } finally {
+      setIsSaving(false);
+    }
   };
 
   const savePayment = async () => {
@@ -707,10 +799,12 @@ export default function AdminReservations({ mode = "admin" }) {
                   onEdit={openEditReservation}
                   onAddPayment={(currentReservation) => openPaymentModal(currentReservation)}
                   onPayBalance={(currentReservation) => openPaymentModal(currentReservation, true)}
+                  onReschedule={(currentReservation) => openRescheduleModal(currentReservation)}
                   onCancel={(currentReservation) => setCancelTarget(currentReservation)}
                   canCancel={canCancelReservations && !isPastGroup}
                   canEdit={!isPastGroup}
                   allowPayments={!isPastGroup}
+                  canReschedule={!isPastGroup}
                 />
               </div>
             </td>
@@ -788,10 +882,12 @@ export default function AdminReservations({ mode = "admin" }) {
               onEdit={openEditReservation}
               onAddPayment={(currentReservation) => openPaymentModal(currentReservation)}
               onPayBalance={(currentReservation) => openPaymentModal(currentReservation, true)}
+              onReschedule={(currentReservation) => openRescheduleModal(currentReservation)}
               onCancel={(currentReservation) => setCancelTarget(currentReservation)}
               canCancel={canCancelReservations && !isPastGroup}
               canEdit={!isPastGroup}
               allowPayments={!isPastGroup}
+              canReschedule={!isPastGroup}
             />
           </div>
         </article>
@@ -828,6 +924,101 @@ export default function AdminReservations({ mode = "admin" }) {
     </>
   );
 
+  const renderRescheduleReservations = () => (
+    <>
+      <div className="admin-reservations-table-wrap">
+        {sortedRescheduleReservations.length ? (
+          <table className="admin-reservations-table admin-reservations-table--operations">
+            <thead>
+              <tr>
+                <th>Cliente</th>
+                <th>Teléfono</th>
+                <th>Fecha original</th>
+                <th className="money-column">Total</th>
+                <th className="money-column">Saldo</th>
+                <th>Estado</th>
+                <th>Acciones</th>
+              </tr>
+            </thead>
+            <tbody>
+              {sortedRescheduleReservations.map((reservation) => {
+                const hasPendingBalance = reservationHasPendingBalance(reservation);
+                return (
+                  <tr className="admin-reservation-row--reschedule" key={reservation.id}>
+                    <td>
+                      <strong>{reservation.clientName}</strong>
+                      <small>{reservation.clientCedula || "Sin cédula"}</small>
+                    </td>
+                    <td>{formatParaguayPhone(reservation.clientPhone) || "Sin teléfono"}</td>
+                    <td>
+                      <strong>{formatDate(reservation.originalStartDate || reservation.startDate)}</strong>
+                      <small>{reservation.originalStartTime || reservation.startTime} a {reservation.originalEndTime || reservation.endTime}</small>
+                    </td>
+                    <td className="money-column">{formatGuaranies(reservation.totalAmount)}</td>
+                    <td className={`money-column ${hasPendingBalance ? "admin-balance-alert-cell" : ""}`}>
+                      {hasPendingBalance ? formatGuaranies(reservation.balance) : "-"}
+                    </td>
+                    <td><span className="admin-status-pill">Pendiente de nueva fecha</span></td>
+                    <td className="admin-actions-cell">
+                      <div className="admin-reservation-row-actions">
+                        <button type="button" className="admin-register-balance-button admin-register-balance-button--compact" onClick={() => openRescheduleModal(reservation, "date")}>
+                          Asignar nueva fecha
+                        </button>
+                        <a href={buildClientWhatsappUrl(venue, reservation)} target="_blank" rel="noreferrer">WhatsApp</a>
+                        {canCancelReservations ? (
+                          <button type="button" className="is-danger" onClick={() => setCancelTarget(reservation)}>Cancelar</button>
+                        ) : null}
+                      </div>
+                    </td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
+        ) : (
+          <p className="admin-empty-note">No hay reservas a remarcar.</p>
+        )}
+      </div>
+
+      <div className="admin-reservations-mobile-list">
+        {sortedRescheduleReservations.length ? (
+          sortedRescheduleReservations.map((reservation) => {
+            const hasPendingBalance = reservationHasPendingBalance(reservation);
+            return (
+              <article className="admin-reservation-mobile-card admin-reservation-mobile-card--reschedule" key={reservation.id}>
+                <header>
+                  <div>
+                    <span className="admin-today-badge">A remarcar</span>
+                    <h3>{reservation.clientName}</h3>
+                    <p>{formatParaguayPhone(reservation.clientPhone) || "Sin teléfono"} · {reservation.clientCedula || "Sin cédula"}</p>
+                  </div>
+                  <span className="admin-status-pill">Pendiente de nueva fecha</span>
+                </header>
+                <div className="admin-reservation-mobile-card__dates">
+                  <div><span>Fecha original</span><strong>{formatDate(reservation.originalStartDate || reservation.startDate)} · {reservation.originalStartTime || reservation.startTime}</strong></div>
+                  <div><span>Salida original</span><strong>{formatDate(reservation.originalEndDate || reservation.endDate)} · {reservation.originalEndTime || reservation.endTime}</strong></div>
+                </div>
+                <div className="admin-reservation-mobile-card__money">
+                  <div><span>Total</span><strong>{formatGuaranies(reservation.totalAmount)}</strong></div>
+                  <div><span>Pagado</span><strong>{formatGuaranies(reservation.totalPaid)}</strong></div>
+                  {hasPendingBalance ? <div className="admin-balance-alert-cell"><span>Saldo</span><strong>{formatGuaranies(reservation.balance)}</strong></div> : null}
+                </div>
+                {reservation.rescheduleReason ? <p className="admin-empty-note">{reservation.rescheduleReason}</p> : null}
+                <footer className="admin-reservation-mobile-card__actions">
+                  <button type="button" className="admin-register-balance-button" onClick={() => openRescheduleModal(reservation, "date")}>Asignar nueva fecha</button>
+                  <a href={buildClientWhatsappUrl(venue, reservation)} target="_blank" rel="noreferrer">WhatsApp</a>
+                  {canCancelReservations ? <button type="button" className="is-danger" onClick={() => setCancelTarget(reservation)}>Cancelar</button> : null}
+                </footer>
+              </article>
+            );
+          })
+        ) : (
+          <p className="admin-empty-note">No hay reservas a remarcar.</p>
+        )}
+      </div>
+    </>
+  );
+
   return (
     <section className="admin-section admin-reservations-section">
       <div className="admin-section-heading">
@@ -860,6 +1051,16 @@ export default function AdminReservations({ mode = "admin" }) {
           </div>
         </header>
         {renderReservationContent(reservationGroups.pendingBalance, "No hay reservas con saldo pendiente.", { isPendingBalanceGroup: true })}
+      </section>
+
+      <section className="admin-reservation-time-section admin-reservation-time-section--reschedule">
+        <header>
+          <div>
+            <h3>Reservas a remarcar</h3>
+            <span>{sortedRescheduleReservations.length} reservas</span>
+          </div>
+        </header>
+        {renderRescheduleReservations()}
       </section>
 
       <section className="admin-reservation-time-section">
@@ -1112,6 +1313,100 @@ export default function AdminReservations({ mode = "admin" }) {
             <div className="admin-modal__actions admin-modal__actions--reservation">
               <button type="button" className="admin-secondary-button" onClick={() => setEditingReservation(null)}>Cancelar</button>
               <button type="button" className="admin-primary-button" onClick={saveEditedReservation} disabled={!canSaveEditedReservation || isSaving}>{isSaving ? "Guardando..." : "Guardar reserva"}</button>
+            </div>
+          </div>
+        </div>
+        </ModalPortal>
+      ) : null}
+
+      {rescheduleTarget && rescheduleDraft ? (
+        <ModalPortal>
+        <div className="admin-modal-backdrop admin-modal-backdrop--reservation" role="presentation">
+          <div className="admin-modal admin-modal--wide admin-modal--reservation" role="dialog" aria-modal="true">
+            <div className="admin-modal__header admin-modal__header--premium">
+              <div className="admin-modal-title">
+                <i><CalendarPlus size={18} strokeWidth={1.8} aria-hidden="true" /></i>
+                <span>
+                  <p className="eyebrow">Reserva</p>
+                  <h3>Remarcar reserva</h3>
+                  <small>Elegí una nueva fecha o dejá la reserva pendiente de remarcar.</small>
+                </span>
+              </div>
+              <button type="button" className="admin-modal-close" onClick={closeRescheduleModal} aria-label="Cerrar">
+                <X size={18} strokeWidth={1.8} aria-hidden="true" />
+              </button>
+            </div>
+
+            <div className="admin-modal__body admin-modal__body--reservation">
+              <div className="reservation-form-section reservation-form-section--full">
+                <h4>{rescheduleTarget.clientName}</h4>
+                <div className="admin-reschedule-choice">
+                  <label>
+                    <input
+                      type="radio"
+                      name="rescheduleMode"
+                      checked={rescheduleDraft.mode === "date"}
+                      onChange={() => setRescheduleDraft((current) => ({ ...current, mode: "date" }))}
+                    />
+                    <span>Elegir nueva fecha ahora</span>
+                  </label>
+                  <label>
+                    <input
+                      type="radio"
+                      name="rescheduleMode"
+                      checked={rescheduleDraft.mode === "pending"}
+                      onChange={() => setRescheduleDraft((current) => ({ ...current, mode: "pending" }))}
+                    />
+                    <span>Dejar pendiente de remarcar</span>
+                  </label>
+                </div>
+              </div>
+
+              {rescheduleDraft.mode === "date" ? (
+                <div className="reservation-edit-form reservation-edit-form--operations">
+                  <section className="reservation-form-section">
+                    <h4>Nueva fecha y horario</h4>
+                    <DateAvailabilityPicker
+                      availability={rescheduleAvailability}
+                      value={rescheduleDraft.startDate}
+                      onChange={(date) => setRescheduleDraft((current) => updateReservationDate(current, "startDate", date))}
+                      label="Nueva fecha de ingreso"
+                    />
+                    <label>Hora de ingreso<input type="time" value={rescheduleDraft.startTime} onChange={(event) => setRescheduleDraft((current) => ({ ...current, startTime: event.target.value }))} /></label>
+                    <DateAvailabilityPicker
+                      availability={rescheduleAvailability}
+                      value={rescheduleDraft.endDate}
+                      minDate={rescheduleDraft.startDate}
+                      onChange={(date) => setRescheduleDraft((current) => updateReservationDate(current, "endDate", date))}
+                      label="Nueva fecha de salida"
+                      allowReservedSelection
+                    />
+                    <label>Hora de salida<input type="time" value={rescheduleDraft.endTime} onChange={(event) => setRescheduleDraft((current) => ({ ...current, endTime: event.target.value }))} /></label>
+                  </section>
+                  <section className="reservation-form-section">
+                    <h4>Motivo / nota</h4>
+                    <label className="reservation-edit-form__notes">Nota opcional<textarea value={rescheduleDraft.reason} onChange={(event) => setRescheduleDraft((current) => ({ ...current, reason: event.target.value }))} /></label>
+                    <div className="reservation-balance-summary">
+                      <span>Se conserva</span>
+                      <strong>{formatGuaranies(rescheduleTarget.totalPaid)} pagado</strong>
+                    </div>
+                  </section>
+                </div>
+              ) : (
+                <div className="reservation-form-section reservation-form-section--full">
+                  <h4>Quedará pendiente de nueva fecha</h4>
+                  <p className="admin-empty-note">La fecha actual se liberará del calendario, pero la reserva conservará cliente, pagos, comprobantes, total y saldo.</p>
+                  <label className="reservation-edit-form__notes">Motivo / nota opcional<textarea value={rescheduleDraft.reason} onChange={(event) => setRescheduleDraft((current) => ({ ...current, reason: event.target.value }))} /></label>
+                </div>
+              )}
+
+              {rescheduleWarning ? <p className="admin-form-warning">{rescheduleWarning}</p> : null}
+            </div>
+            <div className="admin-modal__actions admin-modal__actions--reservation">
+              <button type="button" className="admin-secondary-button" onClick={closeRescheduleModal}>Cancelar</button>
+              <button type="button" className="admin-primary-button" onClick={saveReschedule} disabled={Boolean(rescheduleWarning) || isSaving}>
+                {isSaving ? "Guardando..." : rescheduleDraft.mode === "pending" ? "Dejar pendiente" : "Remarcar reserva"}
+              </button>
             </div>
           </div>
         </div>

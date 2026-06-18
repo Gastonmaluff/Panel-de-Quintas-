@@ -10,6 +10,8 @@ const INACTIVE_RESERVATION_STATUSES = new Set([
   "archivada",
 ]);
 
+const RESCHEDULE_STATUSES = new Set(["pending_reschedule", "to_reschedule", "a_remarcar"]);
+
 function normalizeStatus(status = "") {
   return String(status || "").trim().toLowerCase();
 }
@@ -17,6 +19,14 @@ function normalizeStatus(status = "") {
 export function isActiveReservation(reservation = {}) {
   const status = normalizeStatus(reservation.status);
   return !reservation.deleted && !INACTIVE_RESERVATION_STATUSES.has(status);
+}
+
+export function isPendingRescheduleReservation(reservation = {}) {
+  return isActiveReservation(reservation) && RESCHEDULE_STATUSES.has(normalizeStatus(reservation.status));
+}
+
+export function isScheduledReservation(reservation = {}) {
+  return isActiveReservation(reservation) && !isPendingRescheduleReservation(reservation);
 }
 
 export function getReservationTotal(reservation = {}) {

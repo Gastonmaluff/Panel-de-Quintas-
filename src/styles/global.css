@@ -2534,12 +2534,22 @@ textarea:focus {
   box-shadow: 0 16px 40px rgba(155, 57, 47, 0.08);
 }
 
+.admin-reservation-time-section--reschedule > header {
+  border-color: rgba(190, 137, 50, 0.18);
+  background: linear-gradient(135deg, #fff8e8, #f8fcfa);
+  box-shadow: 0 16px 40px rgba(190, 137, 50, 0.08);
+}
+
 .admin-reservation-row--today > td {
   background: linear-gradient(90deg, rgba(255, 250, 240, 0.92), rgba(248, 253, 250, 0.92));
 }
 
 .admin-reservation-row--pending-balance > td {
   background: linear-gradient(90deg, rgba(255, 241, 238, 0.86), rgba(255, 252, 248, 0.9));
+}
+
+.admin-reservation-row--reschedule > td {
+  background: linear-gradient(90deg, rgba(255, 248, 232, 0.9), rgba(248, 253, 250, 0.9));
 }
 
 .admin-reservation-mobile-card--today {
@@ -2554,6 +2564,12 @@ textarea:focus {
   border-color: rgba(155, 57, 47, 0.24);
   background: linear-gradient(145deg, #fff5f2, #ffffff 55%, #fffaf7);
   box-shadow: 0 18px 46px rgba(155, 57, 47, 0.09);
+}
+
+.admin-reservation-mobile-card--reschedule {
+  border-color: rgba(190, 137, 50, 0.24);
+  background: linear-gradient(145deg, #fff8e8, #ffffff 55%, #f7fbf8);
+  box-shadow: 0 18px 46px rgba(190, 137, 50, 0.09);
 }
 
 .admin-reservation-mobile-card--today::before {
@@ -6519,6 +6535,38 @@ button:active,
   padding: 16px;
 }
 
+.reservation-form-section--full {
+  grid-column: 1 / -1;
+}
+
+.admin-reschedule-choice {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.admin-reschedule-choice label {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  border: 1px solid rgba(6, 27, 14, 0.1);
+  border-radius: 16px;
+  background: rgba(255, 255, 255, 0.86);
+  color: var(--color-forest);
+  cursor: pointer;
+  font-size: 0.84rem;
+  font-weight: 850;
+  letter-spacing: 0;
+  min-height: 50px;
+  padding: 12px 14px;
+  text-transform: none;
+}
+
+.admin-reschedule-choice input {
+  accent-color: var(--color-forest);
+  width: auto;
+}
+
 .reservation-form-section h4 {
   margin: 0;
   color: var(--color-forest);
@@ -7178,6 +7226,7 @@ button:active,
 
   .reservation-edit-form--operations,
   .reservation-form-section,
+  .admin-reschedule-choice,
   .admin-cancelled-list dl,
   .admin-expense-card dl,
   .admin-finance-card-list dl,

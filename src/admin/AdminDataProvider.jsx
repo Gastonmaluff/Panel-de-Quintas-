@@ -8,7 +8,7 @@ import {
   normalizeBooking,
 } from "../utils/booking.js";
 import { cleanParaguayPhone, titleCaseName } from "../utils/formatters.js";
-import { isActiveReservation } from "../utils/reservations.js";
+import { isActiveReservation, isPendingRescheduleReservation, isScheduledReservation } from "../utils/reservations.js";
 import { useAuth } from "../auth/AuthProvider.jsx";
 import { ROLES, isAdminRole } from "../auth/permissions.js";
 
@@ -142,7 +142,7 @@ function buildClients(reservations) {
   const clients = new Map();
 
   reservations
-    .filter((reservation) => reservation.status !== "cancelada")
+    .filter(isActiveReservation)
     .forEach((reservation) => {
       const key = reservation.clientPhone || reservation.clientCedula || reservation.clientId;
       const current =
@@ -186,7 +186,7 @@ function buildClients(reservations) {
 
 export function buildAdminAvailability(reservations, excludedReservationId = "") {
   return buildAvailabilityFromReservations(
-    reservations.filter((reservation) => reservation.status !== "cancelada"),
+    reservations.filter(isScheduledReservation),
     excludedReservationId,
   );
 }
@@ -382,6 +382,56 @@ export function AdminDataProvider({ children }) {
     await setDoc(doc(db, "reservations", id), updatedReservation, { merge: true });
     await persistClientSnapshot(updatedReservation);
     await writeActivity("Reserva editada", `${updatedReservation.clientName} - ${id}`);
+  };
+
+  const markReservationForReschedule = async (id, reason = "") => {
+    const reservation = reservations.find((item) => item.id === id);
+    if (!reservation) return null;
+
+    const payload = {
+      status: "pending_reschedule",
+      originalStartDate: reservation.originalStartDate || reservation.startDate,
+      originalStartTime: reservation.originalStartTime || reservation.startTime,
+      originalEndDate: reservation.originalEndDate || reservation.endDate,
+      originalEndTime: reservation.originalEndTime || reservation.endTime,
+      rescheduleRequestedAt: new Date().toISOString(),
+      rescheduleReason: reason,
+      rescheduleStatus: "pending",
+      updatedBy: user?.email || "",
+      updatedByUid: user?.uid || "",
+      updatedByRole: role || ROLES.manager,
+      updatedAt: new Date().toISOString(),
+    };
+
+    await setDoc(doc(db, "reservations", id), payload, { merge: true });
+    await writeActivity("Reserva marcada para remarcar", `${reservation.clientName}${reason ? ` - ${reason}` : ""}`);
+    return { ...reservation, ...payload };
+  };
+
+  const rescheduleReservation = async (id, changes = {}) => {
+    const reservation = reservations.find((item) => item.id === id);
+    if (!reservation) return null;
+
+    const updatedReservation = normalizeReservation({
+      ...reservation,
+      ...changes,
+      status: "confirmada",
+      rescheduleStatus: "done",
+      rescheduledAt: new Date().toISOString(),
+      rescheduleReason: changes.rescheduleReason ?? reservation.rescheduleReason ?? "",
+      updatedBy: user?.email || "",
+      updatedByUid: user?.uid || "",
+      updatedByRole: role || ROLES.manager,
+      updatedAt: new Date().toISOString(),
+    });
+
+    await setDoc(doc(db, "reservations", id), updatedReservation, { merge: true });
+    await persistClientSnapshot(updatedReservation);
+    await writeActivity(
+      "Reserva remarcada",
+      `${updatedReservation.clientName} - ${reservation.startDate || reservation.originalStartDate || "sin fecha"} a ${updatedReservation.startDate}`,
+    );
+    return updatedReservation;
   };
 
   const cancelReservation = async (id, reason = "") => {
@@ -586,7 +636,8 @@ export function AdminDataProvider({ children }) {
   const value = useMemo(
     () => ({
       reservations,
-      activeReservations: reservations.filter(isActiveReservation),
+      activeReservations: reservations.filter(isScheduledReservation),
+      rescheduleReservations: reservations.filter(isPendingRescheduleReservation),
       cancelledReservations: reservations.filter((reservation) => reservation.status === "cancelada"),
       expenses,
       tasks,
@@ -599,6 +650,8 @@ export function AdminDataProvider({ children }) {
       getReservationDates,
       addReservation,
       updateReservation,
+      markReservationForReschedule,
+      rescheduleReservation,
       cancelReservation,
       removeReservation: cancelReservation,
       addPayment,
