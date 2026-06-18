@@ -31,6 +31,41 @@ function ModalPortal({ children }) {
   return createPortal(children, document.body);
 }
 
+function CollapsibleSection({
+  title,
+  count,
+  defaultOpen = true,
+  className = "",
+  children,
+}) {
+  const [isOpen, setIsOpen] = useState(defaultOpen);
+  const sectionClassName = ["admin-reservation-time-section", "admin-reservation-collapsible-section", className]
+    .filter(Boolean)
+    .join(" ");
+
+  return (
+    <section className={sectionClassName}>
+      <button
+        type="button"
+        className="admin-reservation-section-toggle"
+        aria-expanded={isOpen}
+        onClick={() => setIsOpen((current) => !current)}
+      >
+        <span>
+          <h3>{title}</h3>
+          <small>{count} {count === 1 ? "reserva" : "reservas"}</small>
+        </span>
+        <i aria-hidden="true" />
+      </button>
+      <div className={`admin-reservation-section-panel ${isOpen ? "is-open" : ""}`} aria-hidden={!isOpen}>
+        <div className="admin-reservation-section-panel__inner">
+          {children}
+        </div>
+      </div>
+    </section>
+  );
+}
+
 function buildClientWhatsappUrl(venue, reservation) {
   const phone = toWhatsappParaguay(reservation.clientPhone) || venue.whatsappNumber;
   const message = `Hola ${reservation.clientName}, te escribo por tu reserva en ${venue.name}.`;
@@ -353,14 +388,12 @@ function ReservationDetailPanel({
 
 function CancelledReservations({ reservations }) {
   return (
-    <details className="admin-editor-card admin-collapsible-card cancelled-reservations">
-      <summary>
-        <span>
-          <strong>Reservas canceladas</strong>
-          <small>{reservations.length} reservas liberadas del calendario.</small>
-        </span>
-      </summary>
-      <div className="admin-collapsible-card__content">
+    <CollapsibleSection
+      title="Reservas canceladas"
+      count={reservations.length}
+      defaultOpen={false}
+      className="cancelled-reservations"
+    >
         {reservations.length ? (
           <div className="admin-cancelled-list">
             {reservations.map((reservation) => (
@@ -386,8 +419,7 @@ function CancelledReservations({ reservations }) {
         ) : (
           <p className="admin-empty-note">No hay reservas canceladas.</p>
         )}
-      </div>
-    </details>
+    </CollapsibleSection>
   );
 }
 
@@ -1033,57 +1065,49 @@ export default function AdminReservations({ mode = "admin" }) {
         </button>
       </div>
 
-      <section className="admin-reservation-time-section admin-reservation-time-section--today">
-        <header>
-          <div>
-            <h3>Reservas de hoy</h3>
-            <span>{reservationGroups.today.length} reservas</span>
-          </div>
-        </header>
+      <CollapsibleSection
+        title="Reservas de hoy"
+        count={reservationGroups.today.length}
+        defaultOpen
+        className="admin-reservation-time-section--today"
+      >
         {renderReservationContent(reservationGroups.today, "No hay reservas para hoy.", { isTodayGroup: true })}
-      </section>
+      </CollapsibleSection>
 
-      <section className="admin-reservation-time-section admin-reservation-time-section--pending-balance">
-        <header>
-          <div>
-            <h3>Reservas con saldo pendiente</h3>
-            <span>{reservationGroups.pendingBalance.length} reservas</span>
-          </div>
-        </header>
+      <CollapsibleSection
+        title="Reservas con saldo pendiente"
+        count={reservationGroups.pendingBalance.length}
+        defaultOpen
+        className="admin-reservation-time-section--pending-balance"
+      >
         {renderReservationContent(reservationGroups.pendingBalance, "No hay reservas con saldo pendiente.", { isPendingBalanceGroup: true })}
-      </section>
+      </CollapsibleSection>
 
-      <section className="admin-reservation-time-section admin-reservation-time-section--reschedule">
-        <header>
-          <div>
-            <h3>Reservas a remarcar</h3>
-            <span>{sortedRescheduleReservations.length} reservas</span>
-          </div>
-        </header>
+      <CollapsibleSection
+        title="Reservas a remarcar"
+        count={sortedRescheduleReservations.length}
+        defaultOpen
+        className="admin-reservation-time-section--reschedule"
+      >
         {renderRescheduleReservations()}
-      </section>
+      </CollapsibleSection>
 
-      <section className="admin-reservation-time-section">
-        <header>
-          <div>
-            <h3>Próximas reservas</h3>
-            <span>{reservationGroups.upcoming.length} reservas</span>
-          </div>
-        </header>
+      <CollapsibleSection
+        title="Próximas reservas"
+        count={reservationGroups.upcoming.length}
+        defaultOpen
+      >
         {renderReservationContent(reservationGroups.upcoming, "No hay próximas reservas.")}
-      </section>
+      </CollapsibleSection>
 
-      <details className="admin-reservation-time-section admin-reservation-time-section--collapsed admin-collapsible-card">
-        <summary>
-          <span>
-            <strong>Reservas pasadas</strong>
-            <small>{reservationGroups.past.length} reservas históricas.</small>
-          </span>
-        </summary>
-        <div className="admin-collapsible-card__content">
-          {renderReservationContent(reservationGroups.past, "No hay reservas pasadas.", { isPastGroup: true })}
-        </div>
-      </details>
+      <CollapsibleSection
+        title="Reservas pasadas"
+        count={reservationGroups.past.length}
+        defaultOpen={false}
+        className="admin-reservation-time-section--collapsed"
+      >
+        {renderReservationContent(reservationGroups.past, "No hay reservas pasadas.", { isPastGroup: true })}
+      </CollapsibleSection>
 
       <div className="admin-legacy-reservation-list" hidden>
       <div className="admin-reservations-table-wrap">

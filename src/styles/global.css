@@ -2493,7 +2493,8 @@ textarea:focus {
   margin-top: 22px;
 }
 
-.admin-reservation-time-section > header {
+.admin-reservation-time-section > header,
+.admin-reservation-section-toggle {
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -2504,17 +2505,39 @@ textarea:focus {
   padding: 16px 18px;
 }
 
+.admin-reservation-section-toggle {
+  width: 100%;
+  color: inherit;
+  cursor: pointer;
+  font: inherit;
+  text-align: left;
+  transition: border-color 220ms ease, box-shadow 220ms ease, transform 180ms ease;
+}
+
+.admin-reservation-section-toggle:hover {
+  border-color: rgba(17, 52, 32, 0.18);
+  box-shadow: 0 16px 34px rgba(17, 52, 32, 0.08);
+}
+
+.admin-reservation-section-toggle:active {
+  transform: scale(0.99);
+}
+
 .admin-reservation-time-section > header h3,
-.admin-reservation-time-section > header span {
+.admin-reservation-time-section > header span,
+.admin-reservation-section-toggle h3,
+.admin-reservation-section-toggle small {
   margin: 0;
 }
 
-.admin-reservation-time-section > header h3 {
+.admin-reservation-time-section > header h3,
+.admin-reservation-section-toggle h3 {
   color: var(--color-forest);
   font-size: clamp(1.05rem, 2vw, 1.28rem);
 }
 
-.admin-reservation-time-section > header span {
+.admin-reservation-time-section > header span,
+.admin-reservation-section-toggle small {
   color: var(--color-muted);
   font-size: 0.8rem;
   font-weight: 800;
@@ -2522,19 +2545,79 @@ textarea:focus {
   text-transform: uppercase;
 }
 
-.admin-reservation-time-section--today > header {
+.admin-reservation-section-toggle > span {
+  display: grid;
+  gap: 4px;
+}
+
+.admin-reservation-section-toggle i {
+  position: relative;
+  display: inline-flex;
+  width: 30px;
+  height: 30px;
+  flex: 0 0 auto;
+  align-items: center;
+  justify-content: center;
+  border-radius: 999px;
+  background: rgba(17, 52, 32, 0.08);
+  transition: transform 240ms ease, background 220ms ease;
+}
+
+.admin-reservation-section-toggle i::before {
+  content: "";
+  width: 8px;
+  height: 8px;
+  border-right: 2px solid var(--color-forest);
+  border-bottom: 2px solid var(--color-forest);
+  transform: translateY(-2px) rotate(45deg);
+}
+
+.admin-reservation-section-toggle[aria-expanded="true"] i {
+  transform: rotate(180deg);
+  background: rgba(17, 52, 32, 0.12);
+}
+
+.admin-reservation-section-panel {
+  display: grid;
+  grid-template-rows: 0fr;
+  opacity: 0;
+  transition: grid-template-rows 260ms ease, opacity 220ms ease;
+}
+
+.admin-reservation-section-panel.is-open {
+  grid-template-rows: 1fr;
+  opacity: 1;
+}
+
+.admin-reservation-section-panel__inner {
+  display: grid;
+  gap: 14px;
+  min-height: 0;
+  overflow: hidden;
+  padding-top: 0;
+  transition: padding-top 260ms ease;
+}
+
+.admin-reservation-section-panel.is-open .admin-reservation-section-panel__inner {
+  padding-top: 14px;
+}
+
+.admin-reservation-time-section--today > header,
+.admin-reservation-time-section--today > .admin-reservation-section-toggle {
   border-color: rgba(190, 137, 50, 0.2);
   background: linear-gradient(135deg, #fffaf0, #f3fbf6);
   box-shadow: 0 16px 40px rgba(78, 55, 17, 0.08);
 }
 
-.admin-reservation-time-section--pending-balance > header {
+.admin-reservation-time-section--pending-balance > header,
+.admin-reservation-time-section--pending-balance > .admin-reservation-section-toggle {
   border-color: rgba(155, 57, 47, 0.18);
   background: linear-gradient(135deg, #fff1ee, #fffaf7);
   box-shadow: 0 16px 40px rgba(155, 57, 47, 0.08);
 }
 
-.admin-reservation-time-section--reschedule > header {
+.admin-reservation-time-section--reschedule > header,
+.admin-reservation-time-section--reschedule > .admin-reservation-section-toggle {
   border-color: rgba(190, 137, 50, 0.18);
   background: linear-gradient(135deg, #fff8e8, #f8fcfa);
   box-shadow: 0 16px 40px rgba(190, 137, 50, 0.08);
@@ -7011,6 +7094,9 @@ button:active,
   .admin-accordion-panel,
   .admin-reservation-detail-row td > .admin-reservation-detail-card,
   .admin-reservation-mobile-card__detail,
+  .admin-reservation-section-toggle i,
+  .admin-reservation-section-panel,
+  .admin-reservation-section-panel__inner,
   .admin-reservation-mobile-card--today,
   .admin-reservation-mobile-card--pending-balance,
   .admin-nav-icon {
