@@ -12,7 +12,7 @@ export default function AdminLogin() {
   const [credentials, setCredentials] = useState({ email: "", password: "" });
   const [error, setError] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const defaultRoute = role === ROLES.manager ? "/encargado/reservas" : "/admin";
+  const defaultRoute = role === ROLES.manager ? "/encargado/tareas" : "/admin";
 
   if (!isLoading && isAuthenticated) {
     return <Navigate to={defaultRoute} replace />;

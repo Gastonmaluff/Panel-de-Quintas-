@@ -55,6 +55,7 @@ function AdminShell({ mode = "admin" }) {
   const roleLabel = ROLE_LABELS[role] || role || "Sin rol";
 
   const handleLogout = async () => {
+    window.sessionStorage.removeItem("paraiso-access-splash-complete");
     await logActivity(
       "Usuario cerró sesión",
       `${profile?.name || user?.email || "Sin usuario"} · ${ROLE_LABELS[role] || role || "Sin rol"}`,

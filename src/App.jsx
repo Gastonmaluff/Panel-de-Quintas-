@@ -18,13 +18,37 @@ import { venues } from "./data/venues.js";
 import AccessSplash from "./components/admin/AccessSplash.jsx";
 
 const paraiso = venues.find((venue) => venue.slug === "paraiso-escondido");
+const ACCESS_SPLASH_KEY = "paraiso-access-splash-complete";
+
+function hasCompletedAccessSplash() {
+  if (typeof window === "undefined") return false;
+  return window.sessionStorage.getItem(ACCESS_SPLASH_KEY) === "true";
+}
+
+function markAccessSplashComplete() {
+  if (typeof window !== "undefined") {
+    window.sessionStorage.setItem(ACCESS_SPLASH_KEY, "true");
+  }
+}
 
 function InternalEntryRedirect() {
   const { isAuthenticated, isLoading, role } = useAuth();
-  const [canContinue, setCanContinue] = useState(false);
+  const [canContinue, setCanContinue] = useState(() => hasCompletedAccessSplash());
+
+  if (isLoading && canContinue) {
+    return null;
+  }
 
   if (isLoading || !canContinue) {
-    return <AccessSplash isReady={!isLoading} onComplete={() => setCanContinue(true)} />;
+    return (
+      <AccessSplash
+        isReady={!isLoading}
+        onComplete={() => {
+          markAccessSplashComplete();
+          setCanContinue(true);
+        }}
+      />
+    );
   }
 
   if (!isAuthenticated) return <Navigate to="/admin/login" replace />;

@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import BrandLogo from "../branding/BrandLogo.jsx";
 
 function getStageLabel(progress, isReady) {
@@ -10,6 +10,7 @@ function getStageLabel(progress, isReady) {
 
 export default function AccessSplash({ isReady = false, onComplete }) {
   const [progress, setProgress] = useState(0);
+  const hasCompletedRef = useRef(false);
 
   useEffect(() => {
     const interval = window.setInterval(() => {
@@ -26,7 +27,8 @@ export default function AccessSplash({ isReady = false, onComplete }) {
   }, [isReady]);
 
   useEffect(() => {
-    if (progress < 100) return undefined;
+    if (progress < 100 || hasCompletedRef.current) return undefined;
+    hasCompletedRef.current = true;
     const timeout = window.setTimeout(() => onComplete?.(), 260);
     return () => window.clearTimeout(timeout);
   }, [onComplete, progress]);
