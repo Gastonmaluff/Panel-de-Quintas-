@@ -43,6 +43,10 @@ function CollapsibleSection({
     .filter(Boolean)
     .join(" ");
 
+  useEffect(() => {
+    setIsOpen(defaultOpen);
+  }, [defaultOpen]);
+
   return (
     <section className={sectionClassName}>
       <button
@@ -1068,7 +1072,7 @@ export default function AdminReservations({ mode = "admin" }) {
       <CollapsibleSection
         title="Reservas de hoy"
         count={reservationGroups.today.length}
-        defaultOpen
+        defaultOpen={reservationGroups.today.length > 0}
         className="admin-reservation-time-section--today"
       >
         {renderReservationContent(reservationGroups.today, "No hay reservas para hoy.", { isTodayGroup: true })}
@@ -1077,7 +1081,7 @@ export default function AdminReservations({ mode = "admin" }) {
       <CollapsibleSection
         title="Reservas con saldo pendiente"
         count={reservationGroups.pendingBalance.length}
-        defaultOpen
+        defaultOpen={reservationGroups.pendingBalance.length > 0}
         className="admin-reservation-time-section--pending-balance"
       >
         {renderReservationContent(reservationGroups.pendingBalance, "No hay reservas con saldo pendiente.", { isPendingBalanceGroup: true })}
@@ -1086,7 +1090,7 @@ export default function AdminReservations({ mode = "admin" }) {
       <CollapsibleSection
         title="Reservas a remarcar"
         count={sortedRescheduleReservations.length}
-        defaultOpen
+        defaultOpen={false}
         className="admin-reservation-time-section--reschedule"
       >
         {renderRescheduleReservations()}
@@ -1095,7 +1099,7 @@ export default function AdminReservations({ mode = "admin" }) {
       <CollapsibleSection
         title="Próximas reservas"
         count={reservationGroups.upcoming.length}
-        defaultOpen
+        defaultOpen={false}
       >
         {renderReservationContent(reservationGroups.upcoming, "No hay próximas reservas.")}
       </CollapsibleSection>
