@@ -20,6 +20,7 @@ import {
   titleCaseName,
   toWhatsappParaguay,
 } from "../utils/formatters.js";
+import { hasPendingReservationBalance } from "../utils/reservations.js";
 import { useAuth } from "../auth/AuthProvider.jsx";
 
 const paymentMethods = ["Transferencia", "Efectivo"];
@@ -82,8 +83,7 @@ function createPaymentDraft(amount = "") {
 }
 
 function reservationHasPendingBalance(reservation) {
-  const status = reservation.paymentStatus?.toLowerCase?.() || "";
-  return Number(reservation.balance || 0) > 0 && !status.includes("pagado");
+  return hasPendingReservationBalance(reservation);
 }
 
 function todayISO() {

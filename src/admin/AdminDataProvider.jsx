@@ -8,6 +8,7 @@ import {
   normalizeBooking,
 } from "../utils/booking.js";
 import { cleanParaguayPhone, titleCaseName } from "../utils/formatters.js";
+import { isActiveReservation } from "../utils/reservations.js";
 import { useAuth } from "../auth/AuthProvider.jsx";
 import { ROLES, isAdminRole } from "../auth/permissions.js";
 
@@ -585,7 +586,7 @@ export function AdminDataProvider({ children }) {
   const value = useMemo(
     () => ({
       reservations,
-      activeReservations: reservations.filter((reservation) => reservation.status !== "cancelada"),
+      activeReservations: reservations.filter(isActiveReservation),
       cancelledReservations: reservations.filter((reservation) => reservation.status === "cancelada"),
       expenses,
       tasks,

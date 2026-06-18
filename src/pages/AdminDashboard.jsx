@@ -3,6 +3,7 @@ import { CalendarCheck, CalendarDays, PiggyBank, WalletCards } from "lucide-reac
 import { useAdminData } from "../admin/AdminDataProvider.jsx";
 import { formatGuaranies } from "../utils/pricing.js";
 import { getDayAvailabilityStatus } from "../utils/booking.js";
+import { hasPendingReservationBalance } from "../utils/reservations.js";
 
 function isCurrentMonth(dateValue, currentMonth, currentYear) {
   const date = new Date(`${dateValue}T12:00:00`);
@@ -10,7 +11,7 @@ function isCurrentMonth(dateValue, currentMonth, currentYear) {
 }
 
 export default function AdminDashboard() {
-  const { reservations, activeReservations, getReservationDates } = useAdminData();
+  const { activeReservations, getReservationDates } = useAdminData();
   const today = new Date();
   const currentMonth = today.getMonth();
   const currentYear = today.getFullYear();
@@ -27,7 +28,7 @@ export default function AdminDashboard() {
   });
   const occupancyPercentage = Math.round((occupiedDateSet.size / daysInMonth) * 100);
   const paidThisMonth = monthReservations.reduce((total, reservation) => total + reservation.totalPaid, 0);
-  const pendingDeposits = reservations.filter((reservation) => reservation.paymentStatus === "Sin pago").length;
+  const pendingDeposits = activeReservations.filter(hasPendingReservationBalance).length;
 
   const metrics = [
     { label: "Reservas del mes", value: monthReservations.length, icon: CalendarCheck },
