@@ -188,6 +188,16 @@ function getReservationTimeGroup(reservation, now = new Date()) {
   return "upcoming";
 }
 
+function shouldAnimatePendingBalance(reservation, now = new Date()) {
+  if (!hasPendingReservationBalance(reservation)) return false;
+  const start = getReservationStartDateTime({
+    ...reservation,
+    startTime: "00:00",
+  });
+  if (!start) return false;
+  return start <= startOfLocalDay(now);
+}
+
 function compareReservationStartAsc(a, b) {
   return getReservationStartDateTime(a) - getReservationStartDateTime(b);
 }
@@ -763,10 +773,12 @@ export default function AdminReservations({ mode = "admin" }) {
       const isExpanded = expandedReservationId === reservation.id;
       const hasPendingBalance = reservationHasPendingBalance(reservation);
       const showRegisterBalance = (isTodayGroup || isPendingBalanceGroup) && hasPendingBalance;
+      const shouldAnimateBalanceAlert = showRegisterBalance && shouldAnimatePendingBalance(reservation);
       const rowClassName = [
         isTodayGroup ? "admin-reservation-row--today" : "",
         isPendingBalanceGroup ? "admin-reservation-row--pending-balance" : "",
         showRegisterBalance ? "admin-reservation-row--today-pending" : "",
+        shouldAnimateBalanceAlert ? "admin-reservation-row--pending-attention" : "",
       ]
         .filter(Boolean)
         .join(" ");
@@ -788,7 +800,7 @@ export default function AdminReservations({ mode = "admin" }) {
               <small>{reservation.endTime}</small>
             </td>
             <td className="money-column">{formatGuaranies(reservation.totalAmount)}</td>
-            <td className={`money-column ${showRegisterBalance ? "admin-balance-alert-cell" : ""}`}>
+            <td className={`money-column ${showRegisterBalance ? "admin-balance-alert-cell" : ""} ${shouldAnimateBalanceAlert ? "admin-pending-attention-balance" : ""}`}>
               {hasPendingBalance ? (
                 <>
                   {showRegisterBalance ? <small>Saldo pendiente</small> : null}
@@ -804,7 +816,7 @@ export default function AdminReservations({ mode = "admin" }) {
                 {showRegisterBalance ? (
                   <button
                     type="button"
-                    className="admin-register-balance-button admin-register-balance-button--compact"
+                    className={`admin-register-balance-button admin-register-balance-button--compact ${shouldAnimateBalanceAlert ? "admin-pending-attention-button" : ""}`}
                     onClick={() => openPaymentModal(reservation, true)}
                   >
                     Registrar saldo
@@ -855,11 +867,13 @@ export default function AdminReservations({ mode = "admin" }) {
       const isExpanded = expandedReservationId === reservation.id;
       const hasPendingBalance = reservationHasPendingBalance(reservation);
       const showRegisterBalance = (isTodayGroup || isPendingBalanceGroup) && hasPendingBalance;
+      const shouldAnimateBalanceAlert = showRegisterBalance && shouldAnimatePendingBalance(reservation);
       const cardClassName = [
         "admin-reservation-mobile-card",
         isTodayGroup ? "admin-reservation-mobile-card--today" : "",
         isPendingBalanceGroup ? "admin-reservation-mobile-card--pending-balance" : "",
         showRegisterBalance ? "admin-reservation-mobile-card--today-pending" : "",
+        shouldAnimateBalanceAlert ? "admin-reservation-mobile-card--pending-attention" : "",
       ]
         .filter(Boolean)
         .join(" ");
@@ -880,7 +894,7 @@ export default function AdminReservations({ mode = "admin" }) {
           <div className="admin-reservation-mobile-card__money">
             <div><span>Total</span><strong>{formatGuaranies(reservation.totalAmount)}</strong></div>
             {hasPendingBalance ? (
-              <div className={showRegisterBalance ? "admin-balance-alert-cell" : ""}>
+              <div className={`${showRegisterBalance ? "admin-balance-alert-cell" : ""} ${shouldAnimateBalanceAlert ? "admin-pending-attention-balance" : ""}`}>
                 <span>{showRegisterBalance ? "Saldo pendiente" : "Saldo"}</span>
                 <strong>{formatGuaranies(reservation.balance)}</strong>
               </div>
@@ -891,7 +905,7 @@ export default function AdminReservations({ mode = "admin" }) {
             {showRegisterBalance ? (
               <button
                 type="button"
-                className="admin-register-balance-button"
+                className={`admin-register-balance-button ${shouldAnimateBalanceAlert ? "admin-pending-attention-button" : ""}`}
                 onClick={() => openPaymentModal(reservation, true)}
               >
                 Registrar saldo

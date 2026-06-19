@@ -2718,6 +2718,56 @@ textarea:focus {
   white-space: nowrap;
 }
 
+.admin-pending-attention-balance {
+  position: relative;
+  border-radius: 14px;
+  animation: pendingBalanceSpotlight 2.8s ease-in-out infinite;
+  will-change: transform, box-shadow, background;
+}
+
+.admin-pending-attention-button {
+  animation: pendingBalanceButtonSpotlight 2.8s ease-in-out infinite;
+  will-change: transform, box-shadow, background;
+}
+
+.admin-reservation-mobile-card__money .admin-pending-attention-balance {
+  padding: 8px 10px;
+}
+
+@keyframes pendingBalanceSpotlight {
+  0%,
+  12%,
+  44%,
+  100% {
+    background: transparent;
+    box-shadow: none;
+    transform: scale(1);
+  }
+  18%,
+  34% {
+    background: rgba(155, 57, 47, 0.1);
+    box-shadow: 0 0 0 1px rgba(155, 57, 47, 0.18), 0 10px 26px rgba(155, 57, 47, 0.16);
+    transform: scale(1.025);
+  }
+}
+
+@keyframes pendingBalanceButtonSpotlight {
+  0%,
+  48%,
+  82%,
+  100% {
+    box-shadow: none;
+    transform: scale(1);
+  }
+  56%,
+  72% {
+    background: #f5d8d2 !important;
+    border-color: rgba(155, 57, 47, 0.44) !important;
+    box-shadow: 0 0 0 2px rgba(155, 57, 47, 0.1), 0 12px 28px rgba(155, 57, 47, 0.2);
+    transform: scale(1.035);
+  }
+}
+
 .admin-reservation-row-actions {
   display: inline-flex;
   align-items: center;
@@ -7117,6 +7167,8 @@ button:active,
   .admin-reservation-section-panel__inner,
   .admin-reservation-mobile-card--today,
   .admin-reservation-mobile-card--pending-balance,
+  .admin-pending-attention-balance,
+  .admin-pending-attention-button,
   .admin-nav-icon {
     animation: none !important;
     transition: none !important;
