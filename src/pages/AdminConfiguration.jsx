@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useAdminData } from "../admin/AdminDataProvider.jsx";
 import { ROLE_LABELS, ROLES } from "../auth/permissions.js";
+import BackupSettingsPanel from "../components/admin/BackupSettingsPanel.jsx";
 
 const emptyUserDraft = {
   name: "",
@@ -49,11 +50,6 @@ function buildAccessLink(role) {
 export default function AdminConfiguration() {
   const {
     activityLog,
-    reservations,
-    activeReservations,
-    cancelledReservations,
-    expenses,
-    clients,
     users,
     saveUserProfile,
     updateUserActiveState,
@@ -66,40 +62,6 @@ export default function AdminConfiguration() {
   const [isSavingUser, setIsSavingUser] = useState(false);
   const [userMessage, setUserMessage] = useState("");
   const isEditingUser = Boolean(editingUserId);
-
-  const exportJson = async (type) => {
-    const payload = {
-      exportedAt: new Date().toISOString(),
-      reservas: reservations,
-      reservasActivas: activeReservations,
-      reservasCanceladas: cancelledReservations,
-      clientes: clients,
-      gastos: expenses,
-      pagos: reservations.flatMap((reservation) =>
-        reservation.payments.map((payment) => ({
-          ...payment,
-          reservationId: reservation.id,
-          clientName: reservation.clientName,
-        })),
-      ),
-      resumenFinanciero: {
-        ingresos: reservations.reduce((total, reservation) => total + reservation.totalPaid, 0),
-        gastos: expenses.reduce((total, expense) => total + expense.amount, 0),
-        saldosPendientes: activeReservations.reduce((total, reservation) => total + reservation.balance, 0),
-      },
-    };
-    const selectedPayload = type === "todo" ? payload : payload[type];
-    const blob = new Blob([JSON.stringify(selectedPayload, null, 2)], {
-      type: "application/json",
-    });
-    const url = URL.createObjectURL(blob);
-    const link = document.createElement("a");
-    link.href = url;
-    link.download = `paraiso-escondido-${type}-${new Date().toISOString().slice(0, 10)}.json`;
-    link.click();
-    URL.revokeObjectURL(url);
-    await logActivity("Backup exportado", type === "todo" ? "Backup completo JSON" : `Backup ${type}`);
-  };
 
   const resetUserForm = () => {
     setUserDraft(emptyUserDraft);
@@ -327,15 +289,7 @@ export default function AdminConfiguration() {
         </div>
       </ConfigPanel>
 
-      <ConfigPanel title="Backup de seguridad" description="Exportar información crítica en JSON.">
-        <div className="admin-backup-actions">
-          <button type="button" onClick={() => exportJson("todo")}>Exportar backup JSON</button>
-          <button type="button" onClick={() => exportJson("reservas")}>Exportar reservas</button>
-          <button type="button" onClick={() => exportJson("clientes")}>Exportar clientes</button>
-          <button type="button" onClick={() => exportJson("gastos")}>Exportar gastos</button>
-          <button type="button" onClick={() => exportJson("resumenFinanciero")}>Exportar resumen financiero</button>
-        </div>
-      </ConfigPanel>
+      <BackupSettingsPanel logActivity={logActivity} />
 
       {deleteTarget ? (
         <div className="admin-modal-backdrop" role="presentation">

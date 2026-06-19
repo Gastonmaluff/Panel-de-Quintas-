@@ -117,6 +117,10 @@ service cloud.firestore {
       allow read, write: if isAdmin();
     }
 
+    match /backups/{backupId} {
+      allow read, create, update, delete: if isAdmin();
+    }
+
     match /venues/{venueId} {
       allow read: if true;
       allow write: if isAdmin();

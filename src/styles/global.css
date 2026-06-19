@@ -4675,6 +4675,212 @@ textarea:focus {
   padding: 0 16px;
 }
 
+.admin-backup-panel summary em {
+  color: var(--color-muted);
+  font-size: 0.82rem;
+  font-style: normal;
+  font-weight: 800;
+}
+
+.backup-panel-body,
+.backup-subsection,
+.backup-subsection__body {
+  display: grid;
+  gap: 14px;
+}
+
+.backup-subsection {
+  border: 1px solid rgba(6, 27, 14, 0.08);
+  border-radius: 18px;
+  background: #fbfcfa;
+  padding: 12px;
+}
+
+.backup-subsection__header {
+  display: flex;
+  width: 100%;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+  border: 0;
+  background: transparent;
+  color: var(--color-forest);
+  cursor: pointer;
+  padding: 4px;
+  text-align: left;
+}
+
+.backup-subsection__header span {
+  display: grid;
+  gap: 3px;
+}
+
+.backup-subsection__header small,
+.backup-action-row p,
+.backup-card p,
+.restore-summary p,
+.backup-native-card p {
+  color: var(--color-muted);
+  margin: 0;
+}
+
+.backup-subsection__header i {
+  width: 11px;
+  height: 11px;
+  border-right: 2px solid currentColor;
+  border-bottom: 2px solid currentColor;
+  transform: rotate(45deg);
+}
+
+.backup-action-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 14px;
+  border: 1px solid rgba(6, 27, 14, 0.08);
+  border-radius: 18px;
+  background: #fff;
+  padding: 14px;
+}
+
+.backup-action-row h3,
+.restore-summary h4,
+.backup-native-card h3 {
+  margin: 0 0 4px;
+}
+
+.backup-summary-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.backup-summary-grid span {
+  display: grid;
+  gap: 5px;
+  border: 1px solid rgba(6, 27, 14, 0.08);
+  border-radius: 16px;
+  background: #fff;
+  padding: 12px;
+}
+
+.backup-summary-grid small {
+  color: var(--color-muted);
+  font-weight: 850;
+}
+
+.backup-list {
+  display: grid;
+  gap: 10px;
+}
+
+.backup-card {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 14px;
+  border: 1px solid rgba(6, 27, 14, 0.08);
+  border-radius: 18px;
+  background: #f8fbf9;
+  padding: 14px;
+}
+
+.backup-card strong {
+  display: block;
+  overflow-wrap: anywhere;
+}
+
+.backup-card small {
+  color: var(--color-muted);
+  font-weight: 800;
+}
+
+.backup-card__actions {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.backup-card__actions button,
+.restore-confirm-card button {
+  min-height: 38px;
+}
+
+.backup-status {
+  display: inline-flex;
+  min-height: 30px;
+  align-items: center;
+  border-radius: 999px;
+  font-size: 0.78rem;
+  font-weight: 850;
+  padding: 0 10px;
+}
+
+.backup-status--success {
+  background: #eaf8f0;
+  color: var(--color-forest);
+}
+
+.backup-status--failed,
+.backup-status--error {
+  background: #f8e9e4;
+  color: #8a2e21;
+}
+
+.backup-status--running {
+  background: #fff6d8;
+  color: #876400;
+}
+
+.backup-native-card,
+.restore-summary,
+.restore-confirm-card {
+  display: grid;
+  gap: 12px;
+  border: 1px solid rgba(6, 27, 14, 0.08);
+  border-left: 4px solid var(--color-green);
+  border-radius: 18px;
+  background: #fff;
+  padding: 14px;
+}
+
+.restore-collections {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.restore-collections span {
+  border-radius: 999px;
+  background: #eaf8f0;
+  color: var(--color-forest);
+  font-size: 0.78rem;
+  font-weight: 800;
+  padding: 6px 10px;
+}
+
+.restore-confirm-card label {
+  display: grid;
+  gap: 8px;
+  color: var(--color-muted);
+  font-size: 0.72rem;
+  font-weight: 850;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.restore-confirm-card input,
+.restore-confirm-card select {
+  min-height: 44px;
+  border: 1px solid rgba(6, 27, 14, 0.14);
+  border-radius: 14px;
+  background: #fff;
+  color: var(--color-forest);
+  padding: 0 12px;
+}
+
 .admin-user-role-form {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -4918,6 +5124,22 @@ textarea:focus {
   .admin-user-role-form,
   .admin-user-card dl {
     grid-template-columns: 1fr;
+  }
+
+  .backup-action-row,
+  .backup-card,
+  .backup-summary-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .backup-card__actions {
+    justify-content: stretch;
+  }
+
+  .backup-card__actions button,
+  .backup-action-row button,
+  .restore-confirm-card button {
+    width: 100%;
   }
 }
 
