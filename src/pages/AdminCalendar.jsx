@@ -60,6 +60,7 @@ function formatDate(dateValue) {
 
 function getCalendarStatusLabel(status, reservationCount) {
   if (status === "past") return "Pasado";
+  if (status === "partialPaid") return reservationCount > 1 ? "Con señas" : "Con seña";
   if (status === "reserved" || reservationCount > 0) return "Reservado";
   return "Disponible";
 }
@@ -128,7 +129,9 @@ export default function AdminCalendar() {
     () => (selectedDay ? getReservationsForDate(selectedDay.iso, activeReservations) : []),
     [activeReservations, selectedDay],
   );
-  const selectedBlockingReservations = selectedDay?.status === "reserved" ? selectedReservations : [];
+  const selectedBlockingReservations = ["reserved", "partialPaid"].includes(selectedDay?.status)
+    ? selectedReservations
+    : [];
   const selectedStatusLabel = selectedDay
     ? getCalendarStatusLabel(selectedDay.status, selectedBlockingReservations.length)
     : "";
@@ -249,7 +252,7 @@ export default function AdminCalendar() {
           {cells.map((cell) => {
             const status = getDayAvailabilityStatus(cell.iso, activeReservations);
             const dayReservations = getReservationsForDate(cell.iso, activeReservations);
-            const visibleReservations = status === "reserved" ? dayReservations : [];
+            const visibleReservations = ["reserved", "partialPaid"].includes(status) ? dayReservations : [];
             const isPast = status === "past";
             const isCelebrating = celebration?.date === cell.iso;
             const celebrationReservation =
@@ -271,7 +274,9 @@ export default function AdminCalendar() {
                 <span className="admin-calendar-day__number">{cell.day}</span>
                 {visibleReservations.length || isCelebrating ? (
                   <>
-                    <span className="admin-calendar-day__status">Reservado</span>
+                    <span className="admin-calendar-day__status">
+                      {status === "partialPaid" ? "Seña" : "Reservado"}
+                    </span>
                     <strong>{primaryReservation?.clientName || "Reserva creada"}</strong>
                     <small>
                       {primaryReservation
@@ -291,6 +296,7 @@ export default function AdminCalendar() {
 
         <div className="admin-calendar-legend">
           <span><i className="admin-status-dot admin-status-dot--available" />Disponible</span>
+          <span><i className="admin-status-dot admin-status-dot--partialPaid" />Con seña</span>
           <span><i className="admin-status-dot admin-status-dot--reserved" />Reservado</span>
           <span><i className="admin-status-dot admin-status-dot--past" />Pasado</span>
         </div>

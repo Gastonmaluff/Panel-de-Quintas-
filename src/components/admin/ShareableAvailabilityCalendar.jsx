@@ -6,6 +6,7 @@ const weekdays = ["Lun", "Mar", "Mié", "Jue", "Vie", "Sáb", "Dom"];
 
 const statusText = {
   available: "Disponible",
+  partialPaid: "Reservado",
   reserved: "Reservado",
   preReserved: "Reservado",
   blocked: "Reservado",

@@ -8,11 +8,13 @@ import {
 
 export const availabilityLabels = {
   available: "Disponible",
+  partialPaid: "Con seña",
   reserved: "Reservado",
   past: "Pasado",
 };
 
 export const unavailableReasons = {
+  partialPaid: "Fecha reservada con seña",
   reserved: "Fecha reservada",
   past: "Fecha pasada",
   invalid: "Fecha invalida",
@@ -37,12 +39,13 @@ export function normalizeAvailabilityData(availabilityData = {}) {
         }
         return accumulator;
       },
-      { reserved: [], preReserved: [], blocked: [] },
+      { reserved: [], partialPaid: [], preReserved: [], blocked: [] },
     );
   }
 
   return {
     reserved: availabilityData.reserved || [],
+    partialPaid: availabilityData.partialPaid || [],
     preReserved: availabilityData.preReserved || [],
     blocked: availabilityData.blocked || [],
   };
@@ -54,6 +57,7 @@ export function getAvailabilityStatus(dateValue, availabilityData) {
 
   if (!isoDate) return "invalid";
   if (isPastDay(isoDate)) return "past";
+  if (availability.partialPaid.includes(isoDate)) return "partialPaid";
   if (availability.reserved.includes(isoDate)) return "reserved";
   if (availability.preReserved.includes(isoDate)) return "reserved";
   if (availability.blocked.includes(isoDate)) return "reserved";
@@ -95,6 +99,7 @@ export function getFirstAvailabilityMonth(availabilityData) {
   const today = getTodayISO();
   const futureDates = [
     ...availability.reserved,
+    ...availability.partialPaid,
     ...availability.preReserved,
     ...availability.blocked,
   ]

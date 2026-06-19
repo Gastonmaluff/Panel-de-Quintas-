@@ -24,7 +24,7 @@ export default function AdminDashboard() {
     const date = new Date(currentYear, currentMonth, index + 1);
     const iso = date.toISOString().slice(0, 10);
     const status = getDayAvailabilityStatus(iso, activeReservations);
-    if (["reserved", "preReserved", "blocked"].includes(status)) occupiedDateSet.add(iso);
+    if (["reserved", "partialPaid", "preReserved", "blocked"].includes(status)) occupiedDateSet.add(iso);
   });
   const occupancyPercentage = Math.round((occupiedDateSet.size / daysInMonth) * 100);
   const paidThisMonth = monthReservations.reduce((total, reservation) => total + reservation.totalPaid, 0);

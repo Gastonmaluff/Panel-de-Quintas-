@@ -857,6 +857,7 @@ img {
   border-color: #e7b9ad;
 }
 
+.calendar-day--partialPaid,
 .calendar-day--preReserved {
   background: #f3ead0;
   border-color: #dfcb92;
@@ -909,6 +910,7 @@ img {
   background: #f4ded8;
 }
 
+.legend-dot--partialPaid,
 .legend-dot--preReserved {
   background: #f3ead0;
 }
@@ -1040,6 +1042,7 @@ img {
   border-color: #e7b9ad;
 }
 
+.date-picker-day--partialPaid,
 .date-picker-day--preReserved {
   background: #f3ead0;
   border-color: #dfcb92;
@@ -6778,6 +6781,10 @@ button:active,
   background: #e6f4e9;
 }
 
+.admin-calendar-day--partialPaid {
+  background: #f5e9bf;
+}
+
 .admin-calendar-day--reserved,
 .admin-calendar-day--preReserved {
   background: #f5ddd7;
@@ -6797,6 +6804,12 @@ button:active,
 .admin-status-dot--available,
 .admin-status-dot--libre {
   background: #9dca9f;
+}
+
+.admin-status-dot--partialPaid,
+.admin-status-dot--pre-reserva,
+.admin-status-dot--sena-pendiente {
+  background: #d8ba55;
 }
 
 .admin-status-dot--reserved,
@@ -6869,6 +6882,11 @@ button:active,
 .admin-calendar-detail-status--reserved {
   background: #f8e1dd;
   color: #7d3527;
+}
+
+.admin-calendar-detail-status--partialPaid {
+  background: #fff3c8;
+  color: #7a5614;
 }
 
 .admin-calendar-detail-status--past {

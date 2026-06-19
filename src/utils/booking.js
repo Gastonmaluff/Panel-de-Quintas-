@@ -1,4 +1,5 @@
 import { toISODate } from "./date.js";
+import { getReservationBalance } from "./reservations.js";
 
 export const bookingModeLabels = {
   day: "Turno dia",
@@ -254,14 +255,16 @@ export function getCalendarDayStatus(dateValue, reservations = []) {
   if (!dayReservations.length) return "available";
 
   const defaultSlot = getDateSlotInterval(dateValue);
-  const blocksDefaultSlot = dayReservations.some((reservation) => {
+  const blockingReservations = dayReservations.filter((reservation) => {
     const interval = getReservationInterval(reservation);
     return interval.start < defaultSlot.end && interval.end > defaultSlot.start;
   });
 
-  if (!blocksDefaultSlot) return "available";
+  if (!blockingReservations.length) return "available";
 
-  return "reserved";
+  return blockingReservations.some((reservation) => getReservationBalance(reservation) > 0)
+    ? "partialPaid"
+    : "reserved";
 }
 
 export function getDayAvailabilityStatus(dateValue, reservations = []) {
@@ -271,6 +274,7 @@ export function getDayAvailabilityStatus(dateValue, reservations = []) {
 export function buildAvailabilityFromReservations(reservations, excludedReservationId = "") {
   const availability = {
     reserved: new Set(),
+    partialPaid: new Set(),
     preReserved: new Set(),
     blocked: new Set(),
   };
@@ -290,6 +294,7 @@ export function buildAvailabilityFromReservations(reservations, excludedReservat
 
   return {
     reserved: [...availability.reserved],
+    partialPaid: [...availability.partialPaid],
     preReserved: [...availability.preReserved],
     blocked: [...availability.blocked],
   };
@@ -298,6 +303,7 @@ export function buildAvailabilityFromReservations(reservations, excludedReservat
 export function getUnavailableDatesInRange(startDate, endDate, availability) {
   const unavailable = new Set([
     ...(availability?.reserved || []),
+    ...(availability?.partialPaid || []),
     ...(availability?.preReserved || []),
     ...(availability?.blocked || []),
   ]);

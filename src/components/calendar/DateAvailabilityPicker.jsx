@@ -105,7 +105,8 @@ export default function DateAvailabilityPicker({
             const availabilityState = getDateAvailability(cell.iso, availability);
             const isSelected = value === cell.iso;
             const isBeforeMinDate = Boolean(minDate && cell.iso < minDate);
-            const isReservedSelectionAllowed = allowReservedSelection && availabilityState.status === "reserved";
+            const isReservedSelectionAllowed =
+              allowReservedSelection && ["reserved", "partialPaid"].includes(availabilityState.status);
             const isDisabled =
               !cell.isCurrentMonth ||
               isBeforeMinDate ||
