@@ -154,6 +154,7 @@ export default function AdminCalendar() {
     setCelebration({
       date: targetDate,
       reservationId: location.state.highlightedReservationId || "",
+      reservation: location.state.highlightedReservation || null,
       key: location.state.celebrationKey || `${targetDate}-${Date.now()}`,
     });
 
@@ -214,6 +215,7 @@ export default function AdminCalendar() {
       setCelebration({
         date: createdReservation.startDate,
         reservationId: createdReservation.id,
+        reservation: createdReservation,
         key: `${createdReservation.id}-${Date.now()}`,
       });
     } finally {
@@ -250,6 +252,13 @@ export default function AdminCalendar() {
             const visibleReservations = status === "reserved" ? dayReservations : [];
             const isPast = status === "past";
             const isCelebrating = celebration?.date === cell.iso;
+            const celebrationReservation =
+              isCelebrating && celebration?.reservationId
+                ? activeReservations.find((reservation) => reservation.id === celebration.reservationId) ||
+                  reservations.find((reservation) => reservation.id === celebration.reservationId) ||
+                  celebration.reservation
+                : null;
+            const primaryReservation = celebrationReservation || visibleReservations[0];
 
             return (
               <button
@@ -263,10 +272,10 @@ export default function AdminCalendar() {
                 {visibleReservations.length || isCelebrating ? (
                   <>
                     <span className="admin-calendar-day__status">Reservado</span>
-                    <strong>{visibleReservations[0]?.clientName || "Reserva creada"}</strong>
+                    <strong>{primaryReservation?.clientName || "Reserva creada"}</strong>
                     <small>
-                      {visibleReservations[0]
-                        ? `${visibleReservations[0].startTime} - ${visibleReservations[0].endTime}`
+                      {primaryReservation
+                        ? `${primaryReservation.startTime} - ${primaryReservation.endTime}`
                         : "Confirmada"}
                     </small>
                   </>

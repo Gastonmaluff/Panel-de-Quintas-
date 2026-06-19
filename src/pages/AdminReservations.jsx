@@ -673,6 +673,7 @@ export default function AdminReservations({ mode = "admin" }) {
           state: {
             calendarCelebrationDate: createdReservation.startDate,
             highlightedReservationId: createdReservation.id,
+            highlightedReservation: createdReservation,
             celebrationKey: `${createdReservation.id}-${Date.now()}`,
           },
         });
